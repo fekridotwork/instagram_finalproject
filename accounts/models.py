@@ -57,3 +57,42 @@ class Profile(models.Model):
     )
     def __str__(self):
         return self.display_name or self.full_name or str(self.user)
+
+class OTP(models.Model):
+    PURPOSE_CHOICES = [
+        ("register", "Register"),
+        ("login", "Login"),
+    ]
+    user = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.CASCADE,
+        related_name="otps",
+        null=True,
+        blank=True,
+    )
+    email = models.EmailField(
+        blank=True,
+        null=True,
+    )
+    phone_number = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+    )
+    code = models.CharField(
+        max_length=6,
+    )
+    purpose = models.CharField(
+        max_length=20,
+        choices=PURPOSE_CHOICES,
+    )
+    is_used = models.BooleanField(
+        default=False,
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+    expires_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.purpose} - OTP"
