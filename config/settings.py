@@ -30,13 +30,30 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
-INSTALLED_APPS = [
+LOCAL_APPS = (
+    'accounts.apps.AccountsConfig',
+    'posts.apps.PostsConfig',
+    'interactions.apps.InteractionsConfig',
+    'direct.apps.DirectConfig',
+)
+
+THIRD_PARTY_APPS = (
+
+)
+
+DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+]
+
+INSTALLED_APPS = [
+    *DJANGO_APPS,
+    *THIRD_PARTY_APPS,
+    *LOCAL_APPS,
 ]
 
 MIDDLEWARE = [
