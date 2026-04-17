@@ -96,3 +96,37 @@ class Story(models.Model):
         ordering = ["-created_at"]
     def __str__(self):
         return f"Story #{self.pk} by {self.user}"
+
+class Hashtag(models.Model):
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+    )
+    class Meta:
+        ordering = ["name"]
+    def __str__(self):
+        return self.name
+
+class PostHashtag(models.Model):
+    post = models.ForeignKey(
+        "posts.Post",
+        on_delete=models.CASCADE,
+        related_name="post_hashtags",
+    )
+    hashtag = models.ForeignKey(
+        "posts.Hashtag",
+        on_delete=models.CASCADE,
+        related_name="post_hashtags",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["post", "hashtag"],
+                name="unique_post_hashtag",
+            )
+        ]
+    def __str__(self):
+        return f"Post #{self.post_id} --> #{self.hashtag.name}"
