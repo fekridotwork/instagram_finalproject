@@ -2,16 +2,17 @@ from django.db import models
 from datetime import timedelta
 from django.utils import timezone
 
+MEDIA_TYPE_CHOICES = [
+    ('image', 'Image'),
+    ('video', 'Video'),
+]
+VISIBILITY_CHOICES = [
+    ('public', 'Public'),
+    ('followers', 'Followers'),
+]
+
 class Post(models.Model):
-    MEDIA_TYPE_CHOICES = [
-        ('image', 'Image'),
-        ('video', 'Video'),
-    ]
-    VISIBILITY_CHOICES = [
-        ('public', 'Public'),
-        ('followers', 'Followers'),
-        ('close_friends', 'Close_friends'),
-    ]
+
     user = models.ForeignKey(
         "accounts.User",
         on_delete=models.CASCADE,
@@ -28,7 +29,7 @@ class Post(models.Model):
         blank=True,
     )
     visibility = models.CharField(
-        max_length=20,
+        max_length=10,
         choices=VISIBILITY_CHOICES,
         default='public',
     )
@@ -62,14 +63,6 @@ def story_expiry():
     return timezone.now() + timedelta(hours=24)
 
 class Story(models.Model):
-    MEDIA_TYPE_CHOICES = [
-        ('image', 'Image'),
-        ('video', 'Video'),
-    ]
-    VISIBILITY_CHOICES = [
-        ('public', 'Public'),
-        ('followers', 'Followers'),
-    ]
     user = models.ForeignKey(
         "accounts.User",
         on_delete=models.CASCADE,
