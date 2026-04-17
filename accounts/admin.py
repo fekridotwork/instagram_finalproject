@@ -11,11 +11,9 @@ class UserAdmin(admin.ModelAdmin):
         "phone_number",
         "is_active",
         "is_staff",
-        "created_at",
     )
     search_fields = ("username", "email", "phone_number")
     list_filter = ("is_active", "is_staff", "is_email_verified", "is_phone_verified")
-    ordering = ("-created_at",)
 
 
 @admin.register(Profile)
