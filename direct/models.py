@@ -29,3 +29,25 @@ class DirectConversation(models.Model):
         ]
     def __str__(self):
         return f"Conversation #{self.pk}: {self.user1} & {self.user2}"
+class DirectMessage(models.Model):
+    conversation = models.ForeignKey(
+        "direct.DirectConversation",
+        on_delete=models.CASCADE,
+        related_name="messages"
+    )
+    sender = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.CASCADE,
+        related_name="sent_directz_messages"
+    )
+    text = models.TextField()
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["conversation", "created_at"], name="dm_conv_created_idx"),
+            models.Index(fields=["sender", "created_at"], name="dm_sender_created_idx"),
+        ]
+    def __str__(self):
+        return f"Direct Message #{self.pk}: {self.sender} & {self.text}"
