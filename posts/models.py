@@ -18,6 +18,12 @@ class Post(models.Model):
         on_delete=models.CASCADE,
         related_name="posts",
     )
+    hashtags = models.ManyToManyField(
+        "posts.Hashtag",
+        through="posts.PostHashtag",
+        related_name="posts",
+        blank=True,
+    )
     media = models.FileField(
         upload_to="posts/",
     )
