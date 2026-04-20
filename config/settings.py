@@ -38,7 +38,7 @@ LOCAL_APPS = (
 )
 
 THIRD_PARTY_APPS = (
-
+    "rest_framework",
 )
 
 DJANGO_APPS = [
