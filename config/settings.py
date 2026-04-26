@@ -35,6 +35,7 @@ LOCAL_APPS = (
     'posts.apps.PostsConfig',
     'interactions.apps.InteractionsConfig',
     'direct.apps.DirectConfig',
+    'authentication.apps.AuthenticationConfig',
 )
 
 THIRD_PARTY_APPS = (
