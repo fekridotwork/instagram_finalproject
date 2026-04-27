@@ -1,6 +1,9 @@
 import random
 import time
 
+import uuid
+from accounts.models import User
+
 OTP_PURPOSE = ("login", "register")
 OTP_TTL_SECONDS = 120
 _OTP_STORAGE = {}
@@ -54,3 +57,25 @@ def get_identifier_type(identifier:str) -> str:
     if "@" in identifier:
         return "email"
     return "phone"
+
+
+def generate_temp_username() -> str:
+    return f"user_{uuid.uuid4().hex[:10]}"
+def get_or_create_user_by_identifier(identifier:str) -> tuple[User, bool]:
+    identifier_type = get_identifier_type(identifier)
+
+    if identifier_type == "email":
+        return User.objects.get_or_create(
+            email=identifier,
+            defaults={
+                "username": generate_temp_username(),
+            },
+        )
+    if identifier_type == "phone":
+        return User.objects.get_or_create(
+            phone_number=identifier,
+            defaults={
+                "username": generate_temp_username(),
+            },
+        )
+    raise ValueError("Invalid identifier type")
