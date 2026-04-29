@@ -7,6 +7,10 @@ from .services import generate_otp_code, store_otp, verify_otp, get_or_create_us
 
 from .serializers import RequestOTPSerializer, VerifyOTPSerializer
 
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from rest_framework.permissions import IsAuthenticated
+
 
 class RequestOTPAPIView(APIView):
     def post(self, request):
@@ -39,7 +43,20 @@ class VerifyOTPAPIView(APIView):
                 {"error": "Invalid OTP"},
                 status=status.HTTP_400_BAD_REQUEST)
         user, created = get_or_create_user_by_identifier(identifier)
+        refresh = RefreshToken.for_user(user)
         return Response(
             {"message": "OTP verified successfully",
             "is_new_user": created,
+             "access": str(refresh.access_token),
+             "refresh": str(refresh),
              })
+
+class MeAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        return Response({
+            "id": request.user.id,
+            "username": request.user.username,
+            "email": request.user.email,
+            "phone_number": request.user.phone_number,
+        })
