@@ -23,8 +23,10 @@ class RequestOTPAPIView(APIView):
         code = generate_otp_code()
         store_otp(identifier, purpose, code)
 
-        return Response({"message": "OTP sent successfully",
-                        "code": code,
+        print(f"OTP for {identifier} is {code}")
+
+        return Response({
+            "message": "OTP sent successfully",
         })
 
 class VerifyOTPAPIView(APIView):
