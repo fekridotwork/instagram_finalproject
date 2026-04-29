@@ -8,3 +8,6 @@ class VerifyOTPSerializer(serializers.Serializer):
     identifier = serializers.CharField()
     purpose = serializers.ChoiceField(choices=["login", "register"])
     code = serializers.CharField()
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()

@@ -5,9 +5,9 @@ from rest_framework import status
 
 from .services import generate_otp_code, store_otp, verify_otp, get_or_create_user_by_identifier
 
-from .serializers import RequestOTPSerializer, VerifyOTPSerializer
+from .serializers import RequestOTPSerializer, VerifyOTPSerializer, LogoutSerializer
 
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from rest_framework.permissions import IsAuthenticated
 
@@ -60,3 +60,21 @@ class MeAPIView(APIView):
             "email": request.user.email,
             "phone_number": request.user.phone_number,
         })
+
+class LogoutAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = LogoutSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            refresh_token = serializer.validated_data['refresh']
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except TokenError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return Response({"message": "Logged out successfully",})
