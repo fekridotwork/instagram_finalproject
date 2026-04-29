@@ -4,9 +4,18 @@ import time
 import uuid
 from accounts.models import User
 
+import redis
+from django.conf import settings
+
 OTP_PURPOSE = ("login", "register")
 OTP_TTL_SECONDS = 120
-_OTP_STORAGE = {}
+
+redis_client = redis.Redis(
+    host=settings.REDIS_HOST,
+    port=settings.REDIS_PORT,
+    db=settings.REDIS_DB,
+    decode_responses=True
+)
 
 def generate_otp_code() -> str:
     return str(random.randint(10000, 99999))
@@ -28,10 +37,7 @@ def store_otp(
     key = build_otp_code(identifier, purpose)
     expires_at = time.time() + OTP_TTL_SECONDS
 
-    _OTP_STORAGE[key] = {
-        "code": code,
-        "expires_at": expires_at,
-    }
+    redis_client.setex(key, 120, code)
 
 def verify_otp(
         identifier: str,
@@ -39,18 +45,15 @@ def verify_otp(
         code: str
     ) -> bool:
     key = build_otp_code(identifier, purpose)
-    otp_data = _OTP_STORAGE.get(key)
+    stored_code = redis_client.get(key)
 
-    if not otp_data:
+    if not stored_code:
         return False
 
-    if time.time() > otp_data["expires_at"]:
+    if stored_code != code:
         return False
 
-    if otp_data["code"] != code:
-        return False
-
-    _OTP_STORAGE.pop(key, None)
+    redis_client.delete(key)
     return True
 
 def get_identifier_type(identifier:str) -> str:

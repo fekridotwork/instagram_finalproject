@@ -153,3 +153,8 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+#REDIS
+REDIS_HOST = "localhost"
+REDIS_PORT = 6379
+REDIS_DB = 0
