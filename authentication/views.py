@@ -13,6 +13,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from .sms import send_otp
 
+from django.conf import settings
+
 
 class RequestOTPAPIView(APIView):
     def post(self, request):
@@ -27,9 +29,13 @@ class RequestOTPAPIView(APIView):
 
         send_otp(identifier, purpose, code)
 
-        return Response({
+        data = {
             "message": "OTP sent successfully",
-        })
+        }
+        if settings.DEBUG:
+            data["code"] = code
+
+        return Response(data)
 
 class VerifyOTPAPIView(APIView):
     def post(self, request):
