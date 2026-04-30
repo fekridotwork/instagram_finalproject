@@ -1,3 +1,31 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-# Create your views here.
+from posts.models import Post
+from .models import Like
+
+
+class PostLikeAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, post_id):
+        post = get_object_or_404(Post, id=post_id, is_deleted=False)
+
+        like, created = Like.objects.get_or_create(
+            user=request.user,
+            post=post,
+        )
+
+        if not created:
+            return Response(
+                {"message": "You have already liked this post."},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            {"message": "Post liked successfully."},
+            status=status.HTTP_201_CREATED,
+        )
