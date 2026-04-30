@@ -11,6 +11,14 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -35,10 +43,12 @@ LOCAL_APPS = (
     'posts.apps.PostsConfig',
     'interactions.apps.InteractionsConfig',
     'direct.apps.DirectConfig',
+    'authentication.apps.AuthenticationConfig',
 )
 
 THIRD_PARTY_APPS = (
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
 )
 
 DJANGO_APPS = [
@@ -135,3 +145,27 @@ STATIC_URL = 'static/'
 
 # Custom project settings
 AUTH_USER_MODEL = "accounts.User"
+
+# DRF
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+# JWT
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+#REDIS
+REDIS_HOST = "localhost"
+REDIS_PORT = 6379
+REDIS_DB = 0
+
+#KAVENEGAR
+KAVENEGAR_API_KEY = os.getenv("KAVENEGAR_API_KEY")
+KAVENEGAR_SENDER = os.getenv("KAVENEGAR_SENDER")
+# KAVENEGAR_OTP_TEMPLATE = os.getenv("KAVENEGAR_OTP_TEMPLATE", "verify")
