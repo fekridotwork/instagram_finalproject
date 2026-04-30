@@ -14,6 +14,18 @@ class PostLikeAPIView(APIView):
     def post(self, request, post_id):
         post = get_object_or_404(Post, id=post_id, is_deleted=False)
 
+        if post.user.profile.is_private and post.user != request.user:
+            return Response(
+                {"error": "You do not have permission to like this post."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if post.visibility == "followers" and post.user != request.user:
+            return Response(
+                {"error": "You do not have permission to like this post."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         like, created = Like.objects.get_or_create(
             user=request.user,
             post=post,
