@@ -11,6 +11,8 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from rest_framework.permissions import IsAuthenticated
 
+from .sms import send_otp
+
 
 class RequestOTPAPIView(APIView):
     def post(self, request):
@@ -23,7 +25,7 @@ class RequestOTPAPIView(APIView):
         code = generate_otp_code()
         store_otp(identifier, purpose, code)
 
-        print(f"OTP for {identifier} is {code}")
+        send_otp(identifier, purpose, code)
 
         return Response({
             "message": "OTP sent successfully",

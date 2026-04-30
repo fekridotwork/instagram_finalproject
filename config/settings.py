@@ -13,6 +13,12 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -158,3 +164,8 @@ SIMPLE_JWT = {
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
 REDIS_DB = 0
+
+#KAVENEGAR
+KAVENEGAR_API_KEY = os.getenv("KAVENEGAR_API_KEY")
+KAVENEGAR_SENDER = os.getenv("KAVENEGAR_SENDER")
+# KAVENEGAR_OTP_TEMPLATE = os.getenv("KAVENEGAR_OTP_TEMPLATE", "verify")
