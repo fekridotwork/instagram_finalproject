@@ -16,6 +16,7 @@ class PostSerializer(serializers.ModelSerializer):
             "media",
             "media_type",
             "caption",
+            "visibility",
             "is_deleted",
             "is_edited",
             "created_at",

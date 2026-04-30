@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from .views import HealthCheckAPIView
+from posts.views import UserPostsAPIView
 
 
 urlpatterns = [
@@ -25,4 +26,5 @@ urlpatterns = [
     path('api/auth/', include("authentication.urls")),
     path("api/profile/", include("accounts.urls")),
     path('api/posts/', include("posts.urls")),
+    path('api/users/<str:username>/posts/', UserPostsAPIView.as_view(), name='user_posts'),
 ]
