@@ -41,3 +41,37 @@ class PostLikeAPIView(APIView):
             {"message": "Post liked successfully."},
             status=status.HTTP_201_CREATED,
         )
+
+    def delete(self, request, post_id):
+        post = get_object_or_404(Post, id=post_id, is_deleted=False)
+
+        # visibility check (همون قبلی)
+        if post.user.profile.is_private and post.user != request.user:
+            return Response(
+                {"error": "You do not have permission to unlike this post."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if post.visibility == "followers" and post.user != request.user:
+            return Response(
+                {"error": "You do not have permission to unlike this post."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        like = Like.objects.filter(
+            user=request.user,
+            post=post,
+        ).first()
+
+        if not like:
+            return Response(
+                {"message": "You have not liked this post."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        like.delete()
+
+        return Response(
+            {"message": "Post unliked successfully."},
+            status=status.HTTP_200_OK,
+        )
