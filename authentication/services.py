@@ -14,12 +14,13 @@ redis_client = redis.Redis(
     host=settings.REDIS_HOST,
     port=settings.REDIS_PORT,
     db=settings.REDIS_DB,
-    decode_responses=True
+    decode_responses=True # decode byte to str
 )
 
 def generate_otp_code() -> str:
     return str(random.randint(10000, 99999))
 
+# build_otp_key for redis
 def build_otp_code(
         identifier: str,
         purpose: str
@@ -33,11 +34,10 @@ def store_otp(
         purpose: str,
         code: str,
         ttl: int = OTP_TTL_SECONDS,
-    ) -> str:
+    ):
     key = build_otp_code(identifier, purpose)
-    expires_at = time.time() + OTP_TTL_SECONDS
 
-    redis_client.setex(key, 120, code)
+    redis_client.setex(key, ttl, code) # setex: set with expiration
 
 def verify_otp(
         identifier: str,
