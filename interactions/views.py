@@ -69,6 +69,24 @@ class PostLikeAPIView(APIView):
 class CommentListCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get(self, request, post_id):
+        post = get_object_or_404(Post, id=post_id, is_deleted=False)
+
+        if not can_view_post(request.user, post):
+            return Response(
+                {"error": "You do not have permission to view comments on this post."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        comments = (
+            Comment.objects
+            .filter(post=post, parent__isnull=True, is_deleted=False)
+            .select_related("user")
+        )
+
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
+
     def post(self, request, post_id):
         post = get_object_or_404(
             Post,
