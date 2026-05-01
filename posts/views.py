@@ -108,6 +108,7 @@ class UserPostsAPIView(APIView):
             Post.objects
             .filter(user=user, is_deleted=False)
             .select_related("user")
+            .annotate(likes_count=Count("received_likes"))
         )
 
         if user != request.user:
