@@ -114,3 +114,26 @@ class CommentListCreateAPIView(APIView):
         serializer.save(user=request.user, post=post)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+class CommentDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, comment_id):
+        comment = get_object_or_404(
+            Comment.objects.select_related("user", "post", "post__user"),
+            id=comment_id,
+            is_deleted=False,
+        )
+
+        if comment.user != request.user and comment.post.user != request.user:
+            return Response(
+                {"error": "You do not have permission to delete this comment."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        comment.soft_delete_with_replies()
+
+        return Response(
+            {"message": "Comment deleted successfully."},
+            status=status.HTTP_200_OK,
+        )

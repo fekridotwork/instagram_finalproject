@@ -84,6 +84,14 @@ class Comment(models.Model):
             models.Index(fields=["post", "created_at"], name="comment_post_created_idx"),
             models.Index(fields=["user", "created_at"], name="comment_user_created_idx"),
         ]
+
+    def soft_delete_with_replies(self):
+        self.is_deleted = True
+        self.save(update_fields=["is_deleted"])
+
+        for reply in self.replies.filter(is_deleted=False):
+            reply.soft_delete_with_replies()
+
     def __str__(self):
         return f"{self.user} commented on #{self.post.id}"
 class SavePost(models.Model):
