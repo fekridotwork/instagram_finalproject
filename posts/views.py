@@ -10,11 +10,19 @@ from django.shortcuts import get_object_or_404
 
 from django.contrib.auth import get_user_model
 
+from django.db.models import Count
+
+
 class PostListCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        posts = Post.objects.filter(is_deleted=False).select_related("user")
+        posts = (
+            Post.objects
+            .filter(is_deleted=False)
+            .select_related("user")
+            .annotate(likes_count=Count("received_likes"))
+        )
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
 
@@ -32,7 +40,9 @@ class PostDetailAPIView(APIView):
 
     def get_object(self, post_id):
         return get_object_or_404(
-            Post.objects.select_related("user"),
+            Post.objects
+            .select_related("user")
+            .annotate(likes_count=Count("received_likes")),
             id=post_id,
             is_deleted=False,
         )
@@ -98,6 +108,7 @@ class UserPostsAPIView(APIView):
             Post.objects
             .filter(user=user, is_deleted=False)
             .select_related("user")
+            .annotate(likes_count=Count("received_likes"))
         )
 
         if user != request.user:

@@ -46,9 +46,6 @@ class Post(models.Model):
         default=False,
     )
 
-    likes_count = models.PositiveIntegerField(
-        default=0,
-    )
     comments_count = models.PositiveIntegerField(
         default=0,
     )

@@ -1,6 +1,8 @@
 from django.contrib import admin
 from .models import Post, Story, Hashtag, PostHashtag
 
+from django.db.models import Count
+from .models import Post
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
@@ -10,10 +12,18 @@ class PostAdmin(admin.ModelAdmin):
         "media_type",
         "visibility",
         "is_deleted",
-        "likes_count",
+        "likes_count_display",
         "comments_count",
         "created_at",
     )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            calculated_likes_count=Count("received_likes")
+        )
+    def likes_count_display(self, obj):
+        return obj.calculated_likes_count
+
     search_fields = ("user__username", "user__email", "caption")
     list_filter = ("media_type", "visibility", "is_deleted", "is_edited")
     ordering = ("-created_at",)
