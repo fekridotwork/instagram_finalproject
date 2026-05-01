@@ -31,6 +31,12 @@ class CommentSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
+
     def get_replies(self, obj):
         replies = obj.replies.filter(is_deleted=False)
         return CommentSerializer(replies, many=True).data
+
+    def validate_text(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError("Comment text cannot be empty.")
+        return value
