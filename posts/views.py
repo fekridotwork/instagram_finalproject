@@ -10,19 +10,26 @@ from django.shortcuts import get_object_or_404
 
 from django.contrib.auth import get_user_model
 
-from django.db.models import Count
+from django.db.models import Count, Q
+from posts.permissions import can_view_post
 
 
 class PostListCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+
         posts = (
             Post.objects
             .filter(is_deleted=False)
             .select_related("user")
             .annotate(likes_count=Count("received_likes"))
+            .filter(
+                Q(user=request.user) |
+                Q(user__profile__is_private=False, visibility="public")
+            )
         )
+
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
 
@@ -49,6 +56,13 @@ class PostDetailAPIView(APIView):
 
     def get(self, request, post_id):
         post = self.get_object(post_id)
+
+        if not can_view_post(request.user, post):
+            return Response(
+                {"error": "You do not have permission to view this post."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         serializer = PostSerializer(post)
         return Response(serializer.data)
 
