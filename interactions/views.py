@@ -102,6 +102,15 @@ class CommentListCreateAPIView(APIView):
 
         serializer = CommentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        parent = serializer.validated_data.get("parent")
+
+        if parent and parent.post_id != post.id:
+            return Response(
+                {"error": "Parent comment does not belong to this post."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         serializer.save(user=request.user, post=post)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
