@@ -38,6 +38,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Bio is too long")
         return value
 
+    # override
     def update(self, instance, validated_data):
         user_data = validated_data.pop("user", {})
 
