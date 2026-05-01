@@ -5,7 +5,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from posts.models import Post
-from .models import Like
+from .models import Like, Comment
+from .serializers import CommentSerializer
+
+from posts.permissions import can_view_post
 
 
 class PostLikeAPIView(APIView):
@@ -14,13 +17,7 @@ class PostLikeAPIView(APIView):
     def post(self, request, post_id):
         post = get_object_or_404(Post, id=post_id, is_deleted=False)
 
-        if post.user.profile.is_private and post.user != request.user:
-            return Response(
-                {"error": "You do not have permission to like this post."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        if post.visibility == "followers" and post.user != request.user:
+        if not can_view_post(request.user, post):
             return Response(
                 {"error": "You do not have permission to like this post."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -45,14 +42,7 @@ class PostLikeAPIView(APIView):
     def delete(self, request, post_id):
         post = get_object_or_404(Post, id=post_id, is_deleted=False)
 
-        # visibility check (همون قبلی)
-        if post.user.profile.is_private and post.user != request.user:
-            return Response(
-                {"error": "You do not have permission to unlike this post."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        if post.visibility == "followers" and post.user != request.user:
+        if not can_view_post(request.user, post):
             return Response(
                 {"error": "You do not have permission to unlike this post."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -75,3 +65,25 @@ class PostLikeAPIView(APIView):
             {"message": "Post unliked successfully."},
             status=status.HTTP_200_OK,
         )
+
+class CommentListCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, post_id):
+        post = get_object_or_404(
+            Post,
+            id=post_id,
+            is_deleted=False
+        )
+
+        if not can_view_post(request.user, post):
+            return Response(
+                {"error": "You do not have permission to comment on this post."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = CommentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user, post=post)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
