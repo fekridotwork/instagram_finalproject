@@ -6,6 +6,8 @@ class CommentSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="user.id", read_only=True)
     username = serializers.CharField(source="user.username", read_only=True)
 
+    replies = serializers.SerializerMethodField()
+
     class Meta:
         model = Comment
         fields = [
@@ -18,6 +20,7 @@ class CommentSerializer(serializers.ModelSerializer):
             'is_deleted',
             'created_at',
             'updated_at',
+            'replies',
         ]
         read_only_fields = [
             'id',
@@ -28,3 +31,6 @@ class CommentSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
+    def get_replies(self, obj):
+        replies = obj.replies.filter(is_deleted=False)
+        return CommentSerializer(replies, many=True).data
