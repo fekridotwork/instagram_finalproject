@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -35,7 +34,7 @@ class RequestOTPAPIView(APIView):
         if settings.DEBUG:
             data["code"] = code
 
-        return Response(data)
+        return Response(data, status=status.HTTP_200_OK)
 
 class VerifyOTPAPIView(APIView):
     def post(self, request):
@@ -59,7 +58,8 @@ class VerifyOTPAPIView(APIView):
             "is_new_user": created,
              "access": str(refresh.access_token),
              "refresh": str(refresh),
-             })
+             },
+        status=status.HTTP_200_OK)
 
 class MeAPIView(APIView):
     permission_classes = [IsAuthenticated]
