@@ -1,6 +1,8 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 
 # Virtual environments
 .venv/
@@ -10,6 +12,8 @@ env/
 # Django
 *.log
 db.sqlite3
+
+# Media & static (runtime files)
 media/
 staticfiles/
 
@@ -22,3 +26,8 @@ staticfiles/
 
 # OS
 .Ds_Store
+Thumbs.db
+
+# Coverage / test
+.coverage
+htmlcov/
