@@ -45,6 +45,7 @@ class PostListCreateAPIView(APIView):
 class PostDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    # helper
     def get_object(self, post_id):
         return get_object_or_404(
             Post.objects

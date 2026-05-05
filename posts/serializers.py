@@ -27,7 +27,6 @@ class PostSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
-            "user",
             "is_deleted",
             "is_edited",
             "created_at",
