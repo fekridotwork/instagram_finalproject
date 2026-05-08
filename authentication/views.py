@@ -9,6 +9,8 @@ from .services import (
     get_user_by_identifier,
     user_exists_by_identifier,
     create_user_by_identifier,
+    get_otp_cooldown_remaining,
+    set_otp_cooldown,
 )
 
 from .serializers import RequestOTPSerializer, VerifyOTPSerializer, LogoutSerializer
@@ -44,8 +46,21 @@ class RequestOTPAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        cooldown_remaining = get_otp_cooldown_remaining(identifier, purpose)
+
+        if cooldown_remaining > 0:
+            return Response(
+                {
+                    "error": f"Try again in {cooldown_remaining} seconds.",
+                    "retry_after": cooldown_remaining,
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
         code = generate_otp_code()
         store_otp(identifier, purpose, code)
+
+        set_otp_cooldown(identifier,purpose)
 
         send_otp_task.delay(identifier, purpose, code)
 
