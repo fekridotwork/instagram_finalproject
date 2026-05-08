@@ -4,7 +4,11 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .models import Post
-from .serializers import PostSerializer
+from .serializers import (
+    PostSerializer,
+    PostListSerializer,
+    PostDetailSerializer,
+)
 
 from django.shortcuts import get_object_or_404
 
@@ -30,7 +34,7 @@ class PostListCreateAPIView(APIView):
             )
         )
 
-        serializer = PostSerializer(posts, many=True)
+        serializer = PostListSerializer(posts, many=True)
         return Response(serializer.data)
 
     def post(self, request):
@@ -64,7 +68,7 @@ class PostDetailAPIView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        serializer = PostSerializer(post)
+        serializer = PostDetailSerializer(post)
         return Response(serializer.data)
 
     def patch(self, request, post_id):
