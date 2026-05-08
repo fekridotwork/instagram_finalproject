@@ -1,5 +1,4 @@
 import secrets
-import time
 
 import uuid
 from accounts.models import User
