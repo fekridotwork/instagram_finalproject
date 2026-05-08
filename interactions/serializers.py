@@ -37,6 +37,16 @@ class CommentSerializer(serializers.ModelSerializer):
         return CommentSerializer(replies, many=True).data
 
     def validate_text(self, value):
-        if not value or not value.strip():
-            raise serializers.ValidationError("Comment text cannot be empty.")
+        value = value.strip()
+
+        if not value:
+            raise serializers.ValidationError(
+                "Comment cannot be empty."
+            )
+
+        if len(value) > 500:
+            raise serializers.ValidationError(
+                "Comment cannot be longer than 500 characters."
+            )
+
         return value
