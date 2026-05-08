@@ -1,4 +1,4 @@
-import random
+import secrets
 import time
 
 import uuid
@@ -18,7 +18,7 @@ redis_client = redis.Redis(
 )
 
 def generate_otp_code() -> str:
-    return str(random.randint(10000, 99999))
+    return str(secrets.randbelow(90000) + 10000)
 
 # build_otp_key for redis
 def build_otp_code(
