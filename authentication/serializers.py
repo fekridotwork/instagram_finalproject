@@ -1,3 +1,6 @@
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError as DjangoValidationError
+
 from rest_framework import serializers
 
 
@@ -9,12 +12,23 @@ class RequestOTPSerializer(serializers.Serializer):
         value = value.strip()
 
         if "@" in value:
-            return value.lower()
+            normalized_email = value.lower()
+
+            try:
+                validate_email(normalized_email)
+            except DjangoValidationError:
+                raise serializers.ValidationError(
+                    "Enter a valid email address."
+                )
+
+            return normalized_email
 
         if value.isdigit() and len(value) >= 10:
             return value
 
-        raise serializers.ValidationError("Identifier must be a valid email or phone number.")
+        raise serializers.ValidationError(
+            "Identifier must be a valid email or phone number."
+        )
 
 
 class VerifyOTPSerializer(serializers.Serializer):
