@@ -10,9 +10,9 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from rest_framework.permissions import IsAuthenticated
 
-from .sms import send_otp
-
 from django.conf import settings
+
+from .tasks import send_otp_task
 
 
 class RequestOTPAPIView(APIView):
@@ -26,7 +26,7 @@ class RequestOTPAPIView(APIView):
         code = generate_otp_code()
         store_otp(identifier, purpose, code)
 
-        send_otp(identifier, purpose, code)
+        send_otp_task.delay(identifier, purpose, code)
 
         data = {
             "message": "OTP sent successfully",
