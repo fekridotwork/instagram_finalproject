@@ -21,7 +21,7 @@ def generate_otp_code() -> str:
     return str(secrets.randbelow(90000) + 10000)
 
 # build_otp_key for redis
-def build_otp_code(
+def build_otp_key(
         identifier: str,
         purpose: str
     ) -> str:
@@ -35,7 +35,7 @@ def store_otp(
         code: str,
         ttl: int = OTP_TTL_SECONDS,
     ):
-    key = build_otp_code(identifier, purpose)
+    key = build_otp_key(identifier, purpose)
 
     redis_client.setex(key, ttl, code) # setex: set with expiration
 
@@ -44,7 +44,7 @@ def verify_otp(
         purpose: str,
         code: str
     ) -> bool:
-    key = build_otp_code(identifier, purpose)
+    key = build_otp_key(identifier, purpose)
     stored_code = redis_client.get(key)
 
     if not stored_code:
