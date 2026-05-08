@@ -2,7 +2,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from .services import generate_otp_code, store_otp, verify_otp, get_or_create_user_by_identifier
+from .services import (
+    generate_otp_code, 
+    store_otp, 
+    verify_otp, 
+    get_user_by_identifier,
+    user_exists_by_identifier,
+    create_user_by_identifier,
+)
 
 from .serializers import RequestOTPSerializer, VerifyOTPSerializer, LogoutSerializer
 
@@ -22,6 +29,20 @@ class RequestOTPAPIView(APIView):
 
         identifier = serializer.validated_data['identifier']
         purpose = serializer.validated_data['purpose']
+
+        user_exists = user_exists_by_identifier(identifier)
+
+        if purpose == "register" and user_exists:
+            return Response(
+                {"error": "User with this identifier already exists."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if purpose == "login" and not user_exists:
+            return Response(
+                {"error": "User with this identifier does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         code = generate_otp_code()
         store_otp(identifier, purpose, code)
@@ -51,11 +72,32 @@ class VerifyOTPAPIView(APIView):
             return Response(
                 {"error": "Invalid OTP"},
                 status=status.HTTP_400_BAD_REQUEST)
-        user, created = get_or_create_user_by_identifier(identifier)
+
+        if purpose == "register":
+            if user_exists_by_identifier(identifier):
+                return Response(
+                    {"error": "User with this identifier already exists."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            user = create_user_by_identifier(identifier)
+            is_new_user = True
+
+        elif purpose == "login":
+            user = get_user_by_identifier(identifier)
+
+            if user is None:
+                return Response(
+                    {"error": "User with this identifier does not exist."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            is_new_user = False
         refresh = RefreshToken.for_user(user)
+
         return Response(
             {"message": "OTP verified successfully",
-            "is_new_user": created,
+            "is_new_user": is_new_user,
              "access": str(refresh.access_token),
              "refresh": str(refresh),
              },
