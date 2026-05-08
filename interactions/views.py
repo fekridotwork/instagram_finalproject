@@ -113,6 +113,9 @@ class CommentListCreateAPIView(APIView):
 
         serializer.save(user=request.user, post=post)
 
+        post.comments_count += 1
+        post.save(update_fields=["comments_count"])
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class CommentDetailAPIView(APIView):
@@ -130,8 +133,14 @@ class CommentDetailAPIView(APIView):
                 {"error": "You do not have permission to delete this comment."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-
+        deleted_comments_count = 1 + comment.replies.filter(is_deleted=False).count()
         comment.soft_delete_with_replies()
+
+        comment.post.comments_count = max(
+            comment.post.comments_count - deleted_comments_count,
+            0,
+        )
+        comment.post.save(update_fields=["comments_count"])
 
         return Response(
             {"message": "Comment deleted successfully."},

@@ -8,6 +8,7 @@ class PostSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", read_only=True)
 
     likes_count = serializers.IntegerField(read_only=True)
+    comments_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Post
@@ -20,6 +21,7 @@ class PostSerializer(serializers.ModelSerializer):
             "caption",
             "visibility",
             "likes_count",
+            "comments_count",
             "is_deleted",
             "is_edited",
             "created_at",
