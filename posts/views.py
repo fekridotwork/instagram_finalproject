@@ -85,20 +85,23 @@ class PostDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
 
 User = get_user_model()
 
-class UserPostsAPIView(APIView):
+class UserPostsAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = PostListSerializer
 
-    def get(self, request, username):
-        user = get_object_or_404(
+    def get_user(self):
+        return get_object_or_404(
             User,
-            username=username,
+            username=self.kwargs["username"],
             is_active=True,
         )
+    def get_queryset(self):
+        user = self.get_user()
 
-        if user.profile.is_private and user != request.user:
-            return Response(
-                {"error": "This account is private."},
-                status=status.HTTP_403_FORBIDDEN,
+        if user.profile.is_private and user != self.request.user:
+            self.permission_denied(
+                self.request,
+                message="This account is private."
             )
 
         posts = (
@@ -108,9 +111,8 @@ class UserPostsAPIView(APIView):
             .annotate(likes_count=Count("received_likes"))
         )
 
-        if user != request.user:
+        if user != self.request.user:
             posts = posts.filter(visibility="public")
 
-        serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data)
+        return posts
 
