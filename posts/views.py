@@ -40,64 +40,48 @@ class PostListCreateAPIView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-class PostDetailAPIView(APIView):
+class PostDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
+    lookup_url_kwarg = "post_id"
 
-    # helper
-    def get_object(self, post_id):
-        return get_object_or_404(
+    def get_queryset(self):
+        return (
             Post.objects
+            .filter(is_deleted=False)
             .select_related("user")
-            .annotate(likes_count=Count("received_likes")),
-            id=post_id,
-            is_deleted=False,
+            .annotate(likes_count=Count("received_likes"))
         )
 
-    def get(self, request, post_id):
-        post = self.get_object(post_id)
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return PostDetailSerializer
+        return PostSerializer
+    
+    def get_object(self):
+        post = super().get_object()
 
-        if not can_view_post(request.user, post):
-            return Response(
-                {"error": "You do not have permission to view this post."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        serializer = PostDetailSerializer(post)
-        return Response(serializer.data)
-
-    def patch(self, request, post_id):
-        post = self.get_object(post_id)
-
-        if post.user != request.user:
-            return Response(
-                {"error": "You do not have permission to edit this post."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        serializer = PostSerializer(
-            post,
-            data=request.data,
-            partial=True,
-        )
-        serializer.is_valid(raise_exception=True)
+        if self.request.method == "GET":
+            if not can_view_post(self.request.user, post):
+                self.permission_denied(
+                    self.request,
+                    message="You do not have permission to view this post."
+                )
+        elif post.user != self.request.user:
+                self.permission_denied(
+                    self.request,
+                    message="You do not have permission to edit or delete this post."
+                )
+        return post
+    def perform_update(self, serializer):
+        print("DEBUG instance:", serializer.instance)
+        print("DEBUG instance user_id:", serializer.instance.user_id)
+        print("DEBUG validated data:", serializer.validated_data)
         serializer.save(is_edited=True)
+    
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.save(update_fields=["is_deleted"])
 
-        return Response(serializer.data)
-
-    def delete(self, request, post_id):
-        post = self.get_object(post_id)
-
-        if post.user != request.user:
-            return Response(
-                {"error": "You do not have permission to delete this post."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        post.is_deleted = True
-        post.save(update_fields=["is_deleted"])
-
-        return Response(
-            {"message": "Post has been deleted successfully."},
-            status=status.HTTP_200_OK,
-        )
 
 User = get_user_model()
 
