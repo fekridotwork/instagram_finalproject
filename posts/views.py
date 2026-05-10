@@ -1,7 +1,7 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import generics, status
 
 from .models import Post
 from .serializers import (
@@ -18,34 +18,28 @@ from django.db.models import Count, Q
 from posts.permissions import can_view_post
 
 
-class PostListCreateAPIView(APIView):
+class PostListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-
-        posts = (
+    def get_queryset(self):
+        return (
             Post.objects
             .filter(is_deleted=False)
             .select_related("user")
             .annotate(likes_count=Count("received_likes"))
             .filter(
-                Q(user=request.user) |
+                Q(user=self.request.user) |
                 Q(user__profile__is_private=False, visibility="public")
             )
         )
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return PostListSerializer
+        return PostSerializer
 
-        serializer = PostListSerializer(posts, many=True)
-        return Response(serializer.data)
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
-    def post(self, request):
-        serializer = PostSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(user=request.user)
-
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-        )
 class PostDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -135,3 +129,4 @@ class UserPostsAPIView(APIView):
 
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
+
