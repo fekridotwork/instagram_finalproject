@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import status
+from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -66,57 +66,41 @@ class PostLikeAPIView(APIView):
             status=status.HTTP_200_OK,
         )
 
-class CommentListCreateAPIView(APIView):
+class CommentListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = CommentSerializer
 
-    def get(self, request, post_id):
-        post = get_object_or_404(Post, id=post_id, is_deleted=False)
+    def get_post(self):
+        post = get_object_or_404(Post, id=self.kwargs["post_id"], is_deleted=False)
 
-        if not can_view_post(request.user, post):
-            return Response(
-                {"error": "You do not have permission to view comments on this post."},
-                status=status.HTTP_403_FORBIDDEN,
+        if not can_view_post(self.request.user, post):
+            self.permission_denied(
+                self.request,
+                message="You do not have permission to access comments on this post.",
             )
+        return post
+    def get_queryset(self):
+        post = self.get_post()
 
-        comments = (
+        return (
             Comment.objects
             .filter(post=post, parent__isnull=True, is_deleted=False)
             .select_related("user")
         )
-
-        serializer = CommentSerializer(comments, many=True)
-        return Response(serializer.data)
-
-    def post(self, request, post_id):
-        post = get_object_or_404(
-            Post,
-            id=post_id,
-            is_deleted=False
-        )
-
-        if not can_view_post(request.user, post):
-            return Response(
-                {"error": "You do not have permission to comment on this post."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        serializer = CommentSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
+    
+    def perform_create(self, serializer):
+        post = self.get_post()
         parent = serializer.validated_data.get("parent")
 
         if parent and parent.post_id != post.id:
-            return Response(
-                {"error": "Parent comment does not belong to this post."},
-                status=status.HTTP_400_BAD_REQUEST,
+            raise serializer.ValidationError(
+                {"parent": "Parent comment does not belong to this post."}
             )
 
-        serializer.save(user=request.user, post=post)
+        serializer.save(user=self.request.user, post=post)
 
         post.comments_count += 1
         post.save(update_fields=["comments_count"])
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class CommentDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]
