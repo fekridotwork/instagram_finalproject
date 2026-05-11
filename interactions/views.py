@@ -116,26 +116,24 @@ class CommentDetailAPIView(generics.DestroyAPIView):
         ):
             self.permission_denied(
                 self.request,
-                message="You do not have permission to delete this comment."
+                message="You do not have permission to delete this comment.",
             )
+
         return comment
-    
+
+    def count_comment_tree(self, comment):
+        count = 1
+
+        for reply in comment.replies.filter(is_deleted=False):
+            count += self.count_comment_tree(reply)
+
+        return count
+
     def perform_destroy(self, instance):
-        deleted_count = 1
+        deleted_count = self.count_comment_tree(instance)
 
-        if instance.parent is None:
-            replies_count = Comment.objects.filter(
-                parent=instance,
-                is_deleted=False,
-            ).update(is_deleted=True)
-            
-            deleted_count += replies_count
-
-        instance.is_deleted = True
-        instance.save(update_fields=["is_deleted"])
+        instance.soft_delete_with_replies()
 
         post = instance.post
         post.comments_count = max(post.comments_count - deleted_count, 0)
         post.save(update_fields=["comments_count"])
-
-    
