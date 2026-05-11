@@ -1,3 +1,6 @@
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, viewsets
 
@@ -14,6 +17,8 @@ from django.contrib.auth import get_user_model
 
 from django.db.models import Count, Q
 from posts.permissions import can_view_post
+
+from interactions.models import Like
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -73,6 +78,32 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.is_deleted = True
         instance.save(update_fields=["is_deleted"])
+    
+    @action(detail=True, methods=["post"], url_path="like")
+    def like(self, request, post_id=None):
+        post = self.get_object()
+
+        if not can_view_post(request.user, post):
+            self.permission_denied(
+                request,
+                message="You do not have permission to like this post.",
+            )
+
+        like, created = Like.objects.get_or_create(
+            user=request.user,
+            post=post,
+        )
+
+        if not created:
+            return Response(
+                {"message": "You have already liked this post."},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            {"message": "Post liked successfully."},
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class UserPostsAPIView(generics.ListAPIView):

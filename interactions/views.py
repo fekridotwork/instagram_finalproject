@@ -11,61 +11,6 @@ from .serializers import CommentSerializer
 from posts.permissions import can_view_post
 
 
-class PostLikeAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, post_id):
-        post = get_object_or_404(Post, id=post_id, is_deleted=False)
-
-        if not can_view_post(request.user, post):
-            return Response(
-                {"error": "You do not have permission to like this post."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        like, created = Like.objects.get_or_create(
-            user=request.user,
-            post=post,
-        )
-
-        if not created:
-            return Response(
-                {"message": "You have already liked this post."},
-                status=status.HTTP_200_OK,
-            )
-
-        return Response(
-            {"message": "Post liked successfully."},
-            status=status.HTTP_201_CREATED,
-        )
-
-    def delete(self, request, post_id):
-        post = get_object_or_404(Post, id=post_id, is_deleted=False)
-
-        if not can_view_post(request.user, post):
-            return Response(
-                {"error": "You do not have permission to unlike this post."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        like = Like.objects.filter(
-            user=request.user,
-            post=post,
-        ).first()
-
-        if not like:
-            return Response(
-                {"message": "You have not liked this post."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        like.delete()
-
-        return Response(
-            {"message": "Post unliked successfully."},
-            status=status.HTTP_200_OK,
-        )
-
 class CommentListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = CommentSerializer
