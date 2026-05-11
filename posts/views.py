@@ -1,7 +1,5 @@
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import generics, status
+from rest_framework import generics, viewsets
 
 from .models import Post
 from .serializers import (
@@ -17,73 +15,65 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from posts.permissions import can_view_post
 
-
-class PostListCreateAPIView(generics.ListCreateAPIView):
+class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
+    lookup_field = "id"
+    lookup_url_kwarg = "post_id"
 
     def get_queryset(self):
-        return (
+        queryset = (
             Post.objects
             .filter(is_deleted=False)
             .select_related("user")
             .annotate(likes_count=Count("received_likes"))
-            .filter(
-                Q(user=self.request.user) |
-                Q(user__profile__is_private=False, visibility="public")
-            )
         )
+
+        if self.action == "list":
+            queryset = queryset.filter(
+                Q(user=self.request.user)
+                | Q(user__profile__is_private=False, visibility="public")
+            )
+
+        return queryset
+
     def get_serializer_class(self):
-        if self.request.method == "GET":
+        if self.action == "list":
             return PostListSerializer
+
+        if self.action == "retrieve":
+            return PostDetailSerializer
+
         return PostSerializer
+
+    def get_object(self):
+        post = super().get_object()
+
+        if self.action == "retrieve":
+            if not can_view_post(self.request.user, post):
+                self.permission_denied(
+                    self.request,
+                    message="You do not have permission to view this post.",
+                )
+
+        elif self.action in ["update", "partial_update", "destroy"]:
+            if post.user != self.request.user:
+                self.permission_denied(
+                    self.request,
+                    message="You do not have permission to edit or delete this post.",
+                )
+
+        return post
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-class PostDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated]
-    lookup_url_kwarg = "post_id"
-
-    def get_queryset(self):
-        return (
-            Post.objects
-            .filter(is_deleted=False)
-            .select_related("user")
-            .annotate(likes_count=Count("received_likes"))
-        )
-
-    def get_serializer_class(self):
-        if self.request.method == "GET":
-            return PostDetailSerializer
-        return PostSerializer
-    
-    def get_object(self):
-        post = super().get_object()
-
-        if self.request.method == "GET":
-            if not can_view_post(self.request.user, post):
-                self.permission_denied(
-                    self.request,
-                    message="You do not have permission to view this post."
-                )
-        elif post.user != self.request.user:
-                self.permission_denied(
-                    self.request,
-                    message="You do not have permission to edit or delete this post."
-                )
-        return post
     def perform_update(self, serializer):
-        print("DEBUG instance:", serializer.instance)
-        print("DEBUG instance user_id:", serializer.instance.user_id)
-        print("DEBUG validated data:", serializer.validated_data)
         serializer.save(is_edited=True)
-    
+
     def perform_destroy(self, instance):
         instance.is_deleted = True
         instance.save(update_fields=["is_deleted"])
 
-
-User = get_user_model()
 
 class UserPostsAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
