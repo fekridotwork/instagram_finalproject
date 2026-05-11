@@ -102,31 +102,40 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
         post.comments_count += 1
         post.save(update_fields=["comments_count"])
 
-class CommentDetailAPIView(APIView):
+class CommentDetailAPIView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
+    queryset = Comment.objects.filter(is_deleted=False)
+    lookup_url_kwarg = "comment_id"
 
-    def delete(self, request, comment_id):
-        comment = get_object_or_404(
-            Comment.objects.select_related("user", "post", "post__user"),
-            id=comment_id,
-            is_deleted=False,
-        )
+    def get_object(self):
+        comment = super().get_object()
 
-        if comment.user != request.user and comment.post.user != request.user:
-            return Response(
-                {"error": "You do not have permission to delete this comment."},
-                status=status.HTTP_403_FORBIDDEN,
+        if (
+            comment.user != self.request.user
+            and comment.post.user != self.request.user
+        ):
+            self.permission_denied(
+                self.request,
+                message="You do not have permission to delete this comment."
             )
-        deleted_comments_count = 1 + comment.replies.filter(is_deleted=False).count()
-        comment.soft_delete_with_replies()
+        return comment
+    
+    def perform_destroy(self, instance):
+        deleted_count = 1
 
-        comment.post.comments_count = max(
-            comment.post.comments_count - deleted_comments_count,
-            0,
-        )
-        comment.post.save(update_fields=["comments_count"])
+        if instance.parent is None:
+            replies_count = Comment.objects.filter(
+                parent=instance,
+                is_deleted=False,
+            ).update(is_deleted=True)
+            
+            deleted_count += replies_count
 
-        return Response(
-            {"message": "Comment deleted successfully."},
-            status=status.HTTP_200_OK,
-        )
+        instance.is_deleted = True
+        instance.save(update_fields=["is_deleted"])
+
+        post = instance.post
+        post.comments_count = max(post.comments_count - deleted_count, 0)
+        post.save(update_fields=["comments_count"])
+
+    
