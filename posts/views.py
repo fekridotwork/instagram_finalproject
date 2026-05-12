@@ -24,7 +24,7 @@ from posts.permissions import can_view_post
 
 from interactions.models import Like, SavePost
 
-from django.utils import timezone
+from .services import sync_post_hashtags
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -76,10 +76,13 @@ class PostViewSet(viewsets.ModelViewSet):
         return post
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        post = serializer.save(user=self.request.user)
+        sync_post_hashtags(post)
 
     def perform_update(self, serializer):
-        serializer.save(is_edited=True)
+        post = serializer.save(is_edited=True)
+        sync_post_hashtags(post)
+
 
     def perform_destroy(self, instance):
         instance.is_deleted = True
