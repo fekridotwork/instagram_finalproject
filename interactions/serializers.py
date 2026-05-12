@@ -66,8 +66,8 @@ class FollowUserSerializer(serializers.ModelSerializer):
         read_only=True,
     )
 
-    followers_count = serializers.IntegerField(read_only=True)
-    following_count = serializers.IntegerField(read_only=True)
+    # followers_count = serializers.IntegerField(read_only=True)
+    # following_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = User
@@ -77,6 +77,4 @@ class FollowUserSerializer(serializers.ModelSerializer):
             "username",
             "display_name",
             "is_private",
-            "followers_count",
-            "following_count",
         ]
