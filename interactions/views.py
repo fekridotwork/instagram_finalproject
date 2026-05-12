@@ -8,8 +8,9 @@ from rest_framework.views import APIView
 from accounts.models import User
 from posts.models import Post
 from posts.permissions import can_view_post
+from posts.serializers import PostListSerializer
 
-from .models import Comment, Follow
+from .models import Comment, Follow, SavePost
 from .serializers import CommentSerializer, FollowUserSerializer
 
 
@@ -159,3 +160,17 @@ class MyFollowingListAPIView(generics.ListAPIView):
         ).select_related("following")
 
         return [relation.following for relation in follow_relations]
+class MySavedPostsListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PostListSerializer
+
+    def get_queryset(self):
+        saved_posts = (
+            SavePost.objects
+            .filter(user=self.request.user)
+            .select_related("post", "post__user")
+        )
+
+        posts = [saved_post.post for saved_post in saved_posts]
+
+        return posts

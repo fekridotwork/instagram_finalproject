@@ -4,6 +4,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, viewsets
 
+from accounts.models import User
+
 from .models import Post
 from .serializers import (
     PostSerializer,
@@ -18,7 +20,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from posts.permissions import can_view_post
 
-from interactions.models import Like
+from interactions.models import Like, SavePost
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -115,6 +117,50 @@ class PostViewSet(viewsets.ModelViewSet):
 
         return Response(
             {"message": "Post unliked successfully."},
+            status=status.HTTP_200_OK,
+        )
+    @action(detail=True, methods=["post", "delete"], url_path="save")
+    def save(self, request, post_id=None):
+        post = self.get_object()
+
+        if not can_view_post(request.user, post):
+            self.permission_denied(
+                request,
+                message="You do not have permission to save this post.",
+            )
+
+        if request.method == "POST":
+            saved_post, created = SavePost.objects.get_or_create(
+                user=request.user,
+                post=post,
+            )
+
+            if not created:
+                return Response(
+                    {"message": "You have already saved this post."},
+                    status=status.HTTP_200_OK,
+                )
+
+            return Response(
+                {"message": "Post saved successfully."},
+                status=status.HTTP_201_CREATED,
+            )
+
+        saved_post = SavePost.objects.filter(
+            user=request.user,
+            post=post,
+        ).first()
+
+        if not saved_post:
+            return Response(
+                {"message": "You have not saved this post."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        saved_post.delete()
+
+        return Response(
+            {"message": "Post unsaved successfully."},
             status=status.HTTP_200_OK,
         )
 
