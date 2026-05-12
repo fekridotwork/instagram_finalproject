@@ -26,5 +26,6 @@ urlpatterns = [
     path('api/auth/', include("authentication.urls")),
     path("api/profile/", include("accounts.urls")),
     path('api/posts/', include("posts.urls")),
+    path('api/', include("interactions.urls")),
     path('api/users/<str:username>/posts/', UserPostsAPIView.as_view(), name='user_posts'),
 ]
