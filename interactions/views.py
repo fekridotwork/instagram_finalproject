@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import status
+from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,138 +11,74 @@ from .serializers import CommentSerializer
 from posts.permissions import can_view_post
 
 
-class PostLikeAPIView(APIView):
+class CommentListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = CommentSerializer
 
-    def post(self, request, post_id):
-        post = get_object_or_404(Post, id=post_id, is_deleted=False)
+    def get_post(self):
+        post = get_object_or_404(Post, id=self.kwargs["post_id"], is_deleted=False)
 
-        if not can_view_post(request.user, post):
-            return Response(
-                {"error": "You do not have permission to like this post."},
-                status=status.HTTP_403_FORBIDDEN,
+        if not can_view_post(self.request.user, post):
+            self.permission_denied(
+                self.request,
+                message="You do not have permission to access comments on this post.",
             )
+        return post
+    def get_queryset(self):
+        post = self.get_post()
 
-        like, created = Like.objects.get_or_create(
-            user=request.user,
-            post=post,
-        )
-
-        if not created:
-            return Response(
-                {"message": "You have already liked this post."},
-                status=status.HTTP_200_OK,
-            )
-
-        return Response(
-            {"message": "Post liked successfully."},
-            status=status.HTTP_201_CREATED,
-        )
-
-    def delete(self, request, post_id):
-        post = get_object_or_404(Post, id=post_id, is_deleted=False)
-
-        if not can_view_post(request.user, post):
-            return Response(
-                {"error": "You do not have permission to unlike this post."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        like = Like.objects.filter(
-            user=request.user,
-            post=post,
-        ).first()
-
-        if not like:
-            return Response(
-                {"message": "You have not liked this post."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        like.delete()
-
-        return Response(
-            {"message": "Post unliked successfully."},
-            status=status.HTTP_200_OK,
-        )
-
-class CommentListCreateAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, post_id):
-        post = get_object_or_404(Post, id=post_id, is_deleted=False)
-
-        if not can_view_post(request.user, post):
-            return Response(
-                {"error": "You do not have permission to view comments on this post."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        comments = (
+        return (
             Comment.objects
             .filter(post=post, parent__isnull=True, is_deleted=False)
             .select_related("user")
         )
-
-        serializer = CommentSerializer(comments, many=True)
-        return Response(serializer.data)
-
-    def post(self, request, post_id):
-        post = get_object_or_404(
-            Post,
-            id=post_id,
-            is_deleted=False
-        )
-
-        if not can_view_post(request.user, post):
-            return Response(
-                {"error": "You do not have permission to comment on this post."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        serializer = CommentSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
+    
+    def perform_create(self, serializer):
+        post = self.get_post()
         parent = serializer.validated_data.get("parent")
 
         if parent and parent.post_id != post.id:
-            return Response(
-                {"error": "Parent comment does not belong to this post."},
-                status=status.HTTP_400_BAD_REQUEST,
+            raise serializer.ValidationError(
+                {"parent": "Parent comment does not belong to this post."}
             )
 
-        serializer.save(user=request.user, post=post)
+        serializer.save(user=self.request.user, post=post)
 
         post.comments_count += 1
         post.save(update_fields=["comments_count"])
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-class CommentDetailAPIView(APIView):
+class CommentDetailAPIView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
+    queryset = Comment.objects.filter(is_deleted=False)
+    lookup_url_kwarg = "comment_id"
 
-    def delete(self, request, comment_id):
-        comment = get_object_or_404(
-            Comment.objects.select_related("user", "post", "post__user"),
-            id=comment_id,
-            is_deleted=False,
-        )
+    def get_object(self):
+        comment = super().get_object()
 
-        if comment.user != request.user and comment.post.user != request.user:
-            return Response(
-                {"error": "You do not have permission to delete this comment."},
-                status=status.HTTP_403_FORBIDDEN,
+        if (
+            comment.user != self.request.user
+            and comment.post.user != self.request.user
+        ):
+            self.permission_denied(
+                self.request,
+                message="You do not have permission to delete this comment.",
             )
-        deleted_comments_count = 1 + comment.replies.filter(is_deleted=False).count()
-        comment.soft_delete_with_replies()
 
-        comment.post.comments_count = max(
-            comment.post.comments_count - deleted_comments_count,
-            0,
-        )
-        comment.post.save(update_fields=["comments_count"])
+        return comment
 
-        return Response(
-            {"message": "Comment deleted successfully."},
-            status=status.HTTP_200_OK,
-        )
+    def count_comment_tree(self, comment):
+        count = 1
+
+        for reply in comment.replies.filter(is_deleted=False):
+            count += self.count_comment_tree(reply)
+
+        return count
+
+    def perform_destroy(self, instance):
+        deleted_count = self.count_comment_tree(instance)
+
+        instance.soft_delete_with_replies()
+
+        post = instance.post
+        post.comments_count = max(post.comments_count - deleted_count, 0)
+        post.save(update_fields=["comments_count"])

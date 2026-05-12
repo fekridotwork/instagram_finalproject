@@ -1,7 +1,8 @@
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status 
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import generics, viewsets
 
 from .models import Post
 from .serializers import (
@@ -17,110 +18,124 @@ from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from posts.permissions import can_view_post
 
+from interactions.models import Like
 
-class PostListCreateAPIView(APIView):
+class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
+    lookup_field = "id"
+    lookup_url_kwarg = "post_id"
 
-    def get(self, request):
-
-        posts = (
+    def get_queryset(self):
+        queryset = (
             Post.objects
             .filter(is_deleted=False)
             .select_related("user")
             .annotate(likes_count=Count("received_likes"))
-            .filter(
-                Q(user=request.user) |
-                Q(user__profile__is_private=False, visibility="public")
-            )
         )
 
-        serializer = PostListSerializer(posts, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = PostSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(user=request.user)
-
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-        )
-class PostDetailAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    # helper
-    def get_object(self, post_id):
-        return get_object_or_404(
-            Post.objects
-            .select_related("user")
-            .annotate(likes_count=Count("received_likes")),
-            id=post_id,
-            is_deleted=False,
-        )
-
-    def get(self, request, post_id):
-        post = self.get_object(post_id)
-
-        if not can_view_post(request.user, post):
-            return Response(
-                {"error": "You do not have permission to view this post."},
-                status=status.HTTP_403_FORBIDDEN,
+        if self.action == "list":
+            queryset = queryset.filter(
+                Q(user=self.request.user)
+                | Q(user__profile__is_private=False, visibility="public")
             )
 
-        serializer = PostDetailSerializer(post)
-        return Response(serializer.data)
+        return queryset
 
-    def patch(self, request, post_id):
-        post = self.get_object(post_id)
+    def get_serializer_class(self):
+        if self.action == "list":
+            return PostListSerializer
 
-        if post.user != request.user:
-            return Response(
-                {"error": "You do not have permission to edit this post."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        serializer = PostSerializer(
-            post,
-            data=request.data,
-            partial=True,
-        )
-        serializer.is_valid(raise_exception=True)
+        if self.action == "retrieve":
+            return PostDetailSerializer
+
+        return PostSerializer
+
+    def get_object(self):
+        post = super().get_object()
+
+        if self.action == "retrieve":
+            if not can_view_post(self.request.user, post):
+                self.permission_denied(
+                    self.request,
+                    message="You do not have permission to view this post.",
+                )
+
+        elif self.action in ["update", "partial_update", "destroy"]:
+            if post.user != self.request.user:
+                self.permission_denied(
+                    self.request,
+                    message="You do not have permission to edit or delete this post.",
+                )
+
+        return post
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
         serializer.save(is_edited=True)
 
-        return Response(serializer.data)
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.save(update_fields=["is_deleted"])
+    
+    @action(detail=True, methods=["post", "delete"], url_path="like")
+    def like(self, request, post_id=None):
+        post = self.get_object()
 
-    def delete(self, request, post_id):
-        post = self.get_object(post_id)
-
-        if post.user != request.user:
-            return Response(
-                {"error": "You do not have permission to delete this post."},
-                status=status.HTTP_403_FORBIDDEN,
+        if request.method == "POST":
+            like, created = Like.objects.get_or_create(
+                user=request.user,
+                post=post,
             )
-        post.is_deleted = True
-        post.save(update_fields=["is_deleted"])
+
+            if not created:
+                return Response(
+                    {"message": "You have already liked this post."},
+                    status=status.HTTP_200_OK,
+                )
+
+            return Response(
+                {"message": "Post liked successfully."},
+                status=status.HTTP_201_CREATED,
+            )
+
+        like = Like.objects.filter(
+            user=request.user,
+            post=post,
+        ).first()
+
+        if not like:
+            return Response(
+                {"message": "You have not liked this post."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        like.delete()
 
         return Response(
-            {"message": "Post has been deleted successfully."},
+            {"message": "Post unliked successfully."},
             status=status.HTTP_200_OK,
         )
 
-User = get_user_model()
 
-class UserPostsAPIView(APIView):
+class UserPostsAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = PostListSerializer
 
-    def get(self, request, username):
-        user = get_object_or_404(
+    def get_user(self):
+        return get_object_or_404(
             User,
-            username=username,
+            username=self.kwargs["username"],
             is_active=True,
         )
+    def get_queryset(self):
+        user = self.get_user()
 
-        if user.profile.is_private and user != request.user:
-            return Response(
-                {"error": "This account is private."},
-                status=status.HTTP_403_FORBIDDEN,
+        if user.profile.is_private and user != self.request.user:
+            self.permission_denied(
+                self.request,
+                message="This account is private."
             )
 
         posts = (
@@ -130,8 +145,8 @@ class UserPostsAPIView(APIView):
             .annotate(likes_count=Count("received_likes"))
         )
 
-        if user != request.user:
+        if user != self.request.user:
             posts = posts.filter(visibility="public")
 
-        serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data)
+        return posts
+

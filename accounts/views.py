@@ -1,28 +1,11 @@
-from django.shortcuts import render
-
+from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from .serializers import ProfileSerializer
 
-class ProfileAPIView(APIView):
+class ProfileAPIView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = ProfileSerializer
 
-    def get(self,request):
-        profile = request.user.profile
-        serializer = ProfileSerializer(profile)
-        return Response(serializer.data)
-
-    def patch(self,request):
-        profile = request.user.profile
-
-        serializer = ProfileSerializer(
-            profile,
-            data=request.data,
-            partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        return Response(serializer.data)
+    def get_object(self):
+        return self.request.user.profile
