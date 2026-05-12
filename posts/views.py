@@ -1,3 +1,5 @@
+from datetime import timezone
+
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status 
@@ -229,4 +231,25 @@ class StoryFeedAPIView(generics.ListAPIView):
             )
             .select_related("user")
         )
+    
+class PostHashtagSearchAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PostListSerializer
 
+    def get_queryset(self):
+        hashtag = self.request.query_params.get("hashtag")
+
+        if not hashtag:
+            return Post.objects.none()
+
+        hashtag = hashtag.lower().lstrip("#")
+
+        return (
+            Post.objects
+            .filter(
+                hashtags__name=hashtag,
+                is_deleted=False,
+            )
+            .select_related("user")
+            .annotate(likes_count=Count("received_likes"))
+        )
