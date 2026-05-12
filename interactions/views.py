@@ -1,14 +1,17 @@
 from django.shortcuts import get_object_or_404
+
 from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+ 
+from accounts.models import User
 from posts.models import Post
-from .models import Like, Comment
-from .serializers import CommentSerializer
-
 from posts.permissions import can_view_post
+
+from .models import Comment, Follow
+from .serializers import CommentSerializer, FollowUserSerializer
+
 
 
 class CommentListCreateAPIView(generics.ListCreateAPIView):
@@ -82,3 +85,77 @@ class CommentDetailAPIView(generics.DestroyAPIView):
         post = instance.post
         post.comments_count = max(post.comments_count - deleted_count, 0)
         post.save(update_fields=["comments_count"])
+
+class UserFollowAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_target_user(self, user_id):
+        return get_object_or_404(User, id=user_id, is_active=True)
+
+    def post(self, request, user_id):
+        target_user = self.get_target_user(user_id)
+
+        if target_user == request.user:
+            return Response(
+                {"message": "You cannot follow yourself."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        follow, created = Follow.objects.get_or_create(
+            follower=request.user,
+            following=target_user,
+        )
+
+        if not created:
+            return Response(
+                {"message": "You already follow this user."},
+                status=status.HTTP_200_OK,
+            )
+
+        return Response(
+            {"message": "User followed successfully."},
+            status=status.HTTP_201_CREATED,
+        )
+
+    def delete(self, request, user_id):
+        target_user = self.get_target_user(user_id)
+
+        follow = Follow.objects.filter(
+            follower=request.user,
+            following=target_user,
+        ).first()
+
+        if not follow:
+            return Response(
+                {"message": "You do not follow this user."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        follow.delete()
+
+        return Response(
+            {"message": "User unfollowed successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+class MyFollowersListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowUserSerializer
+
+    def get_queryset(self):
+        follow_relations = Follow.objects.filter(
+            following=self.request.user,
+        ).select_related("follower")
+
+        return [relation.follower for relation in follow_relations]
+    
+class MyFollowingListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowUserSerializer
+
+    def get_queryset(self):
+        follow_relations = Follow.objects.filter(
+            follower=self.request.user,
+        ).select_related("following")
+
+        return [relation.following for relation in follow_relations]
