@@ -6,11 +6,12 @@ from rest_framework import generics, viewsets
 
 from accounts.models import User
 
-from .models import Post
+from .models import Post, Story
 from .serializers import (
     PostSerializer,
     PostListSerializer,
     PostDetailSerializer,
+    StorySerializer,
 )
 
 from django.shortcuts import get_object_or_404
@@ -18,9 +19,12 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 
 from django.db.models import Count, Q
+
 from posts.permissions import can_view_post
 
 from interactions.models import Like, SavePost
+
+from django.utils import timezone
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -195,4 +199,31 @@ class UserPostsAPIView(generics.ListAPIView):
             posts = posts.filter(visibility="public")
 
         return posts
+    
+class StoryCreateAPIView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = StorySerializer
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class StoryFeedAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = StorySerializer
+
+    def get_queryset(self):
+        following_users = self.request.user.following_relations.values_list(
+            "following_id",
+            flat=True,
+        )
+
+        return (
+            Story.objects
+            .filter(
+                Q(user_id__in=following_users) | Q(user=self.request.user),
+                is_deleted=False,
+                expires_at__gt=timezone.now(),
+            )
+            .select_related("user")
+        )
 
