@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from accounts.models import User
 from .models import Comment
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -50,3 +51,32 @@ class CommentSerializer(serializers.ModelSerializer):
             )
 
         return value
+    
+class FollowUserSerializer(serializers.ModelSerializer):
+    display_name = serializers.CharField(
+        source="profile.display_name",
+        read_only=True,
+    )
+    profile_image = serializers.ImageField(
+        source="profile.profile_image",
+        read_only=True,
+    )
+    is_private = serializers.BooleanField(
+        source="profile.is_private",
+        read_only=True,
+    )
+
+    followers_count = serializers.IntegerField(read_only=True)
+    following_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "profile_image",
+            "username",
+            "display_name",
+            "is_private",
+            "followers_count",
+            "following_count",
+        ]
