@@ -28,4 +28,5 @@ urlpatterns = [
     path('api/posts/', include("posts.urls")),
     path('api/', include("interactions.urls")),
     path('api/users/<str:username>/posts/', UserPostsAPIView.as_view(), name='user_posts'),
+    path("api/stories/", include("posts.story_urls")),
 ]

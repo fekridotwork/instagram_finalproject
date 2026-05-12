@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from interactions.serializers import CommentSerializer
-from .models import Post
+from .models import Post, Story
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -65,3 +65,30 @@ class PostDetailSerializer(PostSerializer):
             .prefetch_related("replies")
         )
         return CommentSerializer(comments, many=True).data
+
+class StorySerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source="user.id", read_only=True)
+    username = serializers.CharField(source="user.username", read_only=True)
+
+    class Meta:
+        model = Story
+        fields = [
+            "id",
+            "user_id",
+            "username",
+            "media",
+            "media_type",
+            "text",
+            "visibility",
+            "is_deleted",
+            "expires_at",
+            "created_at",
+        ]
+        read_only_fields = [
+            "id",
+            "user_id",
+            "username",
+            "is_deleted",
+            "expires_at",
+            "created_at",
+        ]
