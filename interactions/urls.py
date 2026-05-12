@@ -4,6 +4,7 @@ from .views import (
     UserFollowAPIView,
     MyFollowersListAPIView,
     MyFollowingListAPIView,
+    MySavedPostsListAPIView
 )
 
 urlpatterns = [
@@ -21,5 +22,10 @@ urlpatterns = [
         "me/following/",
         MyFollowingListAPIView.as_view(),
         name="my-following",
+    ),
+    path(
+        "me/saved-posts/",
+        MySavedPostsListAPIView.as_view(),
+        name="my-saved-posts",
     ),
 ]
