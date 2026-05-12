@@ -79,30 +79,43 @@ class PostViewSet(viewsets.ModelViewSet):
         instance.is_deleted = True
         instance.save(update_fields=["is_deleted"])
     
-    @action(detail=True, methods=["post"], url_path="like")
+    @action(detail=True, methods=["post", "delete"], url_path="like")
     def like(self, request, post_id=None):
         post = self.get_object()
 
-        if not can_view_post(request.user, post):
-            self.permission_denied(
-                request,
-                message="You do not have permission to like this post.",
+        if request.method == "POST":
+            like, created = Like.objects.get_or_create(
+                user=request.user,
+                post=post,
             )
 
-        like, created = Like.objects.get_or_create(
+            if not created:
+                return Response(
+                    {"message": "You have already liked this post."},
+                    status=status.HTTP_200_OK,
+                )
+
+            return Response(
+                {"message": "Post liked successfully."},
+                status=status.HTTP_201_CREATED,
+            )
+
+        like = Like.objects.filter(
             user=request.user,
             post=post,
-        )
+        ).first()
 
-        if not created:
+        if not like:
             return Response(
-                {"message": "You have already liked this post."},
-                status=status.HTTP_200_OK,
+                {"message": "You have not liked this post."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
+        like.delete()
+
         return Response(
-            {"message": "Post liked successfully."},
-            status=status.HTTP_201_CREATED,
+            {"message": "Post unliked successfully."},
+            status=status.HTTP_200_OK,
         )
 
 
