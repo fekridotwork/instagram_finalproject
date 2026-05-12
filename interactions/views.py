@@ -1,8 +1,6 @@
-from django.db.models import Count
 from django.shortcuts import get_object_or_404
 
-from rest_framework import generics, serializers, status, viewsets
-from rest_framework.decorators import action
+from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -88,17 +86,14 @@ class CommentDetailAPIView(generics.DestroyAPIView):
         post.comments_count = max(post.comments_count - deleted_count, 0)
         post.save(update_fields=["comments_count"])
 
-class FollowViewSet(viewsets.ViewSet):
+class UserFollowAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get_user_queryset(self):
-        return User.objects.select_related("profile").annotate(
-            followers_count=Count("follower_relations"),
-            following_count=Count("following_relations"),
-        )
-    @action(detail=True, methods=["post"])
-    def follow(self, request, pk=None):
-        target_user = get_object_or_404(self.get_user_queryset(), pk=pk)
+    def get_target_user(self, user_id):
+        return get_object_or_404(User, id=user_id, is_active=True)
+
+    def post(self, request, user_id):
+        target_user = self.get_target_user(user_id)
 
         if target_user == request.user:
             return Response(
@@ -122,9 +117,8 @@ class FollowViewSet(viewsets.ViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    @action(detail=True, methods=["delete"])
-    def unfollow(self, request, pk=None):
-        target_user = get_object_or_404(self.get_user_queryset(), pk=pk)
+    def delete(self, request, user_id):
+        target_user = self.get_target_user(user_id)
 
         follow = Follow.objects.filter(
             follower=request.user,
@@ -143,26 +137,25 @@ class FollowViewSet(viewsets.ViewSet):
             {"message": "User unfollowed successfully."},
             status=status.HTTP_200_OK,
         )
-    @action(detail=False, methods=["get"])
-    def followers(self, request):
-        
+
+class MyFollowersListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowUserSerializer
+
+    def get_queryset(self):
         follow_relations = Follow.objects.filter(
-            following=request.user,
+            following=self.request.user,
         ).select_related("follower")
 
-        users = [relation.follower for relation in follow_relations]
+        return [relation.follower for relation in follow_relations]
+    
+class MyFollowingListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowUserSerializer
 
-        serializer = FollowUserSerializer(users, many=True)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=["get"])
-    def following(self, request):
-
+    def get_queryset(self):
         follow_relations = Follow.objects.filter(
-            follower=request.user,
+            follower=self.request.user,
         ).select_related("following")
 
-        users = [relation.following for relation in follow_relations]
-
-        serializer = FollowUserSerializer(users, many=True)
-        return Response(serializer.data)
+        return [relation.following for relation in follow_relations]
