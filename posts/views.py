@@ -1,3 +1,5 @@
+from datetime import timezone
+
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status 
@@ -5,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, viewsets
 
 from accounts.models import User
+from interactions.serializers import FollowUserSerializer
 
 from .models import Post, Story
 from .serializers import (
@@ -24,7 +27,7 @@ from posts.permissions import can_view_post
 
 from interactions.models import Like, SavePost
 
-from django.utils import timezone
+from .services import sync_post_hashtags
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -76,10 +79,13 @@ class PostViewSet(viewsets.ModelViewSet):
         return post
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        post = serializer.save(user=self.request.user)
+        sync_post_hashtags(post)
 
     def perform_update(self, serializer):
-        serializer.save(is_edited=True)
+        post = serializer.save(is_edited=True)
+        sync_post_hashtags(post)
+
 
     def perform_destroy(self, instance):
         instance.is_deleted = True
@@ -226,4 +232,44 @@ class StoryFeedAPIView(generics.ListAPIView):
             )
             .select_related("user")
         )
+    
+class PostHashtagSearchAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PostListSerializer
 
+    def get_queryset(self):
+        hashtag = self.request.query_params.get("hashtag")
+
+        if not hashtag:
+            return Post.objects.none()
+
+        hashtag = hashtag.lower().lstrip("#")
+
+        return (
+            Post.objects
+            .filter(
+                hashtags__name=hashtag,
+                is_deleted=False,
+            )
+            .select_related("user")
+            .annotate(likes_count=Count("received_likes"))
+        )
+    
+class UserSearchAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowUserSerializer
+
+    def get_queryset(self):
+        username = self.request.query_params.get("username")
+
+        if not username:
+            return User.objects.none()
+
+        return (
+            User.objects
+            .filter(
+                username__icontains=username,
+                is_active=True,
+            )
+            .select_related("profile")
+        )
