@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, viewsets
 
 from accounts.models import User
+from interactions.serializers import FollowUserSerializer
 
 from .models import Post, Story
 from .serializers import (
@@ -252,4 +253,23 @@ class PostHashtagSearchAPIView(generics.ListAPIView):
             )
             .select_related("user")
             .annotate(likes_count=Count("received_likes"))
+        )
+    
+class UserSearchAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowUserSerializer
+
+    def get_queryset(self):
+        username = self.request.query_params.get("username")
+
+        if not username:
+            return User.objects.none()
+
+        return (
+            User.objects
+            .filter(
+                username__icontains=username,
+                is_active=True,
+            )
+            .select_related("profile")
         )
