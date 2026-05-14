@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from .views import HealthCheckAPIView
-from posts.views import UserPostsAPIView
+from posts.views import UserPostsAPIView, ExploreAPIView
 
 
 urlpatterns = [
@@ -31,4 +31,5 @@ urlpatterns = [
     path("api/stories/", include("posts.story_urls")),
     path("api/search/", include("posts.search_urls")),
     path("api/direct/", include("direct.urls")),
+    path("api/explore/", ExploreAPIView.as_view(), name="explore")
 ]
