@@ -30,4 +30,5 @@ urlpatterns = [
     path('api/users/<str:username>/posts/', UserPostsAPIView.as_view(), name='user_posts'),
     path("api/stories/", include("posts.story_urls")),
     path("api/search/", include("posts.search_urls")),
+    path("api/direct/", include("direct.urls")),
 ]
