@@ -1,13 +1,16 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from accounts.models import User
-from .models import DirectConversation
+from .models import DirectConversation, DirectMessage
 from .serializers import (
     StartConversationSerializer,
     ConversationSerializer,
     InboxConversationSerializer,
+    DirectMessageSerializer,
 )
 
 class ConversationListCreateAPIView(generics.GenericAPIView):
@@ -50,3 +53,46 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
             context={"request": request},
         )
         return Response(serializer.data)
+    
+class ConversationMessagesAPIView(generics.GenericAPIView):
+    serializer_class = DirectMessageSerializer
+
+    def get_conversation(self):
+        return get_object_or_404(
+            DirectConversation,
+            Q(user1=self.request.user) | Q(user2=self.request.user),
+            id=self.kwargs["conversation_id"],
+        )
+
+    def get(self, request, conversation_id):
+        conversation = self.get_conversation()
+
+        messages = (
+            DirectMessage.objects
+            .filter(conversation=conversation)
+            .select_related("sender")
+            .order_by("created_at")
+        )
+
+        serializer = self.get_serializer(messages, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, conversation_id):
+        conversation = self.get_conversation()
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        message = serializer.save(
+            conversation=conversation,
+            sender=request.user,
+        )
+
+        conversation.updated_at = timezone.now()
+        conversation.save(update_fields=["updated_at"])
+
+        response_serializer = self.get_serializer(message)
+        return Response(
+            response_serializer.data,
+            status=status.HTTP_201_CREATED,
+        )
