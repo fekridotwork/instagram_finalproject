@@ -1,7 +1,9 @@
 from rest_framework import serializers
 
 from accounts.models import User
+from interactions.serializers import FollowUserSerializer
 from .models import DirectConversation, DirectMessage
+
 
 
 class StartConversationSerializer(serializers.Serializer):
@@ -76,3 +78,25 @@ class DirectMessageSerializer(serializers.ModelSerializer):
             "sender_id",
             "created_at",
         ]
+
+
+class InboxConversationSerializer(serializers.ModelSerializer):
+    other_user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DirectConversation
+        fields = [
+            "id",
+            "other_user",
+            "updated_at",
+        ]
+
+    def get_other_user(self, obj):
+        request_user = self.context["request"].user
+
+        if obj.user1 == request_user:
+            other_user = obj.user2
+        else:
+            other_user = obj.user1
+
+        return FollowUserSerializer(other_user).data

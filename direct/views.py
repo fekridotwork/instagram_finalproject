@@ -7,6 +7,7 @@ from .models import DirectConversation
 from .serializers import (
     StartConversationSerializer,
     ConversationSerializer,
+    InboxConversationSerializer,
 )
 
 class ConversationListCreateAPIView(generics.GenericAPIView):
@@ -43,5 +44,9 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
             .order_by("-updated_at")
         )
 
-        serializer = ConversationSerializer(conversations, many=True)
+        serializer = InboxConversationSerializer(
+            conversations,
+            many=True,
+            context={"request": request},
+        )
         return Response(serializer.data)
