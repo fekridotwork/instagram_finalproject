@@ -1,5 +1,6 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
+from django.db.models import Q
 
 from accounts.models import User
 from .models import DirectConversation
@@ -34,3 +35,13 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
             response_serializer.data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
+    def get(self, request):
+        conversations = (
+            DirectConversation.objects
+            .filter(Q(user1=request.user) | Q(user2=request.user))
+            .select_related("user1", "user2")
+            .order_by("-updated_at")
+        )
+
+        serializer = ConversationSerializer(conversations, many=True)
+        return Response(serializer.data)
