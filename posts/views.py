@@ -273,3 +273,20 @@ class UserSearchAPIView(generics.ListAPIView):
             )
             .select_related("profile")
         )
+
+class ExploreAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PostListSerializer
+
+    def get_queryset(self):
+        return (
+            Post.objects
+            .filter(
+                is_deleted=False,
+                visibility="public",
+                user__profile__is_private=False,
+            )
+            .select_related("user")
+            .annotate(likes_count=Count("received_likes"))
+            .order_by("-likes_count", "-created_at")
+        )
