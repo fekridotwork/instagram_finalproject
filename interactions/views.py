@@ -161,6 +161,32 @@ class MyFollowingListAPIView(generics.ListAPIView):
         ).select_related("following")
 
         return [relation.following for relation in follow_relations]
+    
+class MutualFollowersAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowUserSerializer
+
+    def get_queryset(self):
+        target_user = get_object_or_404(
+            User,
+            id=self.kwargs["user_id"],
+            is_active=True,
+        )
+
+        my_following_ids = Follow.objects.filter(
+            follower=self.request.user,
+        ).values_list("following_id", flat=True)
+
+        target_following_ids = Follow.objects.filter(
+            follower=target_user,
+        ).values_list("following_id", flat=True)
+
+        return (
+            User.objects
+            .filter(id__in=my_following_ids)
+            .filter(id__in=target_following_ids)
+            .select_related("profile")
+        )
 class MySavedPostsListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PostListSerializer
@@ -177,3 +203,4 @@ class MySavedPostsListAPIView(generics.ListAPIView):
             .select_related("user")
             .annotate(likes_count=Count("received_likes"))
         )
+
