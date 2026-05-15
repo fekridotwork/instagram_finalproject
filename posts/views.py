@@ -249,6 +249,8 @@ class PostHashtagSearchAPIView(generics.ListAPIView):
         return (
             Post.objects
             .filter(
+                Q(user=self.request.user)
+                | Q(user__profile__is_private=False, visibility="public"),
                 hashtags__name=hashtag,
                 is_deleted=False,
             )
