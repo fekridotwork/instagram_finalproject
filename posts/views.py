@@ -231,6 +231,7 @@ class StoryFeedAPIView(generics.ListAPIView):
                 expires_at__gt=timezone.now(),
             )
             .select_related("user")
+            .order_by("-created_at")
         )
     
 class PostHashtagSearchAPIView(generics.ListAPIView):
