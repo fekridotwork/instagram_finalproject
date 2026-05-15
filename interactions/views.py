@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.db.models import Count
 
 from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
@@ -165,12 +166,14 @@ class MySavedPostsListAPIView(generics.ListAPIView):
     serializer_class = PostListSerializer
 
     def get_queryset(self):
-        saved_posts = (
-            SavePost.objects
-            .filter(user=self.request.user)
-            .select_related("post", "post__user")
+        return (
+            Post.objects
+            .filter(
+                id__in=SavePost.objects.filter(
+                    user=self.request.user
+                ).values("post_id"),
+                is_deleted=False,
+            )
+            .select_related("user")
+            .annotate(likes_count=Count("received_likes"))
         )
-
-        posts = [saved_post.post for saved_post in saved_posts]
-
-        return posts
