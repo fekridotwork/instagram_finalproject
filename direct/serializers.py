@@ -59,27 +59,6 @@ class DirectMessageSerializer(serializers.ModelSerializer):
             "created_at",
         ]
     
-class DirectMessageSerializer(serializers.ModelSerializer):
-    sender_id = serializers.IntegerField(
-        source="sender.id",
-        read_only=True,
-    )
-
-    class Meta:
-        model = DirectMessage
-        fields = [
-            "id",
-            "sender_id",
-            "text",
-            "created_at",
-        ]
-        read_only_fields = [
-            "id",
-            "sender_id",
-            "created_at",
-        ]
-
-
 class InboxConversationSerializer(serializers.ModelSerializer):
     other_user = serializers.SerializerMethodField()
 
