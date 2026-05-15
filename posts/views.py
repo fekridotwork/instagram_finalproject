@@ -1,5 +1,3 @@
-from datetime import timezone
-
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status 
@@ -22,6 +20,8 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 
 from django.db.models import Count, Q
+
+from django.utils import timezone
 
 from posts.permissions import can_view_post
 
