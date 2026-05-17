@@ -145,22 +145,22 @@ class MyFollowersListAPIView(generics.ListAPIView):
     serializer_class = FollowUserSerializer
 
     def get_queryset(self):
-        follow_relations = Follow.objects.filter(
-            following=self.request.user,
-        ).select_related("follower")
-
-        return [relation.follower for relation in follow_relations]
+        return User.objects.filter(
+            id__in=Follow.objects.filter(
+                following=self.request.user,
+            ).values("follower_id")
+        )
     
 class MyFollowingListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowUserSerializer
 
     def get_queryset(self):
-        follow_relations = Follow.objects.filter(
-            follower=self.request.user,
-        ).select_related("following")
-
-        return [relation.following for relation in follow_relations]
+        return User.objects.filter(
+            id__in=Follow.objects.filter(
+                follower=self.request.user,
+            ).values("following_id")
+        )
     
 class MutualFollowersAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
