@@ -1,4 +1,5 @@
 from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -14,6 +15,7 @@ from .serializers import (
 )
 
 class ConversationListCreateAPIView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = StartConversationSerializer
 
     def post(self, request):
@@ -55,6 +57,7 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
         return Response(serializer.data)
     
 class ConversationMessagesAPIView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = DirectMessageSerializer
 
     def get_conversation(self):
