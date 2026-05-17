@@ -23,7 +23,7 @@ from django.db.models import Count, Q
 
 from django.utils import timezone
 
-from posts.permissions import can_view_post
+from posts.permissions import can_view_post, can_view_profile
 
 from interactions.models import Like, SavePost
 
@@ -37,14 +37,25 @@ class PostViewSet(viewsets.ModelViewSet):
         queryset = (
             Post.objects
             .filter(is_deleted=False)
-            .select_related("user")
-            .annotate(likes_count=Count("received_likes"))
+            .select_related("user", "user__profile")
+            .annotate(likes_count=Count("received_likes", distinct=True))
         )
 
         if self.action == "list":
+            following_ids = self.request.user.following_relations.values(
+                "following_id"
+            )
+
             queryset = queryset.filter(
                 Q(user=self.request.user)
-                | Q(user__profile__is_private=False, visibility="public")
+                | Q(
+                    user__profile__is_private=False,
+                    visibility="public",
+                )
+                | Q(
+                    user__in=following_ids,
+                    visibility__in=["followers", "public"]
+                )
             )
 
         return queryset
@@ -187,23 +198,32 @@ class UserPostsAPIView(generics.ListAPIView):
     def get_queryset(self):
         user = self.get_user()
 
-        if user.profile.is_private and user != self.request.user:
+        if not can_view_profile(self.request.user, user):
             self.permission_denied(
                 self.request,
-                message="This account is private."
+                message="You do not have permission to view this profile.",
             )
 
-        posts = (
+        queryset = (
             Post.objects
-            .filter(user=user, is_deleted=False)
-            .select_related("user")
-            .annotate(likes_count=Count("received_likes"))
+            .filter(
+                user=user,
+                is_deleted=False,
+            )
+            .select_related("user", "user__profile")
+            .annotate(
+                likes_count=Count("received_likes", distinct=True)
+            )
+            .order_by("-created_at")
         )
 
         if user != self.request.user:
-            posts = posts.filter(visibility="public")
+            queryset = queryset.filter(
+                Q(visibility="public") |
+                Q(visibility="followers")
+            )
 
-        return posts
+        return queryset
     
 class StoryCreateAPIView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -286,9 +306,13 @@ class ExploreAPIView(generics.ListAPIView):
             .filter(
                 is_deleted=False,
                 visibility="public",
+                user__is_active=True,
                 user__profile__is_private=False,
             )
-            .select_related("user")
-            .annotate(likes_count=Count("received_likes"))
+            .exclude(user=self.request.user)
+            .select_related("user", "user__profile")
+            .annotate(
+                likes_count=Count("received_likes", distinct=True)
+            )
             .order_by("-likes_count", "-created_at")
         )
