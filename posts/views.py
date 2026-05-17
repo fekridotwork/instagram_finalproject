@@ -31,7 +31,6 @@ from .services import sync_post_hashtags
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    lookup_field = "id"
     lookup_url_kwarg = "post_id"
 
     def get_queryset(self):
