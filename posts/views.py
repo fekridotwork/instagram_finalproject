@@ -103,6 +103,12 @@ class PostViewSet(viewsets.ModelViewSet):
     def like(self, request, post_id=None):
         post = self.get_object()
 
+        if not can_view_post(request.user, post):
+            self.permission_denied(
+                request,
+                message="You do not have permission to like this post.",
+            )
+
         if request.method == "POST":
             like, created = Like.objects.get_or_create(
                 user=request.user,
@@ -140,6 +146,12 @@ class PostViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post", "delete"], url_path="save")
     def save(self, request, post_id=None):
         post = self.get_object()
+
+        if not can_view_post(request.user, post):
+            self.permission_denied(
+                request,
+                message="You do not have permission to save this post.",
+            )
 
         if not can_view_post(request.user, post):
             self.permission_denied(

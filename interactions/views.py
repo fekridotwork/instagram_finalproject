@@ -40,14 +40,24 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
     
     def perform_create(self, serializer):
         post = self.get_post()
+
+        if not can_view_post(self.request.user, post):
+            self.permission_denied(
+                self.request,
+                message="You do not have permission to comment on this post.",
+            )
+
         parent = serializer.validated_data.get("parent")
 
-        if parent and parent.post_id != post.id:
+        if parent and parent.post != post:
             raise serializers.ValidationError(
                 {"parent": "Parent comment does not belong to this post."}
             )
 
-        serializer.save(user=self.request.user, post=post)
+        serializer.save(
+            user=self.request.user,
+            post=post,
+        )
 
         post.comments_count += 1
         post.save(update_fields=["comments_count"])
