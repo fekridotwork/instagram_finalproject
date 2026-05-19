@@ -62,12 +62,19 @@ class DirectMessageSerializer(serializers.ModelSerializer):
 class InboxConversationSerializer(serializers.ModelSerializer):
     other_user = serializers.SerializerMethodField()
 
+    last_message = serializers.CharField(read_only=True)
+    last_message_sender_id = serializers.IntegerField(read_only=True)
+    last_message_created_at = serializers.DateTimeField(read_only=True)
+
     class Meta:
         model = DirectConversation
         fields = [
             "id",
             "other_user",
             "updated_at",
+            "last_message",
+            "last_message_sender_id",
+            "last_message_created_at",
         ]
 
     def get_other_user(self, obj):
@@ -79,3 +86,17 @@ class InboxConversationSerializer(serializers.ModelSerializer):
             other_user = obj.user1
 
         return FollowUserSerializer(other_user).data
+    
+    def get_last_message(self, obj):
+        last_message = obj.messages.order_by("-created_at").first()
+        return last_message.text if last_message else None
+
+
+    def get_last_message_sender_id(self, obj):
+        last_message = obj.messages.order_by("-created_at").first()
+        return last_message.sender_id if last_message else None
+
+
+    def get_last_message_created_at(self, obj):
+        last_message = obj.messages.order_by("-created_at").first()
+        return last_message.created_at if last_message else None

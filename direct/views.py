@@ -1,7 +1,7 @@
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Q
+from django.db.models import Q, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -42,6 +42,12 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
     def get(self, request):
+        last_message_queryset = (
+            DirectMessage.objects
+            .filter(conversation=OuterRef("pk"))
+            .order_by("-created_at")
+        )
+
         conversations = (
             DirectConversation.objects
             .filter(Q(user1=request.user) | Q(user2=request.user))
@@ -50,6 +56,17 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
                 "user1__profile",
                 "user2",
                 "user2__profile",
+            )
+            .annotate(
+                last_message=Subquery(
+                    last_message_queryset.values("text")[:1]
+                ),
+                last_message_sender_id=Subquery(
+                    last_message_queryset.values("sender_id")[:1]
+                ),
+                last_message_created_at=Subquery(
+                    last_message_queryset.values("created_at")[:1]
+                ),
             )
             .order_by("-updated_at")
         )
