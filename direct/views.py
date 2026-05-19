@@ -71,6 +71,16 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
             .order_by("-updated_at")
         )
 
+        page = self.paginate_queryset(conversations)
+
+        if page is not None:
+            serializer = InboxConversationSerializer(
+                page,
+                many=True,
+                context={"request": request},
+            )
+            return self.get_paginated_response(serializer.data)
+
         serializer = InboxConversationSerializer(
             conversations,
             many=True,
