@@ -1,4 +1,6 @@
+from django.db.models import Prefetch
 from rest_framework import serializers
+from interactions.models import Comment
 from interactions.serializers import CommentSerializer
 from .models import Post, Story
 
@@ -65,7 +67,16 @@ class PostDetailSerializer(PostSerializer):
             obj.comments
             .filter(parent__isnull=True, is_deleted=False)
             .select_related("user")
-            .prefetch_related("replies")
+            .prefetch_related(
+                Prefetch(
+                    "replies",
+                    queryset=Comment.objects
+                    .filter(is_deleted=False)
+                    .select_related("user")
+                    .order_by("created_at"),
+                    to_attr="prefetched_replies",
+                )
+            )
         )
         return CommentSerializer(comments, many=True).data
 

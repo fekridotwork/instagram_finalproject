@@ -34,7 +34,11 @@ class CommentSerializer(serializers.ModelSerializer):
         ]
 
     def get_replies(self, obj):
-        replies = obj.replies.filter(is_deleted=False)
+        replies = getattr(obj, "prefetched_replies", None)
+
+        if replies is None:
+            replies = obj.replies.filter(is_deleted=False).select_related("user")
+
         return CommentSerializer(replies, many=True).data
 
     def validate_text(self, value):
