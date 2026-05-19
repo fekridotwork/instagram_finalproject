@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from accounts.models import User
 from posts.models import Post
 from posts.services.visibility import can_view_post
+from posts.services.annotations import annotate_post_interactions
 from posts.serializers import PostListSerializer
 
 from .models import Comment, Follow, SavePost
@@ -208,22 +209,19 @@ class MutualFollowersAPIView(generics.ListAPIView):
             .select_related("profile")
         )
 class MySavedPostsListAPIView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
     serializer_class = PostListSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         following_ids = self.request.user.following_relations.values(
             "following_id"
         )
 
-        return (
+        queryset = (
             Post.objects
             .filter(
                 Q(user=self.request.user)
-                | Q(
-                    user__profile__is_private=False,
-                    visibility="public",
-                )
+                | Q(user__profile__is_private=False, visibility="public")
                 | Q(
                     user__in=following_ids,
                     visibility__in=["public", "followers"],
@@ -240,4 +238,11 @@ class MySavedPostsListAPIView(generics.ListAPIView):
             )
             .order_by("-created_at")
         )
+
+        queryset = annotate_post_interactions(
+            queryset,
+            self.request.user,
+        )
+
+        return queryset
 

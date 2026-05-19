@@ -4,6 +4,7 @@ from accounts.models import User
 from interactions.serializers import FollowUserSerializer
 from posts.models import Post
 from posts.serializers import PostListSerializer
+from posts.services.annotations import annotate_post_interactions
 
 
 VALID_SEARCH_TYPES = {"all", "users", "posts"}
@@ -59,5 +60,7 @@ def search_posts(search, user, search_type):
         )
         .order_by("-created_at")[:DEFAULT_SEARCH_LIMIT]
     )
+
+    posts = annotate_post_interactions(posts, user)
 
     return PostListSerializer(posts, many=True).data

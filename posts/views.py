@@ -28,6 +28,8 @@ from django.db.models import Count, Exists, OuterRef, Q
 from django.utils import timezone
 
 from posts.services.visibility import can_view_post, can_view_profile
+from posts.services.annotations import annotate_post_interactions
+
 
 from interactions.models import Like, SavePost
 
@@ -61,7 +63,10 @@ class PostViewSet(viewsets.ModelViewSet):
                     visibility__in=["followers", "public"]
                 )
             )
-
+        queryset = annotate_post_interactions(
+            queryset,
+            self.request.user,
+        )
         return queryset
 
     def get_serializer_class(self):
@@ -318,7 +323,7 @@ class ExploreAPIView(generics.ListAPIView):
     serializer_class = PostListSerializer
 
     def get_queryset(self):
-        return (
+        queryset = (
             Post.objects
             .filter(
                 is_deleted=False,
@@ -326,10 +331,16 @@ class ExploreAPIView(generics.ListAPIView):
                 user__is_active=True,
                 user__profile__is_private=False,
             )
-            .exclude(user=self.request.user)
             .select_related("user", "user__profile")
             .annotate(
                 likes_count=Count("received_likes", distinct=True)
             )
             .order_by("-likes_count", "-created_at")
         )
+
+        queryset = annotate_post_interactions(
+            queryset,
+            self.request.user,
+        )
+
+        return queryset
