@@ -43,7 +43,7 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
         parent = serializer.validated_data.get("parent")
 
         if parent and parent.post_id != post.id:
-            raise serializer.ValidationError(
+            raise serializers.ValidationError(
                 {"parent": "Parent comment does not belong to this post."}
             )
 
