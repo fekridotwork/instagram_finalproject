@@ -87,16 +87,4 @@ class InboxConversationSerializer(serializers.ModelSerializer):
 
         return FollowUserSerializer(other_user).data
     
-    def get_last_message(self, obj):
-        last_message = obj.messages.order_by("-created_at").first()
-        return last_message.text if last_message else None
-
-
-    def get_last_message_sender_id(self, obj):
-        last_message = obj.messages.order_by("-created_at").first()
-        return last_message.sender_id if last_message else None
-
-
-    def get_last_message_created_at(self, obj):
-        last_message = obj.messages.order_by("-created_at").first()
-        return last_message.created_at if last_message else None
+    
