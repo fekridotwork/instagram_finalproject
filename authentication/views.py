@@ -1,3 +1,4 @@
+from authentication.throttles import OTPRateThrottle
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -26,6 +27,8 @@ from .tasks import send_otp_task
 
 
 class RequestOTPAPIView(APIView):
+    throttle_classes = [OTPRateThrottle]
+
     def post(self, request):
         serializer = RequestOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -74,6 +77,9 @@ class RequestOTPAPIView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 class VerifyOTPAPIView(APIView):
+    throttle_classes = [OTPRateThrottle]
+
+
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
