@@ -76,10 +76,12 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ["created_at"]
-        models.CheckConstraint(
-            condition=~models.Q(parent=models.F("id")),
-            name="prevent_self_parent_comment",
-        )
+        constraints = [
+            models.CheckConstraint(
+                condition=~models.Q(parent=models.F("id")),
+                name="prevent_self_parent_comment",
+            )
+        ]
         indexes = [
             models.Index(fields=["post", "created_at"], name="comment_post_created_idx"),
             models.Index(fields=["user", "created_at"], name="comment_user_created_idx"),
