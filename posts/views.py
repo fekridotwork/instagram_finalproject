@@ -153,11 +153,6 @@ class PostViewSet(viewsets.ModelViewSet):
                 message="You do not have permission to save this post.",
             )
 
-        if not can_view_post(request.user, post):
-            self.permission_denied(
-                request,
-                message="You do not have permission to save this post.",
-            )
 
         if request.method == "POST":
             saved_post, created = SavePost.objects.get_or_create(
