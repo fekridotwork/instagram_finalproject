@@ -11,6 +11,7 @@ from .services import (
     create_user_by_identifier,
     get_otp_cooldown_remaining,
     set_otp_cooldown,
+    OTPTooManyAttemptsError
 )
 
 from .serializers import RequestOTPSerializer, VerifyOTPSerializer, LogoutSerializer
@@ -81,12 +82,19 @@ class VerifyOTPAPIView(APIView):
         purpose = serializer.validated_data['purpose']
         code = serializer.validated_data['code']
 
-        is_valid = verify_otp(identifier, purpose, code)
+        try:
+            is_valid = verify_otp(identifier, purpose, code)
+        except OTPTooManyAttemptsError:
+            return Response(
+                {"error": "Too many failed attempts. Try again later."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
 
         if not is_valid:
             return Response(
                 {"error": "Invalid OTP"},
-                status=status.HTTP_400_BAD_REQUEST)
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if purpose == "register":
             if user_exists_by_identifier(identifier):

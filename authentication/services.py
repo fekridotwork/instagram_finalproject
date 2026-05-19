@@ -9,6 +9,11 @@ from django.conf import settings
 OTP_PURPOSE = ("login", "register")
 OTP_TTL_SECONDS = 120
 OTP_COOLDOWN_SECONDS = 120
+OTP_MAX_VERIFY_ATTEMPTS = 5
+OTP_VERIFY_LOCK_SECONDS = 600
+
+class OTPTooManyAttemptsError(Exception):
+    pass
 
 redis_client = redis.Redis(
     host=settings.REDIS_HOST,
@@ -33,6 +38,36 @@ def build_otp_cooldown_key(identifier: str, purpose: str) -> str:
     if purpose not in OTP_PURPOSE:
         raise ValueError("Invalid OTP purpose.")
     return f"otp_cooldown:{purpose}:{identifier}"
+
+def build_otp_attempts_key(identifier: str, purpose: str) -> str:
+    if purpose not in OTP_PURPOSE:
+        raise ValueError("Invalid OTP purpose.")
+    return f"otp_attempts:{purpose}:{identifier}"
+
+
+def get_otp_attempts_remaining(identifier: str, purpose: str) -> int:
+    key = build_otp_attempts_key(identifier, purpose)
+    attempts = redis_client.get(key)
+
+    if attempts is None:
+        return OTP_MAX_VERIFY_ATTEMPTS
+
+    return max(OTP_MAX_VERIFY_ATTEMPTS - int(attempts), 0)
+
+
+def increment_otp_attempts(identifier: str, purpose: str) -> int:
+    key = build_otp_attempts_key(identifier, purpose)
+    attempts = redis_client.incr(key)
+
+    if attempts == 1:
+        redis_client.expire(key, OTP_VERIFY_LOCK_SECONDS)
+
+    return attempts
+
+
+def clear_otp_attempts(identifier: str, purpose: str) -> None:
+    key = build_otp_attempts_key(identifier, purpose)
+    redis_client.delete(key)
 
 
 def get_otp_cooldown_remaining(identifier: str, purpose: str) -> int:
@@ -66,11 +101,16 @@ def store_otp(
 
     redis_client.setex(key, ttl, code) # setex: set with expiration
 
-def verify_otp(
-        identifier: str,
-        purpose: str,
-        code: str
-    ) -> bool:
+
+def verify_otp(identifier: str, purpose: str, code: str) -> bool:
+    remaining_attempts = get_otp_attempts_remaining(
+        identifier=identifier,
+        purpose=purpose,
+    )
+
+    if remaining_attempts <= 0:
+        raise OTPTooManyAttemptsError
+
     key = build_otp_key(identifier, purpose)
     stored_code = redis_client.get(key)
 
@@ -78,9 +118,17 @@ def verify_otp(
         return False
 
     if stored_code != code:
+        increment_otp_attempts(
+            identifier=identifier,
+            purpose=purpose,
+        )
         return False
 
     redis_client.delete(key)
+    clear_otp_attempts(
+        identifier=identifier,
+        purpose=purpose,
+    )
     return True
 
 def get_identifier_type(identifier:str) -> str:
@@ -126,3 +174,4 @@ def create_user_by_identifier(identifier: str) -> User:
         )
 
     raise ValueError("Invalid identifier type")
+
