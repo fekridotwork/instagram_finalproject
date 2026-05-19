@@ -8,7 +8,7 @@ from rest_framework.views import APIView
  
 from accounts.models import User
 from posts.models import Post
-from posts.permissions import can_view_post
+from posts.services.visibility import can_view_post
 from posts.serializers import PostListSerializer
 
 from .models import Comment, Follow, SavePost

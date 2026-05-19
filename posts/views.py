@@ -23,11 +23,11 @@ from .serializers import (
 
 from django.shortcuts import get_object_or_404
 
-from django.db.models import Count, Q
+from django.db.models import Count, Exists, OuterRef, Q
 
 from django.utils import timezone
 
-from posts.permissions import can_view_post, can_view_profile
+from posts.services.visibility import can_view_post, can_view_profile
 
 from interactions.models import Like, SavePost
 
