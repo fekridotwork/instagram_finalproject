@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+
+from accounts.views import PublicProfileAPIView
 from .views import HealthCheckAPIView
 from posts.views import UserPostsAPIView, ExploreAPIView
 
@@ -28,6 +30,11 @@ urlpatterns = [
     path('api/posts/', include("posts.urls")),
     path('api/', include("interactions.urls")),
     path('api/users/<str:username>/posts/', UserPostsAPIView.as_view(), name='user_posts'),
+    path(
+        "api/users/<str:username>/",
+        PublicProfileAPIView.as_view(),
+        name="public-profile",
+    ),
     path("api/stories/", include("posts.story_urls")),
     path("api/search/", include("posts.search_urls")),
     path("api/direct/", include("direct.urls")),

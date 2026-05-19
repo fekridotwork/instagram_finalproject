@@ -54,3 +54,29 @@ class ProfileSerializer(serializers.ModelSerializer):
         user.save()
 
         return instance
+
+
+class PublicProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source="user.username", read_only=True)
+    is_active = serializers.BooleanField(source="user.is_active", read_only=True)
+
+    followers_count = serializers.IntegerField(read_only=True)
+    following_count = serializers.IntegerField(read_only=True)
+    posts_count = serializers.IntegerField(read_only=True)
+    is_following = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = [
+            "username",
+            "full_name",
+            "display_name",
+            "bio",
+            "profile_image",
+            "is_private",
+            "is_active",
+            "followers_count",
+            "following_count",
+            "posts_count",
+            "is_following",
+        ]
