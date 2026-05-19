@@ -1,6 +1,6 @@
 from django.db.models import Prefetch
 from rest_framework import serializers
-from interactions.models import Comment
+from interactions.models import Comment, Like, SavePost
 from interactions.serializers import CommentSerializer
 from .models import Post, Story
 
@@ -11,6 +11,32 @@ class PostSerializer(serializers.ModelSerializer):
 
     likes_count = serializers.IntegerField(read_only=True)
     comments_count = serializers.IntegerField(read_only=True)
+
+    is_liked = serializers.SerializerMethodField()
+    is_saved = serializers.SerializerMethodField()
+
+    def get_is_liked(self, obj):
+        request = self.context.get("request")
+
+        if not request or not request.user.is_authenticated:
+            return False
+
+        return Like.objects.filter(
+            user=request.user,
+            post=obj,
+        ).exists()
+
+
+    def get_is_saved(self, obj):
+        request = self.context.get("request")
+
+        if not request or not request.user.is_authenticated:
+            return False
+
+        return SavePost.objects.filter(
+            user=request.user,
+            post=obj,
+        ).exists()
 
     class Meta:
         model = Post
@@ -24,6 +50,8 @@ class PostSerializer(serializers.ModelSerializer):
             "visibility",
             "likes_count",
             "comments_count",
+            "is_liked",
+            "is_saved",
             "is_deleted",
             "is_edited",
             "created_at",
@@ -50,6 +78,8 @@ class PostListSerializer(PostSerializer):
             "visibility",
             "likes_count",
             "comments_count",
+            "is_liked",
+            "is_saved",
             "created_at",
         ]
 
