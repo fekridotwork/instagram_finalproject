@@ -33,7 +33,7 @@ from posts.services.annotations import annotate_post_interactions
 
 from interactions.models import Like, SavePost
 
-from .services.services import sync_post_hashtags
+from .services.hashtags import sync_post_hashtags
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
