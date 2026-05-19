@@ -34,6 +34,8 @@ class PostSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+
 class PostListSerializer(PostSerializer):
     class Meta(PostSerializer.Meta):
         fields = [
@@ -43,6 +45,7 @@ class PostListSerializer(PostSerializer):
             "media",
             "media_type",
             "caption",
+            "visibility",
             "likes_count",
             "comments_count",
             "created_at",
