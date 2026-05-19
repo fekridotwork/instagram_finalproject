@@ -1,6 +1,6 @@
 import re
 
-from .models import Hashtag
+from ..models import Hashtag
 
 
 HASHTAG_PATTERN = r"#([\w\u0600-\u06FF]+)"

@@ -1,3 +1,9 @@
+from posts.services.search import (
+    VALID_SEARCH_TYPES,
+    normalize_search_term,
+    search_posts,
+    search_users,
+)
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status 
@@ -25,7 +31,7 @@ from posts.permissions import can_view_post, can_view_profile
 
 from interactions.models import Like, SavePost
 
-from .services import sync_post_hashtags
+from .services.services import sync_post_hashtags
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
@@ -266,65 +272,47 @@ class StoryFeedAPIView(generics.ListAPIView):
             .order_by("-created_at")
         )
     
-class PostHashtagSearchAPIView(generics.ListAPIView):
+class GlobalSearchAPIView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = PostListSerializer
 
-    def get_queryset(self):
-        hashtag = self.request.query_params.get("hashtag")
+    def get(self, request):
+        search = request.query_params.get("search", "")
+        search_type = request.query_params.get("type", "all").lower()
 
-        if not hashtag:
-            return Post.objects.none()
+        if search_type not in VALID_SEARCH_TYPES:
+            return Response(
+                {
+                    "type": "Invalid search type. Choose from: all, users, posts."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        hashtag = hashtag.lower().lstrip("#")
+        if not search.strip():
+            return Response(
+                {
+                    "users": [],
+                    "posts": [],
+                },
+                status=status.HTTP_200_OK,
+            )
 
-        following_ids = self.request.user.following_relations.values(
-            "following_id"
-        )
+        normalized_search = normalize_search_term(search)
 
-        return (
-            Post.objects
-            .filter(
-                Q(user=self.request.user)
-                | Q(
-                    user__profile__is_private=False,
-                    visibility="public",
-                )
-                | Q(
-                    user__in=following_ids,
-                    visibility__in=["public", "followers"],
+        return Response(
+            {
+                "users": search_users(
+                    normalized_search,
+                    request.user,
+                    search_type,
                 ),
-                hashtags__name=hashtag,
-                is_deleted=False,
-                user__is_active=True,
-            )
-            .select_related("user", "user__profile")
-            .annotate(
-                likes_count=Count("received_likes", distinct=True)
-            )
-            .order_by("-created_at")
+                "posts": search_posts(
+                    normalized_search,
+                    request.user,
+                    search_type,
+                ),
+            },
+            status=status.HTTP_200_OK,
         )
-    
-class UserSearchAPIView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = FollowUserSerializer
-
-    def get_queryset(self):
-        username = self.request.query_params.get("username")
-
-        if not username:
-            return User.objects.none()
-
-        return (
-            User.objects
-            .filter(
-                username__icontains=username,
-                is_active=True,
-            )
-            .exclude(id=self.request.user.id)
-            .select_related("profile")
-        )
-
 class ExploreAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PostListSerializer
