@@ -5,7 +5,6 @@ from .models import Profile, User
 class ProfileSerializer(serializers.ModelSerializer):
 
     username = serializers.CharField(source="user.username")
-    is_active = serializers.BooleanField(source="user.is_active")
 
     class Meta:
         model = Profile
@@ -16,7 +15,6 @@ class ProfileSerializer(serializers.ModelSerializer):
             "bio",
             "profile_image",
             "is_private",
-            "is_active",
         ]
     def validate_display_name(self, value):
         value = value.strip()
