@@ -102,9 +102,17 @@ class PostViewSet(viewsets.ModelViewSet):
         sync_post_hashtags(post)
 
     def perform_update(self, serializer):
-        post = serializer.save(is_edited=True)
-        sync_post_hashtags(post)
+        has_changes = any(
+            getattr(serializer.instance, field) != value
+            for field, value in serializer.validated_data.items()
+        )
 
+        if has_changes:
+            post = serializer.save(is_edited=True)
+        else:
+            post = serializer.save()
+
+        sync_post_hashtags(post)
 
     def perform_destroy(self, instance):
         instance.is_deleted = True
