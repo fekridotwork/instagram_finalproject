@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from django.db.models import Count
+from django.db.models import Q, Count
 
 from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
@@ -145,10 +145,15 @@ class MyFollowersListAPIView(generics.ListAPIView):
     serializer_class = FollowUserSerializer
 
     def get_queryset(self):
-        return User.objects.filter(
-            id__in=Follow.objects.filter(
-                following=self.request.user,
-            ).values("follower_id")
+        return (
+            User.objects
+            .filter(
+                id__in=Follow.objects.filter(
+                    following=self.request.user,
+                ).values("follower_id"),
+                is_active=True,
+            )
+            .select_related("profile")
         )
     
 class MyFollowingListAPIView(generics.ListAPIView):
@@ -156,10 +161,15 @@ class MyFollowingListAPIView(generics.ListAPIView):
     serializer_class = FollowUserSerializer
 
     def get_queryset(self):
-        return User.objects.filter(
-            id__in=Follow.objects.filter(
-                follower=self.request.user,
-            ).values("following_id")
+        return (
+            User.objects
+            .filter(
+                id__in=Follow.objects.filter(
+                    follower=self.request.user,
+                ).values("following_id"),
+                is_active=True,
+            )
+            .select_related("profile")
         )
     
 class MutualFollowersAPIView(generics.ListAPIView):
@@ -192,15 +202,32 @@ class MySavedPostsListAPIView(generics.ListAPIView):
     serializer_class = PostListSerializer
 
     def get_queryset(self):
+        following_ids = self.request.user.following_relations.values(
+            "following_id"
+        )
+
         return (
             Post.objects
             .filter(
+                Q(user=self.request.user)
+                | Q(
+                    user__profile__is_private=False,
+                    visibility="public",
+                )
+                | Q(
+                    user__in=following_ids,
+                    visibility__in=["public", "followers"],
+                ),
                 id__in=SavePost.objects.filter(
                     user=self.request.user
                 ).values("post_id"),
                 is_deleted=False,
+                user__is_active=True,
             )
-            .select_related("user")
-            .annotate(likes_count=Count("received_likes"))
+            .select_related("user", "user__profile")
+            .annotate(
+                likes_count=Count("received_likes", distinct=True)
+            )
+            .order_by("-created_at")
         )
 
