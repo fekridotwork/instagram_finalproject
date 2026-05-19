@@ -235,19 +235,27 @@ class StoryFeedAPIView(generics.ListAPIView):
     serializer_class = StorySerializer
 
     def get_queryset(self):
-        following_users = self.request.user.following_relations.values_list(
-            "following_id",
-            flat=True,
+        following_ids = self.request.user.following_relations.values(
+            "following_id"
         )
 
         return (
             Story.objects
             .filter(
-                Q(user_id__in=following_users) | Q(user=self.request.user),
+                Q(user=self.request.user)
+                | Q(
+                    user__profile__is_private=False,
+                    visibility="public",
+                )
+                | Q(
+                    user__in=following_ids,
+                    visibility__in=["public", "followers"],
+                ),
                 is_deleted=False,
                 expires_at__gt=timezone.now(),
+                user__is_active=True,
             )
-            .select_related("user")
+            .select_related("user", "user__profile")
             .order_by("-created_at")
         )
     
