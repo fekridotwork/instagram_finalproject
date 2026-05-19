@@ -19,15 +19,14 @@ class ProfileSerializer(serializers.ModelSerializer):
     def validate_display_name(self, value):
         value = value.strip()
 
-        if len(value) < 3:
+        if value and len(value) < 3:
             raise serializers.ValidationError("Display name must be at least 3 characters")
         return value
 
     def validate_full_name(self, value):
-        if value:
-            value = value.strip()
+        value = value.strip()
 
-        if len(value) < 3:
+        if value and len(value) < 3:
             raise serializers.ValidationError("Full name is too short")
         return value
 
