@@ -263,16 +263,31 @@ class PostHashtagSearchAPIView(generics.ListAPIView):
 
         hashtag = hashtag.lower().lstrip("#")
 
+        following_ids = self.request.user.following_relations.values(
+            "following_id"
+        )
+
         return (
             Post.objects
             .filter(
                 Q(user=self.request.user)
-                | Q(user__profile__is_private=False, visibility="public"),
+                | Q(
+                    user__profile__is_private=False,
+                    visibility="public",
+                )
+                | Q(
+                    user__in=following_ids,
+                    visibility__in=["public", "followers"],
+                ),
                 hashtags__name=hashtag,
                 is_deleted=False,
+                user__is_active=True,
             )
-            .select_related("user")
-            .annotate(likes_count=Count("received_likes"))
+            .select_related("user", "user__profile")
+            .annotate(
+                likes_count=Count("received_likes", distinct=True)
+            )
+            .order_by("-created_at")
         )
     
 class UserSearchAPIView(generics.ListAPIView):
@@ -291,6 +306,7 @@ class UserSearchAPIView(generics.ListAPIView):
                 username__icontains=username,
                 is_active=True,
             )
+            .exclude(id=self.request.user.id)
             .select_related("profile")
         )
 
