@@ -45,7 +45,12 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
         conversations = (
             DirectConversation.objects
             .filter(Q(user1=request.user) | Q(user2=request.user))
-            .select_related("user1", "user2")
+            .select_related(
+                "user1",
+                "user1__profile",
+                "user2",
+                "user2__profile",
+            )
             .order_by("-updated_at")
         )
 
