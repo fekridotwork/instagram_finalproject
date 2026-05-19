@@ -1,4 +1,4 @@
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Exists, OuterRef
 
 from accounts.models import User
 from interactions.serializers import FollowUserSerializer
@@ -26,7 +26,14 @@ def search_users(search, user, search_type):
             is_active=True,
         )
         .exclude(id=user.id)
-        .select_related("profile")[:DEFAULT_SEARCH_LIMIT]
+        .select_related("profile")
+        .annotate(
+            is_following=Exists(
+                user.following_relations.filter(
+                    following=OuterRef("pk"),
+                )
+            )
+        )[:DEFAULT_SEARCH_LIMIT]
     )
 
     return FollowUserSerializer(users, many=True).data

@@ -69,7 +69,9 @@ class FollowUserSerializer(serializers.ModelSerializer):
         source="profile.is_private",
         read_only=True,
     )
-
+    is_following = serializers.BooleanField(
+        read_only=True
+    )
     # followers_count = serializers.IntegerField(read_only=True)
     # following_count = serializers.IntegerField(read_only=True)
 
@@ -81,4 +83,5 @@ class FollowUserSerializer(serializers.ModelSerializer):
             "username",
             "display_name",
             "is_private",
+            "is_following",
         ]
