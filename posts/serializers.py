@@ -142,13 +142,37 @@ class StorySerializer(serializers.ModelSerializer):
         if isinstance(text, str):
             text = text.strip()
 
-        if not media and not text:
-            raise serializers.ValidationError(
-                "Story must have either media or text."
-            )
+        if media_type == "text":
+            if media:
+                raise serializers.ValidationError(
+                    {
+                        "media": "Text stories cannot have media."
+                    }
+                )
 
-        if media:
+            if not text:
+                raise serializers.ValidationError(
+                    {
+                        "text": "Text story cannot be empty."
+                    }
+                )
+
+        elif media_type in {"image", "video"}:
+            if not media:
+                raise serializers.ValidationError(
+                    {
+                        "media": "Media is required for image/video stories."
+                    }
+                )
+
             validate_media_file(media, media_type)
+
+        else:
+            raise serializers.ValidationError(
+                {
+                    "media_type": "Invalid story type."
+                }
+            )
 
         attrs["text"] = text
         return attrs
