@@ -1,14 +1,16 @@
+from datetime import timedelta
 from io import BytesIO
 from PIL import Image
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from accounts.models import User
 from interactions.models import Follow
-from posts.models import Post
+from posts.models import Post, Story
 
 
 class PostAPITests(APITestCase):
@@ -199,3 +201,195 @@ class PostAPITests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], post.id)
+
+class StoryAPITests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="matin",
+            email="matin@example.com",
+            password="testpass123",
+        )
+        self.other_user = User.objects.create_user(
+            username="ali",
+            email="ali@example.com",
+            password="testpass123",
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def make_image(self):
+        image = Image.new("RGB", (10, 10), color="white")
+        image_file = BytesIO()
+        image.save(image_file, format="JPEG")
+        image_file.seek(0)
+
+        return SimpleUploadedFile(
+            name="story.jpg",
+            content=image_file.read(),
+            content_type="image/jpeg",
+        )
+
+    def test_user_can_create_image_story(self):
+        url = reverse("story-create")
+
+        response = self.client.post(
+            url,
+            data={
+                "media": self.make_image(),
+                "media_type": "image",
+                "text": "my story",
+                "visibility": "followers",
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Story.objects.count(), 1)
+        self.assertEqual(Story.objects.first().user, self.user)
+
+    def test_user_can_create_text_story(self):
+        url = reverse("story-create")
+
+        response = self.client.post(
+            url,
+            data={
+                "media_type": "text",
+                "text": "text only story",
+                "visibility": "followers",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Story.objects.count(), 1)
+
+    def test_user_can_see_followed_users_story(self):
+        Follow.objects.create(
+            follower=self.user,
+            following=self.other_user,
+        )
+
+        Story.objects.create(
+            user=self.other_user,
+            media=self.make_image(),
+            media_type="image",
+            text="visible story",
+            visibility="followers",
+            expires_at=timezone.now() + timedelta(hours=24),
+        )
+
+        url = reverse("story-feed")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, "visible story")
+    def test_expired_story_is_not_visible(self):
+        Follow.objects.create(
+            follower=self.user,
+            following=self.other_user,
+        )
+
+        Story.objects.create(
+            user=self.other_user,
+            media=self.make_image(),
+            media_type="image",
+            text="expired story",
+            visibility="followers",
+            expires_at=timezone.now() - timedelta(hours=1),
+        )
+
+        url = reverse("story-feed")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotContains(response, "expired story")
+
+class SearchAPITests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="matin",
+            email="matin@example.com",
+            password="testpass123",
+        )
+        self.other_user = User.objects.create_user(
+            username="ali",
+            email="ali@example.com",
+            password="testpass123",
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def make_image(self):
+        image = Image.new("RGB", (10, 10), color="white")
+        image_file = BytesIO()
+        image.save(image_file, format="JPEG")
+        image_file.seek(0)
+
+        return SimpleUploadedFile(
+            name="post.jpg",
+            content=image_file.read(),
+            content_type="image/jpeg",
+        )
+
+    def test_user_can_search_users(self):
+        url = reverse("global-search")
+
+        response = self.client.get(
+            url,
+            {
+                "search": "ali",
+                "type": "users",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data["users"]), 1)
+        self.assertEqual(response.data["posts"], [])
+
+    def test_empty_search_returns_empty_results(self):
+        url = reverse("global-search")
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["users"], [])
+        self.assertEqual(response.data["posts"], [])
+
+    def test_invalid_search_type_returns_400(self):
+        url = reverse("global-search")
+
+        response = self.client.get(
+            url,
+            {
+                "search": "django",
+                "type": "wrong",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_user_can_search_posts_by_hashtag(self):
+        post = Post.objects.create(
+            user=self.other_user,
+            media=self.make_image(),
+            media_type="image",
+            caption="Learning Django #django",
+            visibility="public",
+        )
+
+        # چون توی perform_create هشتگ sync می‌کنی، اما اینجا مستقیم model ساختیم،
+        # باید خودمان بعداً اگر تست fail شد sync را صدا بزنیم.
+        from posts.services.hashtags import sync_post_hashtags
+        sync_post_hashtags(post)
+
+        url = reverse("global-search")
+
+        response = self.client.get(
+            url,
+            {
+                "search": "django",
+                "type": "posts",
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["users"], [])
+        self.assertEqual(len(response.data["posts"]), 1)
