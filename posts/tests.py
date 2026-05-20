@@ -375,8 +375,6 @@ class SearchAPITests(APITestCase):
             visibility="public",
         )
 
-        # چون توی perform_create هشتگ sync می‌کنی، اما اینجا مستقیم model ساختیم،
-        # باید خودمان بعداً اگر تست fail شد sync را صدا بزنیم.
         from posts.services.hashtags import sync_post_hashtags
         sync_post_hashtags(post)
 
