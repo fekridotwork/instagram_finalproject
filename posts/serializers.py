@@ -3,6 +3,7 @@ from rest_framework import serializers
 from interactions.models import Comment
 from interactions.serializers import CommentSerializer
 from .models import Post, Story
+from posts.services.media_validation import validate_media_file
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -14,6 +15,17 @@ class PostSerializer(serializers.ModelSerializer):
 
     is_liked = serializers.BooleanField(read_only=True)
     is_saved = serializers.BooleanField(read_only=True)
+
+    def validate(self, attrs):
+        media = attrs.get("media", getattr(self.instance, "media", None))
+        media_type = attrs.get(
+            "media_type",
+            getattr(self.instance, "media_type", None),
+        )
+
+        validate_media_file(media, media_type)
+
+        return attrs
 
 
     class Meta:
@@ -42,6 +54,18 @@ class PostSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+    def validate_caption(self, value):
+        if value is None:
+            return value
+
+        value = value.strip()
+
+        if len(value) > 2200:
+            raise serializers.ValidationError(
+                "Caption is too long."
+            )
+
+        return value
 
 
 class PostListSerializer(PostSerializer):
@@ -92,6 +116,41 @@ class StorySerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="user.id", read_only=True)
     username = serializers.CharField(source="user.username", read_only=True)
 
+    def validate_text(self, value):
+        if value is None:
+            return value
+        
+        value = value.strip()
+
+        if len(value) > 500:
+            raise serializers.ValidationError(
+                "Story text is too long."
+            )
+        return value
+    
+
+    def validate(self, attrs):
+        media = attrs.get("media", getattr(self.instance, "media", None))
+        media_type = attrs.get(
+            "media_type",
+            getattr(self.instance, "media_type", None),
+        )
+        text = attrs.get("text", getattr(self.instance, "text", ""))
+
+        if isinstance(text, str):
+            text = text.strip()
+
+        if not media and not text:
+            raise serializers.ValidationError(
+                "Story must have either media or text."
+            )
+
+        if media:
+            validate_media_file(media, media_type)
+
+        attrs["text"] = text
+        return attrs
+    
     class Meta:
         model = Story
         fields = [

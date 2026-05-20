@@ -45,15 +45,16 @@ def normalize_identifier(value: str) -> str:
         return normalized_email
 
     return normalize_phone_number(value)
-    raise serializers.ValidationError(
-        "Identifier must be a valid email or phone number."
-    )
+    
+
 class RequestOTPSerializer(serializers.Serializer):
     identifier = serializers.CharField()
     purpose = serializers.ChoiceField(choices=["login", "register"])
 
     def validate_identifier(self, value):
         return normalize_identifier(value)
+    
+    
 class VerifyOTPSerializer(serializers.Serializer):
     identifier = serializers.CharField()
     purpose = serializers.ChoiceField(choices=["login", "register"])

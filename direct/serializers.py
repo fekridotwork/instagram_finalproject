@@ -58,6 +58,20 @@ class DirectMessageSerializer(serializers.ModelSerializer):
             "sender_id",
             "created_at",
         ]
+    def validate_text(self, value):
+        value = value.strip()
+
+        if not value:
+            raise serializers.ValidationError(
+                "Message cannot be empty."
+            )
+
+        if len(value) > 2000:
+            raise serializers.ValidationError(
+                "Message is too long."
+            )
+
+        return value
     
 class InboxConversationSerializer(serializers.ModelSerializer):
     other_user = serializers.SerializerMethodField()
