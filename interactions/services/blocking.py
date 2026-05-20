@@ -1,4 +1,5 @@
-from interactions.models import Block, Follow
+from django.db.models import Q
+from interactions.models import Block, Follow 
 
 
 def block_user(blocker, blocked):
@@ -41,3 +42,42 @@ def is_blocked_between(user1, user2):
         blocker=user2,
         blocked=user1,
     ).exists()
+
+def get_blocked_user_ids(user):
+    blocked_by_me = Block.objects.filter(
+        blocker=user,
+    ).values_list("blocked_id", flat=True)
+
+    blocked_me = Block.objects.filter(
+        blocked=user,
+    ).values_list("blocker_id", flat=True)
+
+    return blocked_by_me, blocked_me
+
+def exclude_blocked_users(queryset, user):
+    blocked_by_me, blocked_me = get_blocked_user_ids(user)
+
+    return queryset.exclude(
+        id__in=blocked_by_me,
+    ).exclude(
+        id__in=blocked_me,
+    )
+
+def exclude_blocked_content(queryset, user):
+    blocked_by_me, blocked_me = get_blocked_user_ids(user)
+
+    return queryset.exclude(
+        user_id__in=blocked_by_me,
+    ).exclude(
+        user_id__in=blocked_me,
+    )
+
+def exclude_blocked_conversations(queryset, user):
+    blocked_by_me, blocked_me = get_blocked_user_ids(user)
+
+    return queryset.exclude(
+        Q(user1_id__in=blocked_by_me)
+        | Q(user2_id__in=blocked_by_me)
+        | Q(user1_id__in=blocked_me)
+        | Q(user2_id__in=blocked_me)
+    )

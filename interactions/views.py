@@ -12,6 +12,7 @@ from interactions.services import (
     annotate_follow_status, 
     is_blocked_between
 )
+from interactions.services import exclude_blocked_content
 from posts.models import Post
 from posts.serializers import PostListSerializer
 from posts.services.annotations import annotate_post_interactions
@@ -320,6 +321,11 @@ class MySavedPostsListAPIView(generics.ListAPIView):
                 likes_count=Count("received_likes", distinct=True)
             )
             .order_by("-created_at")
+        )
+
+        queryset = exclude_blocked_content(
+            queryset,
+            self.request.user,
         )
 
         queryset = annotate_post_interactions(

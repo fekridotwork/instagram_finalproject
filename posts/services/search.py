@@ -1,8 +1,8 @@
 from django.db.models import Count, Exists, OuterRef, Q
 
 from accounts.models import User
-from interactions.models import Block
 from interactions.serializers import FollowUserSerializer
+from interactions.services import exclude_blocked_content, exclude_blocked_users
 from posts.models import Post
 from posts.serializers import PostListSerializer
 from posts.services.annotations import annotate_post_interactions
@@ -18,23 +18,13 @@ def search_users(search, user, search_type):
     if search_type not in {"all", "users"}:
         return []
 
-    blocked_by_me = Block.objects.filter(
-        blocker=user,
-    ).values_list("blocked_id", flat=True)
-
-    blocked_me = Block.objects.filter(
-        blocked=user,
-    ).values_list("blocker_id", flat=True)
-
-    users = (
+    users = exclude_blocked_users(
         User.objects
         .filter(
             username__icontains=search,
             is_active=True,
         )
         .exclude(id=user.id)
-        .exclude(id__in=blocked_by_me)
-        .exclude(id__in=blocked_me)
         .select_related("profile")
         .annotate(
             is_following=Exists(
@@ -42,7 +32,8 @@ def search_users(search, user, search_type):
                     following=OuterRef("pk"),
                 )
             )
-        )
+        ),
+        user,
     )
 
     return FollowUserSerializer(users, many=True).data
@@ -55,15 +46,7 @@ def search_posts(search, user, search_type):
 
     following_ids = user.following_relations.values("following_id")
 
-    blocked_by_me = Block.objects.filter(
-        blocker=user,
-    ).values_list("blocked_id", flat=True)
-
-    blocked_me = Block.objects.filter(
-        blocked=user,
-    ).values_list("blocker_id", flat=True)
-
-    posts = (
+    posts = exclude_blocked_content(
         Post.objects
         .filter(
             Q(user=user)
@@ -79,13 +62,12 @@ def search_posts(search, user, search_type):
             is_deleted=False,
             user__is_active=True,
         )
-        .exclude(user_id__in=blocked_by_me)
-        .exclude(user_id__in=blocked_me)
         .select_related("user", "user__profile")
         .annotate(
             likes_count=Count("received_likes", distinct=True)
         )
-        .order_by("-created_at")
+        .order_by("-created_at"),
+        user,
     )
 
     posts = annotate_post_interactions(posts, user)

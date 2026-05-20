@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import User
-from interactions.services import is_blocked_between
+from interactions.services import exclude_blocked_conversations, is_blocked_between
 
 from .models import DirectConversation, DirectMessage
 from .serializers import (ConversationSerializer, DirectMessageSerializer,
@@ -54,21 +54,9 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
             .order_by("-created_at")
         )
 
-        conversations = (
+        conversations = exclude_blocked_conversations(
             DirectConversation.objects
             .filter(Q(user1=request.user) | Q(user2=request.user))
-            .exclude(
-                user1__in=request.user.blocking_relations.values("blocked_id")
-            )
-            .exclude(
-                user2__in=request.user.blocking_relations.values("blocked_id")
-            )
-            .exclude(
-                user1__in=request.user.blocked_by_relations.values("blocker_id")
-            )
-            .exclude(
-                user2__in=request.user.blocked_by_relations.values("blocker_id")
-            )
             .select_related(
                 "user1",
                 "user1__profile",
@@ -86,7 +74,8 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
                     last_message_queryset.values("created_at")[:1]
                 ),
             )
-            .order_by("-updated_at")
+            .order_by("-updated_at"),
+            request.user,
         )
 
         following_ids = set(
