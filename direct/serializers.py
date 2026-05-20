@@ -92,12 +92,15 @@ class InboxConversationSerializer(serializers.ModelSerializer):
         ]
 
     def get_other_user(self, obj):
-        request_user = self.context["request"].user
+        request = self.context["request"]
+        following_ids = self.context.get("following_ids", set())
 
-        if obj.user1 == request_user:
+        if obj.user1 == request.user:
             other_user = obj.user2
         else:
             other_user = obj.user1
+
+        other_user.is_following = other_user.id in following_ids
 
         return FollowUserSerializer(other_user).data
     

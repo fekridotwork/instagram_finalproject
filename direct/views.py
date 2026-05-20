@@ -70,20 +70,33 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
             .order_by("-updated_at")
         )
 
+        following_ids = set(
+            request.user.following_relations.values_list(
+                "following_id",
+                flat=True,
+            )
+        )
+
         page = self.paginate_queryset(conversations)
 
         if page is not None:
             serializer = InboxConversationSerializer(
                 page,
                 many=True,
-                context={"request": request},
+                context={
+                    "request": request,
+                    "following_ids": following_ids,
+                },
             )
             return self.get_paginated_response(serializer.data)
 
         serializer = InboxConversationSerializer(
             conversations,
             many=True,
-            context={"request": request},
+            context={
+                "request": request,
+                "following_ids": following_ids,
+            },
         )
         return Response(serializer.data)
     
