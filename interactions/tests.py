@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from accounts.models import User
-from interactions.models import Comment, Like, SavePost
+from interactions.models import Block, Comment, Follow, Like, SavePost
 from posts.models import Post
 
 
@@ -120,5 +120,100 @@ class InteractionAPITests(APITestCase):
                 user=self.user,
                 post=post,
                 text="nice post",
+            ).exists()
+        )
+
+class FollowBlockAPITests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="matin",
+            email="matin@example.com",
+            password="testpass123",
+        )
+
+        self.other_user = User.objects.create_user(
+            username="ali",
+            email="ali@example.com",
+            password="testpass123",
+        )
+
+        self.client.force_authenticate(user=self.user)
+
+    def test_user_can_follow_other_user(self):
+        url = reverse("user-follow", kwargs={"user_id": self.other_user.id})
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        self.assertTrue(
+            Follow.objects.filter(
+                follower=self.user,
+                following=self.other_user,
+            ).exists()
+        )
+
+    def test_user_can_unfollow_user(self):
+        Follow.objects.create(
+            follower=self.user,
+            following=self.other_user,
+        )
+
+        url = reverse("user-follow", kwargs={"user_id": self.other_user.id})
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertFalse(
+            Follow.objects.filter(
+                follower=self.user,
+                following=self.other_user,
+            ).exists()
+        )
+
+    def test_user_cannot_follow_self(self):
+        url = reverse("user-follow", kwargs={"user_id": self.user.id})
+
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_user_can_block_other_user(self):
+        url = reverse("user-block")
+
+        response = self.client.post(
+            url,
+            data={"user_id": self.other_user.id},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertTrue(
+            Block.objects.filter(
+                blocker=self.user,
+                blocked=self.other_user,
+            ).exists()
+        )
+
+    def test_block_removes_follow_relationship(self):
+        Follow.objects.create(
+            follower=self.user,
+            following=self.other_user,
+        )
+
+        url = reverse("user-block")
+
+        response = self.client.post(
+            url,
+            data={"user_id": self.other_user.id},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertFalse(
+            Follow.objects.filter(
+                follower=self.user,
+                following=self.other_user,
             ).exists()
         )
