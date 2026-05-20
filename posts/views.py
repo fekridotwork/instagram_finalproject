@@ -1,53 +1,57 @@
-from datetime import timezone
-
+from django.db.models import Count, Exists, OuterRef, Q
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import status 
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import generics, viewsets
+from rest_framework.response import Response
 
 from accounts.models import User
+from interactions.models import Like, SavePost
 from interactions.serializers import FollowUserSerializer
+from posts.services.annotations import annotate_post_interactions
+from posts.services.search import (VALID_SEARCH_TYPES, normalize_search_term,
+                                   search_posts, search_users)
+from posts.services.visibility import can_view_post, can_view_profile
 
 from .models import Post, Story
-from .serializers import (
-    PostSerializer,
-    PostListSerializer,
-    PostDetailSerializer,
-    StorySerializer,
-)
+from .serializers import (PostDetailSerializer, PostListSerializer,
+                          PostSerializer, StorySerializer)
+from .services.hashtags import sync_post_hashtags
 
-from django.shortcuts import get_object_or_404
-
-from django.contrib.auth import get_user_model
-
-from django.db.models import Count, Q
-
-from posts.permissions import can_view_post
-
-from interactions.models import Like, SavePost
-
-from .services import sync_post_hashtags
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    lookup_field = "id"
     lookup_url_kwarg = "post_id"
 
     def get_queryset(self):
         queryset = (
             Post.objects
             .filter(is_deleted=False)
-            .select_related("user")
-            .annotate(likes_count=Count("received_likes"))
+            .select_related("user", "user__profile")
+            .annotate(likes_count=Count("received_likes", distinct=True))
         )
 
         if self.action == "list":
-            queryset = queryset.filter(
-                Q(user=self.request.user)
-                | Q(user__profile__is_private=False, visibility="public")
+            following_ids = self.request.user.following_relations.values(
+                "following_id"
             )
 
+            queryset = queryset.filter(
+                Q(user=self.request.user)
+                | Q(
+                    user__profile__is_private=False,
+                    visibility="public",
+                )
+                | Q(
+                    user__in=following_ids,
+                    visibility__in=["followers", "public"]
+                )
+            )
+        queryset = annotate_post_interactions(
+            queryset,
+            self.request.user,
+        )
         return queryset
 
     def get_serializer_class(self):
@@ -83,9 +87,17 @@ class PostViewSet(viewsets.ModelViewSet):
         sync_post_hashtags(post)
 
     def perform_update(self, serializer):
-        post = serializer.save(is_edited=True)
-        sync_post_hashtags(post)
+        has_changes = any(
+            getattr(serializer.instance, field) != value
+            for field, value in serializer.validated_data.items()
+        )
 
+        if has_changes:
+            post = serializer.save(is_edited=True)
+        else:
+            post = serializer.save()
+
+        sync_post_hashtags(post)
 
     def perform_destroy(self, instance):
         instance.is_deleted = True
@@ -94,6 +106,12 @@ class PostViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post", "delete"], url_path="like")
     def like(self, request, post_id=None):
         post = self.get_object()
+
+        if not can_view_post(request.user, post):
+            self.permission_denied(
+                request,
+                message="You do not have permission to like this post.",
+            )
 
         if request.method == "POST":
             like, created = Like.objects.get_or_create(
@@ -138,6 +156,7 @@ class PostViewSet(viewsets.ModelViewSet):
                 request,
                 message="You do not have permission to save this post.",
             )
+
 
         if request.method == "POST":
             saved_post, created = SavePost.objects.get_or_create(
@@ -188,23 +207,37 @@ class UserPostsAPIView(generics.ListAPIView):
     def get_queryset(self):
         user = self.get_user()
 
-        if user.profile.is_private and user != self.request.user:
+        if not can_view_profile(self.request.user, user):
             self.permission_denied(
                 self.request,
-                message="This account is private."
+                message="You do not have permission to view this profile.",
             )
 
-        posts = (
+        queryset = (
             Post.objects
-            .filter(user=user, is_deleted=False)
-            .select_related("user")
-            .annotate(likes_count=Count("received_likes"))
+            .filter(
+                user=user,
+                is_deleted=False,
+            )
+            .select_related("user", "user__profile")
+            .annotate(
+                likes_count=Count("received_likes", distinct=True)
+            )
+            .order_by("-created_at")
         )
 
         if user != self.request.user:
-            posts = posts.filter(visibility="public")
+            queryset = queryset.filter(
+                Q(visibility="public") |
+                Q(visibility="followers")
+            )
+        
+        queryset = annotate_post_interactions(
+            queryset,
+            self.request.user,
+        )
 
-        return posts
+        return queryset
     
 class StoryCreateAPIView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -218,75 +251,94 @@ class StoryFeedAPIView(generics.ListAPIView):
     serializer_class = StorySerializer
 
     def get_queryset(self):
-        following_users = self.request.user.following_relations.values_list(
-            "following_id",
-            flat=True,
+        following_ids = self.request.user.following_relations.values(
+            "following_id"
         )
 
         return (
             Story.objects
             .filter(
-                Q(user_id__in=following_users) | Q(user=self.request.user),
+                Q(user=self.request.user)
+                | Q(
+                    user__profile__is_private=False,
+                    visibility="public",
+                )
+                | Q(
+                    user__in=following_ids,
+                    visibility__in=["public", "followers"],
+                ),
                 is_deleted=False,
                 expires_at__gt=timezone.now(),
+                user__is_active=True,
             )
-            .select_related("user")
+            .select_related("user", "user__profile")
+            .order_by("-created_at")
         )
     
-class PostHashtagSearchAPIView(generics.ListAPIView):
+class GlobalSearchAPIView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = PostListSerializer
 
-    def get_queryset(self):
-        hashtag = self.request.query_params.get("hashtag")
+    def get(self, request):
+        search = request.query_params.get("search", "")
+        search_type = request.query_params.get("type", "all").lower()
 
-        if not hashtag:
-            return Post.objects.none()
-
-        hashtag = hashtag.lower().lstrip("#")
-
-        return (
-            Post.objects
-            .filter(
-                hashtags__name=hashtag,
-                is_deleted=False,
+        if search_type not in VALID_SEARCH_TYPES:
+            return Response(
+                {
+                    "type": "Invalid search type. Choose from: all, users, posts."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
-            .select_related("user")
-            .annotate(likes_count=Count("received_likes"))
-        )
-    
-class UserSearchAPIView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = FollowUserSerializer
 
-    def get_queryset(self):
-        username = self.request.query_params.get("username")
-
-        if not username:
-            return User.objects.none()
-
-        return (
-            User.objects
-            .filter(
-                username__icontains=username,
-                is_active=True,
+        if not search.strip():
+            return Response(
+                {
+                    "users": [],
+                    "posts": [],
+                },
+                status=status.HTTP_200_OK,
             )
-            .select_related("profile")
-        )
 
+        normalized_search = normalize_search_term(search)
+
+        return Response(
+            {
+                "users": search_users(
+                    normalized_search,
+                    request.user,
+                    search_type,
+                ),
+                "posts": search_posts(
+                    normalized_search,
+                    request.user,
+                    search_type,
+                ),
+            },
+            status=status.HTTP_200_OK,
+        )
 class ExploreAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PostListSerializer
 
     def get_queryset(self):
-        return (
+        queryset = (
             Post.objects
             .filter(
                 is_deleted=False,
                 visibility="public",
+                user__is_active=True,
                 user__profile__is_private=False,
             )
-            .select_related("user")
-            .annotate(likes_count=Count("received_likes"))
+            .select_related("user", "user__profile")
+            .annotate(
+                likes_count=Count("received_likes", distinct=True)
+            )
             .order_by("-likes_count", "-created_at")
         )
+
+        queryset = annotate_post_interactions(
+            queryset,
+            self.request.user,
+        )
+
+        return queryset

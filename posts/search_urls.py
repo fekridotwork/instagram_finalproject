@@ -1,16 +1,11 @@
 from django.urls import path
 
-from .views import PostHashtagSearchAPIView, UserSearchAPIView
+from .views import GlobalSearchAPIView
 
 urlpatterns = [
     path(
-        "posts/",
-        PostHashtagSearchAPIView.as_view(),
-        name="post-hashtag-search",
+        "", 
+        GlobalSearchAPIView.as_view(), 
+        name="global-search"
     ),
-    path(
-        "users/",
-        UserSearchAPIView.as_view(),
-        name="user_search",
-    )
 ]

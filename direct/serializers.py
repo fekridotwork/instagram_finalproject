@@ -2,8 +2,8 @@ from rest_framework import serializers
 
 from accounts.models import User
 from interactions.serializers import FollowUserSerializer
-from .models import DirectConversation, DirectMessage
 
+from .models import DirectConversation, DirectMessage
 
 
 class StartConversationSerializer(serializers.Serializer):
@@ -58,30 +58,27 @@ class DirectMessageSerializer(serializers.ModelSerializer):
             "sender_id",
             "created_at",
         ]
+    def validate_text(self, value):
+        value = value.strip()
+
+        if not value:
+            raise serializers.ValidationError(
+                "Message cannot be empty."
+            )
+
+        if len(value) > 2000:
+            raise serializers.ValidationError(
+                "Message is too long."
+            )
+
+        return value
     
-class DirectMessageSerializer(serializers.ModelSerializer):
-    sender_id = serializers.IntegerField(
-        source="sender.id",
-        read_only=True,
-    )
-
-    class Meta:
-        model = DirectMessage
-        fields = [
-            "id",
-            "sender_id",
-            "text",
-            "created_at",
-        ]
-        read_only_fields = [
-            "id",
-            "sender_id",
-            "created_at",
-        ]
-
-
 class InboxConversationSerializer(serializers.ModelSerializer):
     other_user = serializers.SerializerMethodField()
+
+    last_message = serializers.CharField(read_only=True)
+    last_message_sender_id = serializers.IntegerField(read_only=True)
+    last_message_created_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = DirectConversation
@@ -89,14 +86,22 @@ class InboxConversationSerializer(serializers.ModelSerializer):
             "id",
             "other_user",
             "updated_at",
+            "last_message",
+            "last_message_sender_id",
+            "last_message_created_at",
         ]
 
     def get_other_user(self, obj):
-        request_user = self.context["request"].user
+        request = self.context["request"]
+        following_ids = self.context.get("following_ids", set())
 
-        if obj.user1 == request_user:
+        if obj.user1 == request.user:
             other_user = obj.user2
         else:
             other_user = obj.user1
 
+        other_user.is_following = other_user.id in following_ids
+
         return FollowUserSerializer(other_user).data
+    
+    

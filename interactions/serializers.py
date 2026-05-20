@@ -1,7 +1,9 @@
 from rest_framework import serializers
 
 from accounts.models import User
+
 from .models import Comment
+
 
 class CommentSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="user.id", read_only=True)
@@ -34,7 +36,11 @@ class CommentSerializer(serializers.ModelSerializer):
         ]
 
     def get_replies(self, obj):
-        replies = obj.replies.filter(is_deleted=False)
+        replies = getattr(obj, "prefetched_replies", None)
+
+        if replies is None:
+            replies = obj.replies.filter(is_deleted=False).select_related("user")
+
         return CommentSerializer(replies, many=True).data
 
     def validate_text(self, value):
@@ -65,7 +71,9 @@ class FollowUserSerializer(serializers.ModelSerializer):
         source="profile.is_private",
         read_only=True,
     )
-
+    is_following = serializers.BooleanField(
+        read_only=True
+    )
     # followers_count = serializers.IntegerField(read_only=True)
     # following_count = serializers.IntegerField(read_only=True)
 
@@ -77,4 +85,5 @@ class FollowUserSerializer(serializers.ModelSerializer):
             "username",
             "display_name",
             "is_private",
+            "is_following",
         ]

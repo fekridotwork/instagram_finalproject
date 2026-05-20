@@ -1,10 +1,12 @@
-from django.db import models
 from datetime import timedelta
+
+from django.db import models
 from django.utils import timezone
 
 MEDIA_TYPE_CHOICES = [
     ('image', 'Image'),
     ('video', 'Video'),
+    ("text", "Text"),
 ]
 VISIBILITY_CHOICES = [
     ('public', 'Public'),
@@ -73,6 +75,8 @@ class Story(models.Model):
     )
     media = models.FileField(
         upload_to="stories/",
+        blank=True,
+        null=True,
     )
     media_type = models.CharField(
         max_length=10,

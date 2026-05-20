@@ -1,30 +1,24 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from django.conf import settings
 from rest_framework import status
-
-from .services import (
-    generate_otp_code, 
-    store_otp, 
-    verify_otp, 
-    get_user_by_identifier,
-    user_exists_by_identifier,
-    create_user_by_identifier,
-    get_otp_cooldown_remaining,
-    set_otp_cooldown,
-)
-
-from .serializers import RequestOTPSerializer, VerifyOTPSerializer, LogoutSerializer
-
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
-from rest_framework.permissions import IsAuthenticated
+from authentication.throttles import OTPRateThrottle
 
-from django.conf import settings
-
+from .serializers import (LogoutSerializer, RequestOTPSerializer,
+                          VerifyOTPSerializer)
+from .services import (OTPTooManyAttemptsError, create_user_by_identifier,
+                       generate_otp_code, get_otp_cooldown_remaining,
+                       get_user_by_identifier, set_otp_cooldown, store_otp,
+                       user_exists_by_identifier, verify_otp)
 from .tasks import send_otp_task
 
 
 class RequestOTPAPIView(APIView):
+    throttle_classes = [OTPRateThrottle]
+
     def post(self, request):
         serializer = RequestOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -36,13 +30,13 @@ class RequestOTPAPIView(APIView):
 
         if purpose == "register" and user_exists:
             return Response(
-                {"error": "User with this identifier already exists."},
+                {"detail": "User with this identifier already exists."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if purpose == "login" and not user_exists:
             return Response(
-                {"error": "User with this identifier does not exist."},
+                {"detail": "User with this identifier does not exist."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -51,7 +45,7 @@ class RequestOTPAPIView(APIView):
         if cooldown_remaining > 0:
             return Response(
                 {
-                    "error": f"Try again in {cooldown_remaining} seconds.",
+                    "detail": f"Try again in {cooldown_remaining} seconds.",
                     "retry_after": cooldown_remaining,
                 },
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -73,6 +67,9 @@ class RequestOTPAPIView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 class VerifyOTPAPIView(APIView):
+    throttle_classes = [OTPRateThrottle]
+
+
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -81,17 +78,24 @@ class VerifyOTPAPIView(APIView):
         purpose = serializer.validated_data['purpose']
         code = serializer.validated_data['code']
 
-        is_valid = verify_otp(identifier, purpose, code)
+        try:
+            is_valid = verify_otp(identifier, purpose, code)
+        except OTPTooManyAttemptsError:
+            return Response(
+                {"detail": "Too many failed attempts. Try again later."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
 
         if not is_valid:
             return Response(
-                {"error": "Invalid OTP"},
-                status=status.HTTP_400_BAD_REQUEST)
+                {"detail": "Invalid OTP"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if purpose == "register":
             if user_exists_by_identifier(identifier):
                 return Response(
-                    {"error": "User with this identifier already exists."},
+                    {"detail": "User with this identifier already exists."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -103,7 +107,7 @@ class VerifyOTPAPIView(APIView):
 
             if user is None:
                 return Response(
-                    {"error": "User with this identifier does not exist."},
+                    {"detail": "User with this identifier does not exist."},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
@@ -141,7 +145,7 @@ class LogoutAPIView(APIView):
             token.blacklist()
         except TokenError as e:
             return Response(
-                {"error": str(e)},
+                {"detail": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
         return Response({"message": "Logged out successfully",})

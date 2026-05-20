@@ -1,19 +1,20 @@
-from rest_framework import generics, status
-from rest_framework.response import Response
-from django.db.models import Q
+from django.db.models import OuterRef, Q, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from accounts.models import User
+
 from .models import DirectConversation, DirectMessage
-from .serializers import (
-    StartConversationSerializer,
-    ConversationSerializer,
-    InboxConversationSerializer,
-    DirectMessageSerializer,
-)
+from .serializers import (ConversationSerializer, DirectMessageSerializer,
+                          InboxConversationSerializer,
+                          StartConversationSerializer)
+
 
 class ConversationListCreateAPIView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = StartConversationSerializer
 
     def post(self, request):
@@ -40,21 +41,67 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
     def get(self, request):
+        last_message_queryset = (
+            DirectMessage.objects
+            .filter(conversation=OuterRef("pk"))
+            .order_by("-created_at")
+        )
+
         conversations = (
             DirectConversation.objects
             .filter(Q(user1=request.user) | Q(user2=request.user))
-            .select_related("user1", "user2")
+            .select_related(
+                "user1",
+                "user1__profile",
+                "user2",
+                "user2__profile",
+            )
+            .annotate(
+                last_message=Subquery(
+                    last_message_queryset.values("text")[:1]
+                ),
+                last_message_sender_id=Subquery(
+                    last_message_queryset.values("sender_id")[:1]
+                ),
+                last_message_created_at=Subquery(
+                    last_message_queryset.values("created_at")[:1]
+                ),
+            )
             .order_by("-updated_at")
         )
+
+        following_ids = set(
+            request.user.following_relations.values_list(
+                "following_id",
+                flat=True,
+            )
+        )
+
+        page = self.paginate_queryset(conversations)
+
+        if page is not None:
+            serializer = InboxConversationSerializer(
+                page,
+                many=True,
+                context={
+                    "request": request,
+                    "following_ids": following_ids,
+                },
+            )
+            return self.get_paginated_response(serializer.data)
 
         serializer = InboxConversationSerializer(
             conversations,
             many=True,
-            context={"request": request},
+            context={
+                "request": request,
+                "following_ids": following_ids,
+            },
         )
         return Response(serializer.data)
     
 class ConversationMessagesAPIView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = DirectMessageSerializer
 
     def get_conversation(self):
@@ -73,6 +120,12 @@ class ConversationMessagesAPIView(generics.GenericAPIView):
             .select_related("sender")
             .order_by("created_at")
         )
+
+        page = self.paginate_queryset(messages)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(messages, many=True)
         return Response(serializer.data)

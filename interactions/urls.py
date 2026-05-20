@@ -1,11 +1,8 @@
 from django.urls import path
 
-from .views import (
-    UserFollowAPIView,
-    MyFollowersListAPIView,
-    MyFollowingListAPIView,
-    MySavedPostsListAPIView
-)
+from .views import (MutualFollowersAPIView, MyFollowersListAPIView,
+                    MyFollowingListAPIView, MySavedPostsListAPIView,
+                    UserFollowAPIView)
 
 urlpatterns = [
     path(
@@ -27,5 +24,10 @@ urlpatterns = [
         "me/saved-posts/",
         MySavedPostsListAPIView.as_view(),
         name="my-saved-posts",
+    ),
+    path(
+        "users/<int:user_id>/mutual-followers/",
+        MutualFollowersAPIView.as_view(),
+        name="mutual-followers",
     ),
 ]

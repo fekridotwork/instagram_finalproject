@@ -1,11 +1,9 @@
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 
+from interactions.views import CommentDetailAPIView, CommentListCreateAPIView
+
 from .views import PostViewSet
-from interactions.views import (
-    CommentListCreateAPIView,
-    CommentDetailAPIView,
-)
 
 router = SimpleRouter()
 router.register("", PostViewSet, basename="post")

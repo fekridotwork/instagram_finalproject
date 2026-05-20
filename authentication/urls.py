@@ -1,5 +1,7 @@
 from django.urls import path
-from .views import RequestOTPAPIView, VerifyOTPAPIView, MeAPIView, LogoutAPIView
+
+from .views import (LogoutAPIView, MeAPIView, RequestOTPAPIView,
+                    VerifyOTPAPIView)
 
 urlpatterns = [
     path("request-otp/", RequestOTPAPIView.as_view(), name="request_otp"),
