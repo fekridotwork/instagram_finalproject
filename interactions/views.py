@@ -6,7 +6,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import User
-from interactions.services import annotate_follow_status
+from interactions.serializers import BlockUserSerializer
+from interactions.services import (
+    block_user, unblock_user, 
+    annotate_follow_status, 
+    is_blocked_between
+)
+from interactions.services import exclude_blocked_content
 from posts.models import Post
 from posts.serializers import PostListSerializer
 from posts.services.annotations import annotate_post_interactions
@@ -103,9 +109,16 @@ class UserFollowAPIView(APIView):
 
     def get_target_user(self, user_id):
         return get_object_or_404(User, id=user_id, is_active=True)
+    
 
     def post(self, request, user_id):
         target_user = self.get_target_user(user_id)
+
+        if is_blocked_between(request.user, target_user):
+            self.permission_denied(
+                request,
+                message="You cannot follow this user.",
+            )
 
         if target_user == request.user:
             return Response(
@@ -149,6 +162,56 @@ class UserFollowAPIView(APIView):
             {"message": "User unfollowed successfully."},
             status=status.HTTP_200_OK,
         )
+    
+class UserBlockAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = BlockUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        target_user = get_object_or_404(
+            User,
+            id=serializer.validated_data["user_id"],
+            is_active=True,
+        )
+
+        try:
+            block_user(request.user, target_user)
+        except ValueError as error:
+            return Response(
+                {"detail": str(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {"detail": "User blocked successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+    def delete(self, request):
+        serializer = BlockUserSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        target_user = get_object_or_404(
+            User,
+            id=serializer.validated_data["user_id"],
+            is_active=True,
+        )
+
+        try:
+            unblock_user(request.user, target_user)
+        except ValueError as error:
+            return Response(
+                {"detail": str(error)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {"detail": "User unblocked successfully."},
+            status=status.HTTP_200_OK,
+        )
+
 
 class MyFollowersListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -258,6 +321,11 @@ class MySavedPostsListAPIView(generics.ListAPIView):
                 likes_count=Count("received_likes", distinct=True)
             )
             .order_by("-created_at")
+        )
+
+        queryset = exclude_blocked_content(
+            queryset,
+            self.request.user,
         )
 
         queryset = annotate_post_interactions(

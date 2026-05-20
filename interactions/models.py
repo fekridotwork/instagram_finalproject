@@ -28,6 +28,38 @@ class Follow(models.Model):
         ]
     def __str__(self):
         return f"{self.follower} -> {self.following}"
+    
+
+class Block(models.Model):
+    blocker = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.CASCADE,
+        related_name="blocking_relations",
+    )
+    blocked = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.CASCADE,
+        related_name="blocked_by_relations",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["blocker", "blocked"],
+                name="unique_block_relation",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(blocker=models.F("blocked")),
+                name="prevent_self_block",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.blocker} blocked {self.blocked}"
+    
+
 class Like(models.Model):
     user = models.ForeignKey(
         "accounts.User",

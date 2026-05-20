@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.models import Profile
 from accounts.serializers import PublicProfileSerializer
 from posts.models import Post
+from posts.services.visibility import can_view_profile
 
 from .serializers import ProfileSerializer
 
@@ -22,6 +23,17 @@ class PublicProfileAPIView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
     lookup_field = "user__username"
     lookup_url_kwarg = "username"
+
+    def get_object(self):
+        profile = super().get_object()
+
+        if not can_view_profile(self.request.user, profile.user):
+            self.permission_denied(
+                self.request,
+                message="You do not have permission to view this profile.",
+            )
+
+        return profile
 
     def get_queryset(self):
         return (

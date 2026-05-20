@@ -7,8 +7,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import User
-from interactions.models import Like, SavePost
+from interactions.models import Like, SavePost, Block
 from interactions.serializers import FollowUserSerializer
+from interactions.services import exclude_blocked_content
 from posts.services.annotations import annotate_post_interactions
 from posts.services.search import (VALID_SEARCH_TYPES, normalize_search_term,
                                    search_posts, search_users)
@@ -25,11 +26,14 @@ class PostViewSet(viewsets.ModelViewSet):
     lookup_url_kwarg = "post_id"
 
     def get_queryset(self):
-        queryset = (
+        queryset = exclude_blocked_content(
             Post.objects
             .filter(is_deleted=False)
             .select_related("user", "user__profile")
-            .annotate(likes_count=Count("received_likes", distinct=True))
+            .annotate(
+                likes_count=Count("received_likes", distinct=True)
+            ),
+            self.request.user,
         )
 
         if self.action == "list":
@@ -213,7 +217,7 @@ class UserPostsAPIView(generics.ListAPIView):
                 message="You do not have permission to view this profile.",
             )
 
-        queryset = (
+        queryset = exclude_blocked_content(
             Post.objects
             .filter(
                 user=user,
@@ -223,7 +227,8 @@ class UserPostsAPIView(generics.ListAPIView):
             .annotate(
                 likes_count=Count("received_likes", distinct=True)
             )
-            .order_by("-created_at")
+            .order_by("-created_at"),
+            self.request.user,
         )
 
         if user != self.request.user:
@@ -255,7 +260,7 @@ class StoryFeedAPIView(generics.ListAPIView):
             "following_id"
         )
 
-        return (
+        return exclude_blocked_content(
             Story.objects
             .filter(
                 Q(user=self.request.user)
@@ -272,7 +277,8 @@ class StoryFeedAPIView(generics.ListAPIView):
                 user__is_active=True,
             )
             .select_related("user", "user__profile")
-            .order_by("-created_at")
+            .order_by("-created_at"),
+            self.request.user,
         )
     
 class GlobalSearchAPIView(generics.GenericAPIView):
@@ -321,7 +327,7 @@ class ExploreAPIView(generics.ListAPIView):
     serializer_class = PostListSerializer
 
     def get_queryset(self):
-        queryset = (
+        queryset = exclude_blocked_content(
             Post.objects
             .filter(
                 is_deleted=False,
@@ -333,7 +339,8 @@ class ExploreAPIView(generics.ListAPIView):
             .annotate(
                 likes_count=Count("received_likes", distinct=True)
             )
-            .order_by("-likes_count", "-created_at")
+            .order_by("-likes_count", "-created_at"),
+            self.request.user,
         )
 
         queryset = annotate_post_interactions(
