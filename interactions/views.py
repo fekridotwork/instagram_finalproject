@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import User
+from interactions.services import annotate_follow_status
 from posts.models import Post
 from posts.serializers import PostListSerializer
 from posts.services.annotations import annotate_post_interactions
@@ -154,7 +155,7 @@ class MyFollowersListAPIView(generics.ListAPIView):
     serializer_class = FollowUserSerializer
 
     def get_queryset(self):
-        return (
+        queryset = (
             User.objects
             .filter(
                 id__in=Follow.objects.filter(
@@ -164,13 +165,20 @@ class MyFollowersListAPIView(generics.ListAPIView):
             )
             .select_related("profile")
         )
+
+        queryset = annotate_follow_status(
+            queryset,
+            self.request.user,
+        )
+
+        return queryset
     
 class MyFollowingListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowUserSerializer
 
     def get_queryset(self):
-        return (
+        queryset = (
             User.objects
             .filter(
                 id__in=Follow.objects.filter(
@@ -180,6 +188,13 @@ class MyFollowingListAPIView(generics.ListAPIView):
             )
             .select_related("profile")
         )
+
+        queryset = annotate_follow_status(
+            queryset,
+            self.request.user,
+        )
+
+        return queryset
     
 class MutualFollowersAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
@@ -200,12 +215,20 @@ class MutualFollowersAPIView(generics.ListAPIView):
             follower=target_user,
         ).values_list("following_id", flat=True)
 
-        return (
+        queryset = (
             User.objects
             .filter(id__in=my_following_ids)
             .filter(id__in=target_following_ids)
+            .filter(is_active=True)
             .select_related("profile")
         )
+
+        queryset = annotate_follow_status(
+            queryset,
+            self.request.user,
+        )
+
+        return queryset
 class MySavedPostsListAPIView(generics.ListAPIView):
     serializer_class = PostListSerializer
     permission_classes = [IsAuthenticated]
