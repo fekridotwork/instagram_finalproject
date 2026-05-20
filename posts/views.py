@@ -231,6 +231,11 @@ class UserPostsAPIView(generics.ListAPIView):
                 Q(visibility="public") |
                 Q(visibility="followers")
             )
+        
+        queryset = annotate_post_interactions(
+            queryset,
+            self.request.user,
+        )
 
         return queryset
     

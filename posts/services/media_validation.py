@@ -51,9 +51,9 @@ def validate_media_file(media, media_type):
                     "media": "Video file size must be 20MB or less."
                 }
             )
-        else:
-            raise serializers.ValidationError(
-                {
-                    "media_type": "Invalid media type."
-                }
-            )
+    else:
+        raise serializers.ValidationError(
+            {
+                "media_type": "Invalid media type."
+            }
+        )
