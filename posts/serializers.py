@@ -1,9 +1,11 @@
 from django.db.models import Prefetch
 from rest_framework import serializers
+
 from interactions.models import Comment
 from interactions.serializers import CommentSerializer
-from .models import Post, Story
 from posts.services.media_validation import validate_media_file
+
+from .models import Post, Story
 
 
 class PostSerializer(serializers.ModelSerializer):

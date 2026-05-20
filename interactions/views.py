@@ -1,20 +1,18 @@
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
-from django.db.models import Q, Count
-
 from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
- 
+
 from accounts.models import User
 from posts.models import Post
-from posts.services.visibility import can_view_post
-from posts.services.annotations import annotate_post_interactions
 from posts.serializers import PostListSerializer
+from posts.services.annotations import annotate_post_interactions
+from posts.services.visibility import can_view_post
 
 from .models import Comment, Follow, SavePost
 from .serializers import CommentSerializer, FollowUserSerializer
-
 
 
 class CommentListCreateAPIView(generics.ListCreateAPIView):

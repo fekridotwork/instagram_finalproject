@@ -1,12 +1,8 @@
 from django.urls import path
 
-from .views import (
-    UserFollowAPIView,
-    MyFollowersListAPIView,
-    MyFollowingListAPIView,
-    MySavedPostsListAPIView,
-    MutualFollowersAPIView
-)
+from .views import (MutualFollowersAPIView, MyFollowersListAPIView,
+                    MyFollowingListAPIView, MySavedPostsListAPIView,
+                    UserFollowAPIView)
 
 urlpatterns = [
     path(

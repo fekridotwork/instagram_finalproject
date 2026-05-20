@@ -1,39 +1,24 @@
-from posts.services.search import (
-    VALID_SEARCH_TYPES,
-    normalize_search_term,
-    search_posts,
-    search_users,
-)
+from django.db.models import Count, Exists, OuterRef, Q
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import status 
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import generics, viewsets
+from rest_framework.response import Response
 
 from accounts.models import User
+from interactions.models import Like, SavePost
 from interactions.serializers import FollowUserSerializer
+from posts.services.annotations import annotate_post_interactions
+from posts.services.search import (VALID_SEARCH_TYPES, normalize_search_term,
+                                   search_posts, search_users)
+from posts.services.visibility import can_view_post, can_view_profile
 
 from .models import Post, Story
-from .serializers import (
-    PostSerializer,
-    PostListSerializer,
-    PostDetailSerializer,
-    StorySerializer,
-)
-
-from django.shortcuts import get_object_or_404
-
-from django.db.models import Count, Exists, OuterRef, Q
-
-from django.utils import timezone
-
-from posts.services.visibility import can_view_post, can_view_profile
-from posts.services.annotations import annotate_post_interactions
-
-
-from interactions.models import Like, SavePost
-
+from .serializers import (PostDetailSerializer, PostListSerializer,
+                          PostSerializer, StorySerializer)
 from .services.hashtags import sync_post_hashtags
+
 
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]

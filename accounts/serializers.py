@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from .models import Profile, User
 
+
 class ProfileSerializer(serializers.ModelSerializer):
 
     username = serializers.CharField(source="user.username")

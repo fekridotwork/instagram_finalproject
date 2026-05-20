@@ -1,18 +1,17 @@
+from django.db.models import OuterRef, Q, Subquery
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Q, OuterRef, Subquery
-from django.shortcuts import get_object_or_404
-from django.utils import timezone
 
 from accounts.models import User
+
 from .models import DirectConversation, DirectMessage
-from .serializers import (
-    StartConversationSerializer,
-    ConversationSerializer,
-    InboxConversationSerializer,
-    DirectMessageSerializer,
-)
+from .serializers import (ConversationSerializer, DirectMessageSerializer,
+                          InboxConversationSerializer,
+                          StartConversationSerializer)
+
 
 class ConversationListCreateAPIView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]

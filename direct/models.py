@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
+
 class DirectConversation(models.Model):
     user1 = models.ForeignKey(
         "accounts.User",

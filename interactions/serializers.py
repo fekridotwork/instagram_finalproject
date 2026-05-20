@@ -1,7 +1,9 @@
 from rest_framework import serializers
 
 from accounts.models import User
+
 from .models import Comment
+
 
 class CommentSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="user.id", read_only=True)

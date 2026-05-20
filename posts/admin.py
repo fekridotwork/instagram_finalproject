@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import Post, Story, Hashtag, PostHashtag
-
 from django.db.models import Count
-from .models import Post
+
+from .models import Hashtag, Post, PostHashtag, Story
+
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):

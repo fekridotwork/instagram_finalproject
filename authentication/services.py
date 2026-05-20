@@ -1,10 +1,10 @@
 import secrets
-
 import uuid
-from accounts.models import User
 
 import redis
 from django.conf import settings
+
+from accounts.models import User
 
 OTP_PURPOSE = ("login", "register")
 OTP_TTL_SECONDS = 120

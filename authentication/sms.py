@@ -1,5 +1,6 @@
 from django.conf import settings
-from kavenegar import KavenegarAPI, APIException, HTTPException
+from kavenegar import APIException, HTTPException, KavenegarAPI
+
 
 def send_otp(identifier,purpose,code):
     if not settings.KAVENEGAR_API_KEY:

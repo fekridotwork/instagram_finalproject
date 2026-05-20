@@ -1,15 +1,13 @@
+from django.db.models import Count, Exists, OuterRef, Q
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import Profile
+from accounts.serializers import PublicProfileSerializer
+from posts.models import Post
 
 from .serializers import ProfileSerializer
 
-from django.db.models import Count, Exists, OuterRef, Q
-
-from posts.models import Post
-
-from accounts.serializers import PublicProfileSerializer
 
 class ProfileAPIView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]

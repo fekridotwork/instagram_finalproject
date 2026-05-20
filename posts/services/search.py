@@ -1,11 +1,10 @@
-from django.db.models import Count, Q, Exists, OuterRef
+from django.db.models import Count, Exists, OuterRef, Q
 
 from accounts.models import User
 from interactions.serializers import FollowUserSerializer
 from posts.models import Post
 from posts.serializers import PostListSerializer
 from posts.services.annotations import annotate_post_interactions
-
 
 VALID_SEARCH_TYPES = {"all", "users", "posts"}
 DEFAULT_SEARCH_LIMIT = 10

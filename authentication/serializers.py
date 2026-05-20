@@ -1,10 +1,9 @@
-from django.core.validators import validate_email
+import phonenumbers
 from django.core.exceptions import ValidationError as DjangoValidationError
-
+from django.core.validators import validate_email
+from phonenumbers import NumberParseException
 from rest_framework import serializers
 
-import phonenumbers
-from phonenumbers import NumberParseException
 
 def normalize_phone_number(value: str) -> str:
     raw_phone = value.strip().replace(" ", "").replace("-", "")

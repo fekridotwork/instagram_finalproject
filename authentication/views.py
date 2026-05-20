@@ -1,28 +1,18 @@
-from authentication.throttles import OTPRateThrottle
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from django.conf import settings
 from rest_framework import status
-
-from .services import (
-    generate_otp_code, 
-    store_otp, 
-    verify_otp, 
-    get_user_by_identifier,
-    user_exists_by_identifier,
-    create_user_by_identifier,
-    get_otp_cooldown_remaining,
-    set_otp_cooldown,
-    OTPTooManyAttemptsError
-)
-
-from .serializers import RequestOTPSerializer, VerifyOTPSerializer, LogoutSerializer
-
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
-from rest_framework.permissions import IsAuthenticated
+from authentication.throttles import OTPRateThrottle
 
-from django.conf import settings
-
+from .serializers import (LogoutSerializer, RequestOTPSerializer,
+                          VerifyOTPSerializer)
+from .services import (OTPTooManyAttemptsError, create_user_by_identifier,
+                       generate_otp_code, get_otp_cooldown_remaining,
+                       get_user_by_identifier, set_otp_cooldown, store_otp,
+                       user_exists_by_identifier, verify_otp)
 from .tasks import send_otp_task
 
 

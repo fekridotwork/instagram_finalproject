@@ -2,8 +2,8 @@ from rest_framework import serializers
 
 from accounts.models import User
 from interactions.serializers import FollowUserSerializer
-from .models import DirectConversation, DirectMessage
 
+from .models import DirectConversation, DirectMessage
 
 
 class StartConversationSerializer(serializers.Serializer):

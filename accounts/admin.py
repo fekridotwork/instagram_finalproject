@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import User, Profile, OTP
+
+from .models import OTP, Profile, User
 
 
 @admin.register(User)
