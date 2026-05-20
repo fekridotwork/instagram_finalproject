@@ -19,13 +19,26 @@ class PostSerializer(serializers.ModelSerializer):
     is_saved = serializers.BooleanField(read_only=True)
 
     def validate(self, attrs):
-        media = attrs.get("media", getattr(self.instance, "media", None))
-        media_type = attrs.get(
-            "media_type",
-            getattr(self.instance, "media_type", None),
-        )
+        media = attrs.get("media")
+        media_type = attrs.get("media_type")
 
-        validate_media_file(media, media_type)
+        if self.instance is None:
+            if not media:
+                raise serializers.ValidationError(
+                    {"media": "Media is required."}
+                )
+
+            if not media_type:
+                raise serializers.ValidationError(
+                    {"media_type": "Media type is required."}
+                )
+
+            validate_media_file(media, media_type)
+            return attrs
+
+        if media is not None:
+            final_media_type = media_type or self.instance.media_type
+            validate_media_file(media, final_media_type)
 
         return attrs
 
