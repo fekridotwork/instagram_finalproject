@@ -1,4 +1,5 @@
 from interactions.models import Follow
+from interactions.services import is_blocked_between
 
 
 def is_following(user, target_user):
@@ -20,6 +21,9 @@ def can_view_profile(user, target_user):
 
     if user == target_user:
         return True
+    
+    if is_blocked_between(user, target_user):
+        return False
 
     if not target_user.profile.is_private:
         return True
@@ -33,6 +37,9 @@ def can_view_content(user, content):
 
     if content.user == user:
         return True
+    
+    if is_blocked_between(user, content.user):
+        return False
 
     is_follower = is_following(user, content.user)
 

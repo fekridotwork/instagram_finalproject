@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import User
+from interactions.services import is_blocked_between
 
 from .models import DirectConversation, DirectMessage
 from .serializers import (ConversationSerializer, DirectMessageSerializer,
@@ -23,6 +24,12 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
 
         target_user_id = serializer.validated_data["user_id"]
         target_user = User.objects.get(id=target_user_id)
+
+        if is_blocked_between(request.user, target_user):
+            self.permission_denied(
+                request,
+                message="You cannot start a conversation with this user.",
+            )
 
         user1, user2 = sorted(
             [request.user, target_user],
@@ -50,6 +57,18 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
         conversations = (
             DirectConversation.objects
             .filter(Q(user1=request.user) | Q(user2=request.user))
+            .exclude(
+                user1__in=request.user.blocking_relations.values("blocked_id")
+            )
+            .exclude(
+                user2__in=request.user.blocking_relations.values("blocked_id")
+            )
+            .exclude(
+                user1__in=request.user.blocked_by_relations.values("blocker_id")
+            )
+            .exclude(
+                user2__in=request.user.blocked_by_relations.values("blocker_id")
+            )
             .select_related(
                 "user1",
                 "user1__profile",
@@ -114,6 +133,18 @@ class ConversationMessagesAPIView(generics.GenericAPIView):
     def get(self, request, conversation_id):
         conversation = self.get_conversation()
 
+        other_user = (
+            conversation.user2
+            if conversation.user1 == request.user
+            else conversation.user1
+        )
+
+        if is_blocked_between(request.user, other_user):
+            self.permission_denied(
+                request,
+                message="You cannot view messages with this user.",
+            )
+
         messages = (
             DirectMessage.objects
             .filter(conversation=conversation)
@@ -132,6 +163,18 @@ class ConversationMessagesAPIView(generics.GenericAPIView):
 
     def post(self, request, conversation_id):
         conversation = self.get_conversation()
+
+        other_user = (
+            conversation.user2
+            if conversation.user1 == request.user
+            else conversation.user1
+        )
+
+        if is_blocked_between(request.user, other_user):
+            self.permission_denied(
+                request,
+                message="You cannot send messages to this user.",
+            )
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

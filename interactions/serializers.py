@@ -87,3 +87,7 @@ class FollowUserSerializer(serializers.ModelSerializer):
             "is_private",
             "is_following",
         ]
+
+
+class BlockUserSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField()

@@ -1,5 +1,7 @@
 from django.urls import path
 
+from interactions.views import UserBlockAPIView
+
 from .views import (MutualFollowersAPIView, MyFollowersListAPIView,
                     MyFollowingListAPIView, MySavedPostsListAPIView,
                     UserFollowAPIView)
@@ -29,5 +31,10 @@ urlpatterns = [
         "users/<int:user_id>/mutual-followers/",
         MutualFollowersAPIView.as_view(),
         name="mutual-followers",
+    ),
+    path(
+        "block/",
+        UserBlockAPIView.as_view(),
+        name="user-block",
     ),
 ]

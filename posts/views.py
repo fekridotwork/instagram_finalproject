@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import User
-from interactions.models import Like, SavePost
+from interactions.models import Like, SavePost, Block
 from interactions.serializers import FollowUserSerializer
 from posts.services.annotations import annotate_post_interactions
 from posts.services.search import (VALID_SEARCH_TYPES, normalize_search_term,
@@ -254,6 +254,13 @@ class StoryFeedAPIView(generics.ListAPIView):
         following_ids = self.request.user.following_relations.values(
             "following_id"
         )
+        blocked_by_me = Block.objects.filter(
+            blocker=self.request.user,
+        ).values_list("blocked_id", flat=True)
+
+        blocked_me = Block.objects.filter(
+            blocked=self.request.user,
+        ).values_list("blocker_id", flat=True)
 
         return (
             Story.objects
@@ -271,6 +278,8 @@ class StoryFeedAPIView(generics.ListAPIView):
                 expires_at__gt=timezone.now(),
                 user__is_active=True,
             )
+            .exclude(user_id__in=blocked_by_me)
+            .exclude(user_id__in=blocked_me)
             .select_related("user", "user__profile")
             .order_by("-created_at")
         )

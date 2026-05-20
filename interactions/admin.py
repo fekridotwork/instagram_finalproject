@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Comment, Follow, Like, SavePost
+from .models import Block, Comment, Follow, Like, SavePost
 
 
 @admin.register(Follow)
@@ -12,6 +12,16 @@ class FollowAdmin(admin.ModelAdmin):
         "following__username",
         "following__email",
     )
+    ordering = ("-created_at",)
+
+@admin.register(Block)
+class BlockAdmin(admin.ModelAdmin):
+    list_display = ("id", "blocker", "blocked", "created_at")
+    search_fields = (
+        "blocker__username",
+        "blocked__username",
+    )
+    list_filter = ("created_at",)
     ordering = ("-created_at",)
 
 
