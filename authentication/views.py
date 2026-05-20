@@ -30,13 +30,13 @@ class RequestOTPAPIView(APIView):
 
         if purpose == "register" and user_exists:
             return Response(
-                {"error": "User with this identifier already exists."},
+                {"detail": "User with this identifier already exists."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if purpose == "login" and not user_exists:
             return Response(
-                {"error": "User with this identifier does not exist."},
+                {"detail": "User with this identifier does not exist."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -45,7 +45,7 @@ class RequestOTPAPIView(APIView):
         if cooldown_remaining > 0:
             return Response(
                 {
-                    "error": f"Try again in {cooldown_remaining} seconds.",
+                    "detail": f"Try again in {cooldown_remaining} seconds.",
                     "retry_after": cooldown_remaining,
                 },
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -82,20 +82,20 @@ class VerifyOTPAPIView(APIView):
             is_valid = verify_otp(identifier, purpose, code)
         except OTPTooManyAttemptsError:
             return Response(
-                {"error": "Too many failed attempts. Try again later."},
+                {"detail": "Too many failed attempts. Try again later."},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
         if not is_valid:
             return Response(
-                {"error": "Invalid OTP"},
+                {"detail": "Invalid OTP"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         if purpose == "register":
             if user_exists_by_identifier(identifier):
                 return Response(
-                    {"error": "User with this identifier already exists."},
+                    {"detail": "User with this identifier already exists."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -107,7 +107,7 @@ class VerifyOTPAPIView(APIView):
 
             if user is None:
                 return Response(
-                    {"error": "User with this identifier does not exist."},
+                    {"detail": "User with this identifier does not exist."},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
@@ -145,7 +145,7 @@ class LogoutAPIView(APIView):
             token.blacklist()
         except TokenError as e:
             return Response(
-                {"error": str(e)},
+                {"detail": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
         return Response({"message": "Logged out successfully",})
