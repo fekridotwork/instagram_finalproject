@@ -108,6 +108,12 @@ class ConversationMessagesAPIView(generics.GenericAPIView):
             .order_by("created_at")
         )
 
+        page = self.paginate_queryset(messages)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = self.get_serializer(messages, many=True)
         return Response(serializer.data)
 
