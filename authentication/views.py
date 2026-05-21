@@ -1,5 +1,6 @@
 from django.conf import settings
-from rest_framework import status
+from drf_spectacular.utils import extend_schema_view
+from rest_framework import status, serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,15 +8,25 @@ from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from authentication.throttles import OTPRateThrottle
 
-from .serializers import (LogoutSerializer, RequestOTPSerializer,
-                          VerifyOTPSerializer)
+from .schemas import (
+    logout_schema, 
+    me_schema,
+    request_otp_schema, 
+    verify_otp_schema,
+)
+from .serializers import (
+    LogoutSerializer, 
+    MeSerializer,
+    RequestOTPSerializer,
+    VerifyOTPSerializer,
+)
 from .services import (OTPTooManyAttemptsError, create_user_by_identifier,
                        generate_otp_code, get_otp_cooldown_remaining,
                        get_user_by_identifier, set_otp_cooldown, store_otp,
                        user_exists_by_identifier, verify_otp)
 from .tasks import send_otp_task
 
-
+@extend_schema_view(post=request_otp_schema)
 class RequestOTPAPIView(APIView):
     throttle_classes = [OTPRateThrottle]
 
@@ -65,10 +76,11 @@ class RequestOTPAPIView(APIView):
             data["code"] = code
 
         return Response(data, status=status.HTTP_200_OK)
+    
 
+@extend_schema_view(post=verify_otp_schema)
 class VerifyOTPAPIView(APIView):
     throttle_classes = [OTPRateThrottle]
-
 
     def post(self, request):
         serializer = VerifyOTPSerializer(data=request.data)
@@ -122,16 +134,17 @@ class VerifyOTPAPIView(APIView):
              },
         status=status.HTTP_200_OK)
 
+
+@extend_schema_view(get=me_schema)
 class MeAPIView(APIView):
     permission_classes = [IsAuthenticated]
-    def get(self, request):
-        return Response({
-            "id": request.user.id,
-            "username": request.user.username,
-            "email": request.user.email,
-            "phone_number": request.user.phone_number,
-        })
 
+    def get(self, request):
+        serializer = MeSerializer(request.user)
+        return Response(serializer.data)
+
+
+@extend_schema_view(post=logout_schema)
 class LogoutAPIView(APIView):
     permission_classes = [IsAuthenticated]
 

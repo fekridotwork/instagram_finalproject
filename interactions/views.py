@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import User
+from drf_spectacular.utils import extend_schema_view
 from interactions.serializers import BlockUserSerializer
 from interactions.services import (
     block_user, unblock_user, 
@@ -19,9 +20,26 @@ from posts.services.annotations import annotate_post_interactions
 from posts.services.visibility import can_view_post
 
 from .models import Comment, Follow, SavePost
+from .schemas import (
+    block_schema,
+    comment_create_schema,
+    comment_delete_schema,
+    comment_list_schema,
+    follow_schema,
+    mutual_followers_schema,
+    my_followers_schema,
+    my_following_schema,
+    my_saved_posts_schema,
+    unfollow_schema,
+    unblock_schema,
+)
 from .serializers import CommentSerializer, FollowUserSerializer
 
 
+@extend_schema_view(
+    get=comment_list_schema,
+    post=comment_create_schema,
+)
 class CommentListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = CommentSerializer
@@ -68,6 +86,10 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
         post.comments_count += 1
         post.save(update_fields=["comments_count"])
 
+
+@extend_schema_view(
+    delete=comment_delete_schema,
+)
 class CommentDetailAPIView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Comment.objects.filter(is_deleted=False)
@@ -104,6 +126,11 @@ class CommentDetailAPIView(generics.DestroyAPIView):
         post.comments_count = max(post.comments_count - deleted_count, 0)
         post.save(update_fields=["comments_count"])
 
+
+@extend_schema_view(
+    post=follow_schema,
+    delete=unfollow_schema,
+)
 class UserFollowAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -163,6 +190,11 @@ class UserFollowAPIView(APIView):
             status=status.HTTP_200_OK,
         )
     
+
+@extend_schema_view(
+    post=block_schema,
+    delete=unblock_schema,
+)    
 class UserBlockAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -213,6 +245,7 @@ class UserBlockAPIView(APIView):
         )
 
 
+@extend_schema_view(get=my_followers_schema)
 class MyFollowersListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowUserSerializer
@@ -236,6 +269,8 @@ class MyFollowersListAPIView(generics.ListAPIView):
 
         return queryset
     
+
+@extend_schema_view(get=my_following_schema)    
 class MyFollowingListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowUserSerializer
@@ -259,6 +294,8 @@ class MyFollowingListAPIView(generics.ListAPIView):
 
         return queryset
     
+
+@extend_schema_view(get=mutual_followers_schema)    
 class MutualFollowersAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowUserSerializer
@@ -292,6 +329,9 @@ class MutualFollowersAPIView(generics.ListAPIView):
         )
 
         return queryset
+    
+
+@extend_schema_view(get=my_saved_posts_schema)    
 class MySavedPostsListAPIView(generics.ListAPIView):
     serializer_class = PostListSerializer
     permission_classes = [IsAuthenticated]

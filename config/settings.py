@@ -49,6 +49,7 @@ LOCAL_APPS = (
 THIRD_PARTY_APPS = (
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
+    "drf_spectacular"
 )
 
 DJANGO_APPS = [
@@ -165,6 +166,7 @@ REST_FRAMEWORK = {
         "user": "1000/hour",
         "otp": "5/minute",
     },
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # JWT
@@ -191,4 +193,26 @@ CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = "Asia/Tehran"
+CELERY_TIMEZONE = "Asia/Tehran" 
+
+# SWAGGER
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Instagram API",
+    "DESCRIPTION": "REST API documentation for Instagram-like social media project.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "TAGS": [
+        {"name": "Authentication"},
+        {"name": "Profiles"},
+        {"name": "Stories"},
+        {"name": "Posts"},
+        {"name": "Interactions - Follow"},
+        {"name": "Interactions - Block"},
+        {"name": "Interactions - Comments"},
+        {"name": "Interactions - Like"},
+        {"name": "Interactions - Save"},
+        {"name": "Discovery"},
+        {"name": "Direct Messages"},
+        {"name": "System"},
+    ],
+}
