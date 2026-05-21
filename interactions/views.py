@@ -23,6 +23,10 @@ from .models import Comment, Follow, SavePost
 from .schemas import (
     block_schema,
     follow_schema,
+    mutual_followers_schema,
+    my_followers_schema,
+    my_following_schema,
+    my_saved_posts_schema,
     unfollow_schema,
     unblock_schema,
 )
@@ -230,6 +234,7 @@ class UserBlockAPIView(APIView):
         )
 
 
+@extend_schema_view(get=my_followers_schema)
 class MyFollowersListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowUserSerializer
@@ -253,6 +258,8 @@ class MyFollowersListAPIView(generics.ListAPIView):
 
         return queryset
     
+
+@extend_schema_view(get=my_following_schema)    
 class MyFollowingListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowUserSerializer
@@ -276,6 +283,8 @@ class MyFollowingListAPIView(generics.ListAPIView):
 
         return queryset
     
+
+@extend_schema_view(get=mutual_followers_schema)    
 class MutualFollowersAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowUserSerializer
@@ -309,6 +318,9 @@ class MutualFollowersAPIView(generics.ListAPIView):
         )
 
         return queryset
+    
+
+@extend_schema_view(get=my_saved_posts_schema)    
 class MySavedPostsListAPIView(generics.ListAPIView):
     serializer_class = PostListSerializer
     permission_classes = [IsAuthenticated]

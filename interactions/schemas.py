@@ -13,6 +13,7 @@ from config.swagger import (
     not_found_response,
     unauthorized_response,
 )
+from posts.serializers import PostListSerializer
 from .serializers import BlockUserSerializer, CommentSerializer, FollowUserSerializer
 
 follow_schema = extend_schema(
@@ -164,5 +165,76 @@ unblock_schema = extend_schema(
             description="Target user was not found or is inactive.",
             example_detail="Not found.",
         ),
+    },
+)
+
+
+my_followers_schema = extend_schema(
+    tags=["Interactions"],
+    summary="List My Followers",
+    description=(
+        "Return the list of active users who follow the authenticated user. "
+        "Each item includes basic user/profile information and whether the "
+        "authenticated user follows them back."
+    ),
+    responses={
+        200: FollowUserSerializer(many=True),
+        401: unauthorized_response(),
+    },
+)
+
+
+my_following_schema = extend_schema(
+    tags=["Interactions"],
+    summary="List My Following",
+    description=(
+        "Return the list of active users that the authenticated user follows. "
+        "Each item includes basic user/profile information and follow status."
+    ),
+    responses={
+        200: FollowUserSerializer(many=True),
+        401: unauthorized_response(),
+    },
+)
+
+
+mutual_followers_schema = extend_schema(
+    tags=["Interactions"],
+    summary="List Mutual Following Users",
+    description=(
+        "Return users that are followed by both the authenticated user and the "
+        "target user. The target user is identified by the user_id path parameter."
+    ),
+    parameters=[
+        OpenApiParameter(
+            name="user_id",
+            type=int,
+            location=OpenApiParameter.PATH,
+            description="ID of the target user used to calculate mutual following users.",
+            required=True,
+        ),
+    ],
+    responses={
+        200: FollowUserSerializer(many=True),
+        401: unauthorized_response(),
+        404: not_found_response(
+            name="MutualFollowersUserNotFoundResponse",
+            description="Target user was not found or is inactive.",
+            example_detail="Not found.",
+        ),
+    },
+)
+
+
+my_saved_posts_schema = extend_schema(
+    tags=["Interactions"],
+    summary="List My Saved Posts",
+    description=(
+        "Return posts saved by the authenticated user. Results respect post visibility, "
+        "privacy rules, deleted posts, inactive users, and block relationships."
+    ),
+    responses={
+        200: PostListSerializer(many=True),
+        401: unauthorized_response(),
     },
 )
