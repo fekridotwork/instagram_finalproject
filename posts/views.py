@@ -25,6 +25,8 @@ from posts.services.visibility import can_view_post, can_view_profile
 
 from .models import Post, Story
 from .schemas import (
+    explore_schema,
+    global_search_schema,
     post_create_schema,
     post_delete_schema,
     post_list_schema,
@@ -319,6 +321,8 @@ class StoryFeedAPIView(generics.ListAPIView):
             self.request.user,
         )
     
+
+@global_search_schema
 class GlobalSearchAPIView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
@@ -360,6 +364,9 @@ class GlobalSearchAPIView(generics.GenericAPIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+@explore_schema
 class ExploreAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PostListSerializer

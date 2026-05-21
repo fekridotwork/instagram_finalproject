@@ -1,8 +1,14 @@
 from drf_spectacular.utils import (
+    OpenApiExample,
     OpenApiParameter,
     OpenApiResponse,
     extend_schema,
+    inline_serializer,
 )
+
+from rest_framework import serializers
+
+from interactions.serializers import FollowUserSerializer
 
 from config.swagger import (
     detail_response,
@@ -207,5 +213,89 @@ story_delete_schema = extend_schema(
             description="Story not found or already deleted.",
             example_detail="Not found.",
         ),
+    },
+)
+
+global_search_schema = extend_schema(
+    tags=["Discovery"],
+    summary="Global Search",
+    description=(
+        "Search users by username and posts by hashtag. "
+        "Use the type query parameter to limit results to users, posts, or all. "
+        "Blocked users and content are excluded from the results."
+    ),
+    parameters=[
+        OpenApiParameter(
+            name="search",
+            type=str,
+            location=OpenApiParameter.QUERY,
+            description=(
+                "Search keyword. For post search, hashtags can be passed with or without #."
+            ),
+            required=False,
+        ),
+        OpenApiParameter(
+            name="type",
+            type=str,
+            location=OpenApiParameter.QUERY,
+            description="Search type. Valid values: all, users, posts.",
+            required=False,
+        ),
+    ],
+    responses={
+        200: OpenApiResponse(
+            response=inline_serializer(
+                name="GlobalSearchResponse",
+                fields={
+                    "users": FollowUserSerializer(many=True),
+                    "posts": PostListSerializer(many=True),
+                },
+            ),
+            description="Search results returned successfully.",
+            examples=[
+                OpenApiExample(
+                    "Search Results",
+                    value={
+                        "users": [],
+                        "posts": [],
+                    },
+                    response_only=True,
+                ),
+            ],
+        ),
+        400: OpenApiResponse(
+            response=inline_serializer(
+                name="GlobalSearchBadRequestResponse",
+                fields={
+                    "type": serializers.CharField(),
+                },
+            ),
+            description="Invalid search type.",
+            examples=[
+                OpenApiExample(
+                    "Invalid Search Type",
+                    value={
+                        "type": "Invalid search type. Choose from: all, users, posts."
+                    },
+                    response_only=True,
+                ),
+            ],
+        ),
+        401: unauthorized_response(),
+    },
+)
+
+
+explore_schema = extend_schema(
+    tags=["Discovery"],
+    summary="Explore Public Posts",
+    description=(
+        "Return public posts from active, non-private users. "
+        "Deleted posts and blocked users/content are excluded. "
+        "Posts are ordered by like count and creation date."
+    ),
+    responses={
+        200: PostListSerializer(many=True),
+        401: unauthorized_response(),
     },
 )
