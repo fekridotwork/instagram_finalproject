@@ -181,19 +181,27 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-#REDIS
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
-REDIS_DB = 0
 
 #KAVENEGAR
 KAVENEGAR_API_KEY = os.getenv("KAVENEGAR_API_KEY")
 KAVENEGAR_SENDER = os.getenv("KAVENEGAR_SENDER")
 # KAVENEGAR_OTP_TEMPLATE = os.getenv("KAVENEGAR_OTP_TEMPLATE", "verify")
 
+# REDIS
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_DB = int(os.getenv("REDIS_DB", 0))
+
 # Celery
-CELERY_BROKER_URL = "redis://localhost:6379/1"
-CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
+CELERY_BROKER_URL = os.getenv(
+    "CELERY_BROKER_URL",
+    f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
+)
+
+CELERY_RESULT_BACKEND = os.getenv(
+    "CELERY_RESULT_BACKEND",
+    f"redis://{REDIS_HOST}:{REDIS_PORT}/1"
+)
 
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
