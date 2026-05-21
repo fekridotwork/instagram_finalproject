@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_view
 from django.db.models import OuterRef, Q, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -9,11 +10,24 @@ from accounts.models import User
 from interactions.services import exclude_blocked_conversations, is_blocked_between
 
 from .models import DirectConversation, DirectMessage
-from .serializers import (ConversationSerializer, DirectMessageSerializer,
-                          InboxConversationSerializer,
-                          StartConversationSerializer)
+from .schemas import (
+    conversation_create_schema,
+    conversation_list_schema,
+    conversation_message_create_schema,
+    conversation_messages_list_schema,
+)
+from .serializers import (
+    ConversationSerializer, 
+    DirectMessageSerializer,
+    InboxConversationSerializer,
+    StartConversationSerializer
+)
 
 
+@extend_schema_view(
+    get=conversation_list_schema,
+    post=conversation_create_schema,
+)
 class ConversationListCreateAPIView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = StartConversationSerializer
@@ -107,7 +121,12 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
             },
         )
         return Response(serializer.data)
-    
+
+
+@extend_schema_view(
+    get=conversation_messages_list_schema,
+    post=conversation_message_create_schema,
+)
 class ConversationMessagesAPIView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = DirectMessageSerializer
