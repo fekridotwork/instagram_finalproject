@@ -29,6 +29,9 @@ from .schemas import (
     post_list_schema,
     post_retrieve_schema,
     post_update_schema,
+    story_create_schema,
+    story_delete_schema,
+    story_list_schema,
 )
 from .serializers import (PostDetailSerializer, PostListSerializer,
                           PostSerializer, StorySerializer)
@@ -273,6 +276,8 @@ class UserPostsAPIView(generics.ListAPIView):
 
         return queryset
     
+
+@story_create_schema    
 class StoryCreateAPIView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = StorySerializer
@@ -280,6 +285,8 @@ class StoryCreateAPIView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+
+@story_list_schema
 class StoryFeedAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = StorySerializer

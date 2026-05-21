@@ -13,6 +13,7 @@ from .serializers import (
     PostSerializer,
     PostDetailSerializer,
     PostListSerializer,
+    StorySerializer
 )
 
 post_list_schema = extend_schema(
@@ -130,6 +131,80 @@ post_delete_schema = extend_schema(
         404: not_found_response(
             name="PostDeleteNotFoundResponse",
             description="Post was not found or has been deleted.",
+            example_detail="Not found.",
+        ),
+    },
+)
+
+
+story_list_schema = extend_schema(
+    tags=["Stories"],
+    summary="List Story Feed",
+    description=(
+        "Return visible stories for the authenticated user. "
+        "Only non-expired stories are included. Visibility, follow relationships, "
+        "deleted stories, inactive users, and block rules are respected."
+    ),
+    responses={
+        200: StorySerializer(many=True),
+        401: unauthorized_response(),
+    },
+)
+
+
+story_create_schema = extend_schema(
+    tags=["Stories"],
+    summary="Create Story",
+    description=(
+        "Create a new story with media, optional text, and visibility settings. "
+        "The request must be sent as multipart/form-data."
+    ),
+    request=StorySerializer,
+    responses={
+        201: OpenApiResponse(
+            response=StorySerializer,
+            description="Story created successfully.",
+        ),
+        400: detail_response(
+            name="StoryCreateBadRequestResponse",
+            description="Invalid story data or unsupported media.",
+            example_name="Invalid Story",
+            example_detail="Invalid media file.",
+        ),
+        401: unauthorized_response(),
+    },
+)
+
+
+story_delete_schema = extend_schema(
+    tags=["Stories"],
+    summary="Delete Story",
+    description=(
+        "Soft delete a story owned by the authenticated user."
+    ),
+    parameters=[
+        OpenApiParameter(
+            name="story_id",
+            type=int,
+            location=OpenApiParameter.PATH,
+            description="ID of the story to delete.",
+            required=True,
+        ),
+    ],
+    responses={
+        204: OpenApiResponse(
+            description="Story deleted successfully.",
+        ),
+        401: unauthorized_response(),
+        403: detail_response(
+            name="StoryDeleteForbiddenResponse",
+            description="Only the story owner can delete this story.",
+            example_name="Cannot Delete Story",
+            example_detail="You do not have permission to delete this story.",
+        ),
+        404: not_found_response(
+            name="StoryNotFoundResponse",
+            description="Story not found or already deleted.",
             example_detail="Not found.",
         ),
     },
