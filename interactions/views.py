@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import User
+from drf_spectacular.utils import extend_schema_view
 from interactions.serializers import BlockUserSerializer
 from interactions.services import (
     block_user, unblock_user, 
@@ -19,6 +20,12 @@ from posts.services.annotations import annotate_post_interactions
 from posts.services.visibility import can_view_post
 
 from .models import Comment, Follow, SavePost
+from .schemas import (
+    block_schema,
+    follow_schema,
+    unfollow_schema,
+    unblock_schema,
+)
 from .serializers import CommentSerializer, FollowUserSerializer
 
 
@@ -104,6 +111,11 @@ class CommentDetailAPIView(generics.DestroyAPIView):
         post.comments_count = max(post.comments_count - deleted_count, 0)
         post.save(update_fields=["comments_count"])
 
+
+@extend_schema_view(
+    post=follow_schema,
+    delete=unfollow_schema,
+)
 class UserFollowAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -163,6 +175,11 @@ class UserFollowAPIView(APIView):
             status=status.HTTP_200_OK,
         )
     
+
+@extend_schema_view(
+    post=block_schema,
+    delete=unblock_schema,
+)    
 class UserBlockAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
