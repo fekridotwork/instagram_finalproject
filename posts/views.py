@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from django.db.models import Count, Exists, OuterRef, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -8,6 +9,12 @@ from rest_framework.response import Response
 
 from accounts.models import User
 from interactions.models import Like, SavePost, Block
+from interactions.schemas import (
+    like_post_schema,
+    save_post_schema,
+    unlike_post_schema,
+    unsave_post_schema,
+)
 from interactions.serializers import FollowUserSerializer
 from interactions.services import exclude_blocked_content
 from posts.services.annotations import annotate_post_interactions
@@ -16,11 +23,26 @@ from posts.services.search import (VALID_SEARCH_TYPES, normalize_search_term,
 from posts.services.visibility import can_view_post, can_view_profile
 
 from .models import Post, Story
+from .schemas import (
+    post_create_schema,
+    post_delete_schema,
+    post_list_schema,
+    post_retrieve_schema,
+    post_update_schema,
+)
 from .serializers import (PostDetailSerializer, PostListSerializer,
                           PostSerializer, StorySerializer)
 from .services.hashtags import sync_post_hashtags
 
 
+@extend_schema_view(
+    list=post_list_schema,
+    create=post_create_schema,
+    retrieve=post_retrieve_schema,
+    update=post_update_schema,
+    partial_update=post_update_schema,
+    destroy=post_delete_schema,
+)
 class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     lookup_url_kwarg = "post_id"
@@ -107,6 +129,9 @@ class PostViewSet(viewsets.ModelViewSet):
         instance.is_deleted = True
         instance.save(update_fields=["is_deleted"])
     
+
+    @like_post_schema
+    @unlike_post_schema
     @action(detail=True, methods=["post", "delete"], url_path="like")
     def like(self, request, post_id=None):
         post = self.get_object()
@@ -151,6 +176,10 @@ class PostViewSet(viewsets.ModelViewSet):
             {"message": "Post unliked successfully."},
             status=status.HTTP_200_OK,
         )
+    
+
+    @save_post_schema
+    @unsave_post_schema
     @action(detail=True, methods=["post", "delete"], url_path="save")
     def save(self, request, post_id=None):
         post = self.get_object()

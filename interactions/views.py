@@ -22,6 +22,9 @@ from posts.services.visibility import can_view_post
 from .models import Comment, Follow, SavePost
 from .schemas import (
     block_schema,
+    comment_create_schema,
+    comment_delete_schema,
+    comment_list_schema,
     follow_schema,
     mutual_followers_schema,
     my_followers_schema,
@@ -33,6 +36,10 @@ from .schemas import (
 from .serializers import CommentSerializer, FollowUserSerializer
 
 
+@extend_schema_view(
+    get=comment_list_schema,
+    post=comment_create_schema,
+)
 class CommentListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = CommentSerializer
@@ -79,6 +86,10 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
         post.comments_count += 1
         post.save(update_fields=["comments_count"])
 
+
+@extend_schema_view(
+    delete=comment_delete_schema,
+)
 class CommentDetailAPIView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
     queryset = Comment.objects.filter(is_deleted=False)
