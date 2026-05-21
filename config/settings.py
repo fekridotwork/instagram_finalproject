@@ -201,4 +201,18 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "REST API documentation for Instagram-like social media project.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "TAGS": [
+        {"name": "Authentication"},
+        {"name": "Profiles"},
+        {"name": "Stories"},
+        {"name": "Posts"},
+        {"name": "Interactions - Follow"},
+        {"name": "Interactions - Block"},
+        {"name": "Interactions - Comments"},
+        {"name": "Interactions - Like"},
+        {"name": "Interactions - Save"},
+        {"name": "Discovery"},
+        {"name": "Direct Messages"},
+        {"name": "System"},
+    ],
 }
