@@ -16,12 +16,13 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+
 
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
@@ -103,11 +104,11 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "instagram_db",
-        "USER": "instagram_user",
-        "PASSWORD": "1234",
-        "HOST": "localhost",
-        "PORT": "5432",
+        "NAME": os.getenv("DB_NAME", "instagram_db"),
+        "USER": os.getenv("DB_USER", "instagram_user"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "1234"),
+        "HOST": os.getenv("DB_HOST", "localhost"),
+        "PORT": os.getenv("DB_PORT", "5432"),
     }
 }
 
