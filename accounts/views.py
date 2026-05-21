@@ -18,6 +18,7 @@ from .serializers import ProfileSerializer
 
 @extend_schema_view(
     get=my_profile_retrieve_schema,
+    put=my_profile_update_schema,
     patch=my_profile_update_schema,
 )
 class ProfileAPIView(generics.RetrieveUpdateAPIView):
