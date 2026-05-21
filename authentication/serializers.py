@@ -76,3 +76,10 @@ class VerifyOTPSerializer(serializers.Serializer):
 
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
+
+
+class MeSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    username = serializers.CharField()
+    email = serializers.EmailField(allow_blank=True, allow_null=True)
+    phone_number = serializers.CharField(allow_blank=True, allow_null=True)

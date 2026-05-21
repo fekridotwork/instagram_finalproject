@@ -197,8 +197,8 @@ CELERY_TIMEZONE = "Asia/Tehran"
 
 # SWAGGER
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Instagram Clone API",
-    "DESCRIPTION": "API documentation for Instagram-like social media project.",
+    "TITLE": "Instagram API",
+    "DESCRIPTION": "REST API documentation for Instagram-like social media project.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
