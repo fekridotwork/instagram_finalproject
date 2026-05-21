@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from accounts.models import User
+from accounts.schemas import user_posts_schema
 from interactions.models import Like, SavePost, Block
 from interactions.schemas import (
     like_post_schema,
@@ -230,6 +231,7 @@ class PostViewSet(viewsets.ModelViewSet):
         )
 
 
+@user_posts_schema
 class UserPostsAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = PostListSerializer

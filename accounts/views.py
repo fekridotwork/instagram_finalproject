@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_view
 from django.db.models import Count, Exists, OuterRef, Q
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
@@ -7,9 +8,18 @@ from accounts.serializers import PublicProfileSerializer
 from posts.models import Post
 from posts.services.visibility import can_view_profile
 
+from .schemas import (
+    my_profile_retrieve_schema,
+    my_profile_update_schema,
+    public_profile_retrieve_schema,
+)
 from .serializers import ProfileSerializer
 
 
+@extend_schema_view(
+    get=my_profile_retrieve_schema,
+    patch=my_profile_update_schema,
+)
 class ProfileAPIView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ProfileSerializer
@@ -18,6 +28,9 @@ class ProfileAPIView(generics.RetrieveUpdateAPIView):
         return self.request.user.profile
     
 
+@extend_schema_view(
+    get=public_profile_retrieve_schema,
+)
 class PublicProfileAPIView(generics.RetrieveAPIView):
     serializer_class = PublicProfileSerializer
     permission_classes = [IsAuthenticated]
