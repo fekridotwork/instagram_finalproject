@@ -145,7 +145,16 @@ unblock_schema = extend_schema(
         "Unblock a previously blocked user. This does not restore any previous "
         "follow relationship automatically."
     ),
-    request=BlockUserSerializer,
+    parameters=[
+        OpenApiParameter(
+            name="user_id",
+            type=int,
+            location=OpenApiParameter.QUERY,
+            description="ID of the user to unblock.",
+            required=True,
+        ),
+    ],
+    request=None,
     responses={
         200: message_response(
             name="UnblockUserResponse",

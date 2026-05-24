@@ -222,7 +222,11 @@ class UserBlockAPIView(APIView):
         )
 
     def delete(self, request):
-        serializer = BlockUserSerializer(data=request.data)
+        data = request.data.copy()
+        if not data.get("user_id"):
+            data["user_id"] = request.query_params.get("user_id")
+
+        serializer = BlockUserSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
         target_user = get_object_or_404(
