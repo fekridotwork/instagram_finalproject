@@ -28,6 +28,8 @@ verifyOtpBtn.addEventListener("click", verifyOtp);
 switchAuthBtn.addEventListener("click", switchAuthMode);
 logoutBtn.addEventListener("click", logout);
 
+feedList.addEventListener("click", handleFeedClick);
+
 navItems.forEach(function (item) {
     item.addEventListener("click", function () {
         const page = item.dataset.page;

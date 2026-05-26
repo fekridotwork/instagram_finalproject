@@ -329,4 +329,9 @@ body {
     .post-placeholder {
         height: 280px;
     }
+
+    .like-btn.liked {
+        color: #e11d48;
+        background: #fff1f2;
+    }
 }

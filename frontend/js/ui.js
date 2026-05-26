@@ -73,7 +73,7 @@ function renderFeed(posts) {
 
     feedList.innerHTML = posts.map(function (post) {
         return `
-            <article class="post-card">
+            <article class="post-card" data-post-id="${post.id}">
                 <div class="post-header">
                     <div class="avatar">
                         ${post.username ? post.username[0].toUpperCase() : "U"}
@@ -87,9 +87,22 @@ function renderFeed(posts) {
                 ${renderPostMedia(post)}
 
                 <div class="post-actions">
-                    <button class="btn btn-light">♡ ${post.likes_count || 0}</button>
-                    <button class="btn btn-light">Comment</button>
-                    <button class="btn btn-light">${post.is_saved ? "Saved" : "Save"}</button>
+                    <button
+                        class="btn btn-light like-btn ${post.is_liked ? "liked" : ""}"
+                        data-post-id="${post.id}"
+                        data-liked="${post.is_liked}"
+                        data-likes-count="${post.likes_count || 0}"
+                    >
+                        ${post.is_liked ? "♥" : "♡"} ${post.likes_count || 0}
+                    </button>
+
+                    <button class="btn btn-light">
+                        💬 ${post.comments_count || 0}
+                    </button>
+
+                    <button class="btn btn-light">
+                        ${post.is_saved ? "Saved" : "Save"}
+                    </button>
                 </div>
 
                 ${post.caption ? `<p class="post-caption mb-0">${post.caption}</p>` : ""}
@@ -126,6 +139,13 @@ function renderPostMedia(post) {
             <img class="post-media" src="${mediaUrl}" alt="Post media">
         </div>
     `;
+}
+
+function updateLikeButton(button, isLiked, likesCount) {
+    button.dataset.liked = isLiked;
+    button.dataset.likesCount = likesCount;
+    button.classList.toggle("liked", isLiked);
+    button.innerHTML = `${isLiked ? "♥" : "♡"} ${likesCount}`;
 }
 
 function formatDate(dateString) {
