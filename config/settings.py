@@ -50,7 +50,8 @@ LOCAL_APPS = (
 THIRD_PARTY_APPS = (
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
-    "drf_spectacular"
+    "drf_spectacular",
+    "corsheaders"
 )
 
 DJANGO_APPS = [
@@ -69,6 +70,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -230,3 +232,8 @@ SPECTACULAR_SETTINGS = {
         {"name": "System"},
     ],
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+]
