@@ -16,6 +16,8 @@ const verifyOtpBtn = document.getElementById("verifyOtpBtn");
 const messageBox = document.getElementById("messageBox");
 const logoutBtn = document.getElementById("logoutBtn");
 
+const feedList = document.getElementById("feedList");
+
 checkAuthState();
 
 sendOtpBtn.addEventListener("click", requestOtp);
