@@ -114,6 +114,7 @@ async function toggleSave(button) {
 function handleFeedClick(event) {
     const likeButton = event.target.closest(".like-btn");
     const saveButton = event.target.closest(".save-btn");
+    const gridItem = event.target.closest(".clean-grid-item, .posts-grid-item, .profile-grid-item");
 
     if (likeButton) {
         toggleLike(likeButton);
@@ -122,5 +123,11 @@ function handleFeedClick(event) {
 
     if (saveButton) {
         toggleSave(saveButton);
+        return;
+    }
+
+    if (gridItem) {
+        const postId = gridItem.dataset.postId;
+        openPostDetail(postId);
     }
 }

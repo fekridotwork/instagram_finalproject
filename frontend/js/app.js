@@ -21,6 +21,11 @@ const pageTitle = document.getElementById("pageTitle");
 const pageSubtitle = document.getElementById("pageSubtitle");
 const navItems = document.querySelectorAll(".app-nav-item");
 
+const postModal = document.getElementById("postModal");
+const postModalContent = document.getElementById("postModalContent");
+const postModalBackdrop = document.getElementById("postModalBackdrop");
+const closePostModalBtn = document.getElementById("closePostModalBtn");
+
 checkAuthState();
 
 sendOtpBtn.addEventListener("click", requestOtp);
@@ -29,6 +34,9 @@ switchAuthBtn.addEventListener("click", switchAuthMode);
 logoutBtn.addEventListener("click", logout);
 
 feedList.addEventListener("click", handleFeedClick);
+
+postModalBackdrop.addEventListener("click", closePostDetail);
+closePostModalBtn.addEventListener("click", closePostDetail);
 
 navItems.forEach(function (item) {
     item.addEventListener("click", function () {
