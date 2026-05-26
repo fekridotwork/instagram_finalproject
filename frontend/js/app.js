@@ -17,6 +17,9 @@ const messageBox = document.getElementById("messageBox");
 const logoutBtn = document.getElementById("logoutBtn");
 
 const feedList = document.getElementById("feedList");
+const pageTitle = document.getElementById("pageTitle");
+const pageSubtitle = document.getElementById("pageSubtitle");
+const navItems = document.querySelectorAll(".app-nav-item");
 
 checkAuthState();
 
@@ -24,3 +27,12 @@ sendOtpBtn.addEventListener("click", requestOtp);
 verifyOtpBtn.addEventListener("click", verifyOtp);
 switchAuthBtn.addEventListener("click", switchAuthMode);
 logoutBtn.addEventListener("click", logout);
+
+navItems.forEach(function (item) {
+    item.addEventListener("click", function () {
+        const page = item.dataset.page;
+
+        setActiveNav(item);
+        handleNavigation(page);
+    });
+});

@@ -1,4 +1,12 @@
-async function loadFeed() {
+async function loadHomeFeed() {
+    await loadFeedFromEndpoint("/posts/");
+}
+
+async function loadExploreFeed() {
+    await loadFeedFromEndpoint("/explore/");
+}
+
+async function loadFeedFromEndpoint(endpoint) {
     feedList.innerHTML = `
         <div class="text-center text-muted py-5">
             Loading feed...
@@ -6,7 +14,7 @@ async function loadFeed() {
     `;
 
     try {
-        const { response, data } = await getRequest("/posts/");
+        const { response, data } = await getRequest(endpoint);
 
         console.log("Feed response:", data);
 

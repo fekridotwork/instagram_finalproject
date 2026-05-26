@@ -79,12 +79,12 @@
             <div class="app-logo">Moment</div>
 
             <nav class="app-nav">
-                <button class="app-nav-item active">Home</button>
-                <button class="app-nav-item">Search</button>
-                <button class="app-nav-item">Explore</button>
-                <button class="app-nav-item">Messages</button>
-                <button class="app-nav-item">Saved</button>
-                <button class="app-nav-item">Profile</button>
+                <button class="app-nav-item active" data-page="home">Home</button>
+                <button class="app-nav-item" data-page="search">Search</button>
+                <button class="app-nav-item" data-page="explore">Explore</button>
+                <button class="app-nav-item" data-page="messages">Messages</button>
+                <button class="app-nav-item" data-page="saved">Saved</button>
+                <button class="app-nav-item" data-page="profile">Profile</button>
             </nav>
 
             <button id="logoutBtn" class="btn btn-outline-danger w-100 mt-auto">
@@ -95,8 +95,8 @@
         <section class="app-main">
             <header class="app-header">
                 <div>
-                    <h4 class="mb-1">Home</h4>
-                    <p class="text-muted mb-0">Catch up with the latest moments.</p>
+                    <h4 id="pageTitle" class="mb-1">Home</h4>
+                    <p id="pageSubtitle" class="text-muted mb-0">Catch up with the latest moments.</p>
                 </div>
 
                 <button class="btn btn-primary">

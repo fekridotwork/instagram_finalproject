@@ -2,7 +2,7 @@ function showApp() {
     authPage.classList.add("d-none");
     appPage.classList.remove("d-none");
 
-    loadFeed();
+    loadHomeFeed();
 }
 
 function showAuth() {
@@ -24,6 +24,40 @@ function resetOtpState() {
     otpSection.classList.add("d-none");
     otpInput.value = "";
     clearMessage();
+}
+
+function setActiveNav(activeItem) {
+    navItems.forEach(function (item) {
+        item.classList.remove("active");
+    });
+
+    activeItem.classList.add("active");
+}
+
+function handleNavigation(page) {
+    if (page === "home") {
+        pageTitle.textContent = "Home";
+        pageSubtitle.textContent = "Catch up with the latest moments.";
+        loadHomeFeed();
+        return;
+    }
+
+    if (page === "explore") {
+        pageTitle.textContent = "Explore";
+        pageSubtitle.textContent = "Discover public posts people are liking.";
+        loadExploreFeed();
+        return;
+    }
+
+    pageTitle.textContent = capitalize(page);
+    pageSubtitle.textContent = "This section is coming next.";
+
+    feedList.innerHTML = `
+        <div class="empty-state">
+            <h5>${capitalize(page)} is not ready yet</h5>
+            <p>We will connect this section to the backend step by step.</p>
+        </div>
+    `;
 }
 
 function renderFeed(posts) {
@@ -105,4 +139,8 @@ function formatDate(dateString) {
         month: "short",
         day: "numeric",
     });
+}
+
+function capitalize(text) {
+    return text.charAt(0).toUpperCase() + text.slice(1);
 }
