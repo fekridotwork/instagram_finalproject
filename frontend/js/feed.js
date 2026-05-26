@@ -18,7 +18,7 @@ async function loadFeedFromEndpoint(endpoint) {
 
         if (response.ok) {
             const posts = Array.isArray(data) ? data : data.results || [];
-            renderFeed(posts);
+            renderPostGrid(posts);
         } else {
             feedList.innerHTML = `
                 <div class="empty-state">
@@ -78,10 +78,49 @@ async function toggleLike(button) {
     }
 }
 
+async function toggleSave(button) {
+    const postId = button.dataset.postId;
+    const isSaved = button.dataset.saved === "true";
+
+    button.disabled = true;
+
+    try {
+        let response;
+        let data;
+
+        if (isSaved) {
+            const result = await deleteRequest(`/posts/${postId}/save/`);
+            response = result.response;
+            data = result.data;
+        } else {
+            const result = await postRequest(`/posts/${postId}/save/`);
+            response = result.response;
+            data = result.data;
+        }
+
+        if (response.ok) {
+            updateSaveButton(button, !isSaved);
+        } else {
+            alert(getErrorMessage(data));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Could not update save state.");
+    } finally {
+        button.disabled = false;
+    }
+}
+
 function handleFeedClick(event) {
     const likeButton = event.target.closest(".like-btn");
+    const saveButton = event.target.closest(".save-btn");
 
     if (likeButton) {
         toggleLike(likeButton);
+        return;
+    }
+
+    if (saveButton) {
+        toggleSave(saveButton);
     }
 }

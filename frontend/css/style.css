@@ -9,9 +9,7 @@ body {
     background: #f6f7fb;
 }
 
-/* =========================
-   AUTH PAGE
-========================= */
+/* AUTH PAGE */
 
 .auth-page {
     min-height: 100vh;
@@ -90,9 +88,7 @@ body {
     border-radius: 14px;
 }
 
-/* =========================
-   APP LAYOUT
-========================= */
+/* APP LAYOUT */
 
 .app-page {
     min-height: 100vh;
@@ -141,7 +137,7 @@ body {
 .app-main {
     padding: 28px;
     width: 100%;
-    max-width: 620px;
+    max-width: 680px;
     margin: 0 auto;
 }
 
@@ -178,13 +174,40 @@ body {
 }
 
 .feed-list {
-    display: grid;
-    gap: 20px;
+    width: 100%;
 }
 
-/* =========================
-   POSTS
-========================= */
+/* GRID POSTS */
+
+.clean-grid,
+.posts-grid,
+.profile-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.clean-grid-item,
+.posts-grid-item,
+.profile-grid-item {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: #f3f4f6;
+    border-radius: 12px;
+}
+
+.clean-grid-item img,
+.posts-grid-item img,
+.profile-grid-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* OLD POST CARD SUPPORT */
 
 .post-card {
     background: white;
@@ -229,15 +252,17 @@ body {
     display: block;
 }
 
-.post-placeholder {
-    height: 320px;
+.post-placeholder,
+.clean-grid-placeholder,
+.posts-grid-placeholder,
+.profile-grid-placeholder {
+    width: 100%;
+    height: 100%;
     display: grid;
     place-items: center;
     color: #6b7280;
-    font-weight: 700;
-    background:
-        radial-gradient(circle at top left, rgba(236, 72, 153, 0.18), transparent 30%),
-        linear-gradient(135deg, #f9fafb, #eef2ff);
+    font-size: 13px;
+    background: #f3f4f6;
 }
 
 .post-actions {
@@ -253,9 +278,126 @@ body {
     line-height: 1.7;
 }
 
-/* =========================
-   RIGHT PANEL
-========================= */
+.like-btn.liked {
+    color: #e11d48;
+    background: #fff1f2;
+}
+
+.save-btn.saved {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+/* PROFILE */
+
+.profile-page {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+    width: 100%;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 28px;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 36px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #3b82f6, #9333ea, #ec4899);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 44px;
+    font-weight: 800;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-info h3 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.profile-username {
+    margin: 4px 0 12px;
+    color: #6b7280;
+}
+
+.profile-bio {
+    margin-bottom: 18px;
+    color: #374151;
+    line-height: 1.6;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 32px;
+}
+
+.profile-stats div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.profile-stats strong {
+    font-size: 18px;
+}
+
+.profile-stats span {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.profile-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.profile-tab {
+    border: none;
+    background: white;
+    padding: 16px;
+    font-weight: 700;
+    color: #6b7280;
+    cursor: pointer;
+}
+
+.profile-tab.active {
+    background: #f9fafb;
+    color: #111827;
+}
+
+.profile-empty {
+    grid-column: 1 / -1;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+}
+
+/* RIGHT PANEL */
 
 .app-right-panel {
     padding: 28px 24px;
@@ -279,9 +421,7 @@ body {
     color: #6b7280;
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
+/* RESPONSIVE */
 
 @media (max-width: 1200px) {
     .app-page {
@@ -325,13 +465,30 @@ body {
         padding: 20px;
     }
 
-    .post-media-frame,
-    .post-placeholder {
+    .post-media-frame {
         height: 280px;
     }
+}
 
-    .like-btn.liked {
-        color: #e11d48;
-        background: #fff1f2;
+@media (max-width: 600px) {
+    .clean-grid,
+    .posts-grid,
+    .profile-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .profile-avatar {
+        width: 90px;
+        height: 90px;
+        border-radius: 28px;
+    }
+
+    .profile-stats {
+        gap: 18px;
     }
 }

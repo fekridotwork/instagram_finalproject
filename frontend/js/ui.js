@@ -49,6 +49,11 @@ function handleNavigation(page) {
         return;
     }
 
+    if (page === "profile") {
+        loadProfilePage();
+        return;
+    }
+
     pageTitle.textContent = capitalize(page);
     pageSubtitle.textContent = "This section is coming next.";
 
@@ -97,10 +102,14 @@ function renderFeed(posts) {
                     </button>
 
                     <button class="btn btn-light">
-                        💬 ${post.comments_count || 0}
+                        Comment
                     </button>
 
-                    <button class="btn btn-light">
+                    <button
+                        class="btn btn-light save-btn ${post.is_saved ? "saved" : ""}"
+                        data-post-id="${post.id}"
+                        data-saved="${post.is_saved}"
+                    >
                         ${post.is_saved ? "Saved" : "Save"}
                     </button>
                 </div>
@@ -109,6 +118,46 @@ function renderFeed(posts) {
             </article>
         `;
     }).join("");
+}
+
+function renderPostGrid(posts) {
+    if (!posts.length) {
+        feedList.innerHTML = `
+            <div class="empty-state">
+                <h5>No posts found</h5>
+                <p>Nothing to show here yet.</p>
+            </div>
+        `;
+        return;
+    }
+
+    feedList.innerHTML = `
+        <section class="clean-grid">
+            ${posts.map(function (post) {
+                const mediaUrl = post.media ? getMediaUrl(post.media) : "";
+
+                return `
+                    <article class="clean-grid-item" data-post-id="${post.id}">
+                        ${
+                            mediaUrl
+                                ? `<img src="${mediaUrl}" alt="Post">`
+                                : `<div class="clean-grid-placeholder">No media</div>`
+                        }
+                    </article>
+                `;
+            }).join("")}
+        </section>
+    `;
+}
+
+function getMediaUrl(path) {
+    if (!path) {
+        return "";
+    }
+
+    return path.startsWith("http")
+        ? path
+        : `${BACKEND_BASE_URL}${path}`;
 }
 
 function renderPostMedia(post) {
@@ -146,6 +195,12 @@ function updateLikeButton(button, isLiked, likesCount) {
     button.dataset.likesCount = likesCount;
     button.classList.toggle("liked", isLiked);
     button.innerHTML = `${isLiked ? "♥" : "♡"} ${likesCount}`;
+}
+
+function updateSaveButton(button, isSaved) {
+    button.dataset.saved = isSaved;
+    button.classList.toggle("saved", isSaved);
+    button.innerHTML = isSaved ? "Saved" : "Save";
 }
 
 function formatDate(dateString) {
