@@ -1,0 +1,30 @@
+async function postRequest(endpoint, payload) {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+
+    return {
+        response,
+        data,
+    };
+}
+
+function getErrorMessage(data) {
+    if (data.detail) {
+        return data.detail;
+    }
+
+    const firstKey = Object.keys(data)[0];
+
+    if (firstKey && Array.isArray(data[firstKey])) {
+        return data[firstKey][0];
+    }
+
+    return "Something went wrong.";
+} 
