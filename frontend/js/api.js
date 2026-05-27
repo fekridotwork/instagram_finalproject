@@ -134,3 +134,14 @@ async function patchFormRequest(endpoint, formData) {
         body: formData,
     });
 }
+async function getFollowers() {
+    return requestWithAuth("/api/me/followers/");
+}
+
+async function getFollowing() {
+    return requestWithAuth("/api/me/following/");
+}
+
+async function getMutualFollowers(userId) {
+    return requestWithAuth(`/api/users/${userId}/mutual-followers/`);
+}

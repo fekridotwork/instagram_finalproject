@@ -93,6 +93,19 @@ if (topProfileBtn) {
         handleNavigation("profile");
     });
 }
+const followModal = document.getElementById("followModal");
+const followModalBackdrop = document.getElementById("followModalBackdrop");
+const closeFollowModalBtn = document.getElementById("closeFollowModalBtn");
+const followModalTitle = document.getElementById("followModalTitle");
+const followModalList = document.getElementById("followModalList");
+
+if (followModalBackdrop) {
+    followModalBackdrop.addEventListener("click", closeFollowModal);
+}
+
+if (closeFollowModalBtn) {
+    closeFollowModalBtn.addEventListener("click", closeFollowModal);
+}
 
 checkAuthState();
 
