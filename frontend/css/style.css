@@ -1586,3 +1586,93 @@ body {
         border-bottom: 1px solid rgba(255, 255, 255, 0.16);
     }
 }
+.public-profile-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.public-message-btn {
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 14px;
+    padding: 10px 24px;
+    color: white;
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.public-message-btn:hover {
+    background: rgba(255, 255, 255, 0.20);
+}
+/* DIRECT MESSAGES POLISH */
+
+.conversation-item.active {
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: inset 3px 0 0 #fb7185;
+}
+
+.chat-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chat-user small {
+    display: block;
+    color: rgba(255, 255, 255, 0.62);
+    margin-top: 2px;
+}
+
+.message-row {
+    display: flex;
+    width: 100%;
+}
+
+.message-row.mine {
+    justify-content: flex-end;
+}
+
+.message-row.theirs {
+    justify-content: flex-start;
+}
+
+.message-row.mine .message-bubble {
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+    border-bottom-right-radius: 6px;
+}
+
+.message-row.theirs .message-bubble {
+    background: rgba(255, 255, 255, 0.14);
+    border-bottom-left-radius: 6px;
+}
+
+.message-bubble {
+    width: fit-content;
+    max-width: 72%;
+    padding: 12px 15px;
+    border-radius: 18px;
+    color: white;
+    word-break: break-word;
+}
+
+.message-bubble p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.message-bubble span {
+    display: block;
+    margin-top: 5px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.58);
+}
+
+.message-form input {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: white;
+}
+
+.message-form input::placeholder {
+    color: rgba(255, 255, 255, 0.56);
+}

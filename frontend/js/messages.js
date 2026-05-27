@@ -1,6 +1,13 @@
 let activeConversationId = null;
+let activeConversationUser = null;
+let messagesPollingInterval = null;
+let currentUserId = null;
+window.cachedConversations = [];
 
 async function loadMessagesPage() {
+    clearMessagesPolling();
+    await loadCurrentMessageUser();
+
     feedList.innerHTML = `
         <section class="messages-page glass-card">
             <aside class="conversations-panel">
@@ -50,6 +57,8 @@ async function loadConversations() {
         }
 
         const conversations = Array.isArray(data) ? data : data.results || [];
+        window.cachedConversations = conversations;
+
         renderConversations(conversations);
     } catch (error) {
         console.error(error);
@@ -71,7 +80,10 @@ function renderConversations(conversations) {
         const image = user.profile_image ? getMediaUrl(user.profile_image) : "";
 
         return `
-            <button class="conversation-item" data-conversation-id="${conversation.id}">
+            <button
+                class="conversation-item ${String(activeConversationId) === String(conversation.id) ? "active" : ""}"
+                data-conversation-id="${conversation.id}"
+            >
                 <div class="conversation-avatar">
                     ${
                         image
@@ -90,22 +102,57 @@ function renderConversations(conversations) {
 
     document.querySelectorAll(".conversation-item").forEach(function (item) {
         item.addEventListener("click", function () {
-            loadConversationMessages(item.dataset.conversationId);
+            const conversation = window.cachedConversations.find(function (conv) {
+                return String(conv.id) === String(item.dataset.conversationId);
+            });
+
+            const user = conversation ? conversation.other_user : null;
+
+            loadConversationMessages(item.dataset.conversationId, user);
         });
     });
 }
 
-async function loadConversationMessages(conversationId) {
+async function loadConversationMessages(conversationId, user = null, options = {}) {
     activeConversationId = conversationId;
+    activeConversationUser = user || activeConversationUser;
+
+    const silent = options.silent || false;
 
     const messagesList = document.getElementById("messagesList");
     const messageInput = document.getElementById("messageInput");
     const sendMessageBtn = document.getElementById("sendMessageBtn");
+    const chatHeader = document.getElementById("chatHeader");
 
-    messagesList.innerHTML = `<p class="text-white-50">Loading messages...</p>`;
+    if (activeConversationUser) {
+        const username = activeConversationUser.username || "User";
+
+        chatHeader.innerHTML = `
+            <div class="chat-user">
+                <div class="conversation-avatar">
+                    ${
+                        activeConversationUser.profile_image
+                            ? `<img src="${getMediaUrl(activeConversationUser.profile_image)}" alt="${username}">`
+                            : `<span>${username[0].toUpperCase()}</span>`
+                    }
+                </div>
+
+                <div>
+                    <strong>${username}</strong>
+                    <small>@${username}</small>
+                </div>
+            </div>
+        `;
+    }
+
+    if (!silent) {
+        messagesList.innerHTML = `<p class="text-white-50">Loading messages...</p>`;
+    }
 
     try {
-        const { response, data } = await getRequest(`/direct/conversations/${conversationId}/messages/`);
+        const { response, data } = await getRequest(
+            `/direct/conversations/${conversationId}/messages/`
+        );
 
         if (!response.ok) {
             messagesList.innerHTML = `<p class="text-white-50">${getErrorMessage(data)}</p>`;
@@ -113,15 +160,21 @@ async function loadConversationMessages(conversationId) {
         }
 
         const messages = Array.isArray(data) ? data : data.results || [];
+
         renderMessages(messages);
 
         messageInput.disabled = false;
         sendMessageBtn.disabled = false;
 
         bindMessageForm();
+        renderConversations(window.cachedConversations);
+        startMessagesPolling();
     } catch (error) {
         console.error(error);
-        messagesList.innerHTML = `<p class="text-white-50">Could not load messages.</p>`;
+
+        if (!silent) {
+            messagesList.innerHTML = `<p class="text-white-50">Could not load messages.</p>`;
+        }
     }
 }
 
@@ -134,10 +187,13 @@ function renderMessages(messages) {
     }
 
     messagesList.innerHTML = messages.map(function (message) {
+        const isMine = Number(message.sender_id) === Number(currentUserId); 
         return `
-            <div class="message-bubble">
-                <p>${message.text}</p>
-                <span>${formatDate(message.created_at)}</span>
+            <div class="message-row ${isMine ? "mine" : "theirs"}">
+                <div class="message-bubble">
+                    <p>${message.text}</p>
+                    <span>${formatDate(message.created_at)}</span>
+                </div>
             </div>
         `;
     }).join("");
@@ -178,10 +234,44 @@ async function sendMessage() {
         }
 
         messageInput.value = "";
-        await loadConversationMessages(activeConversationId);
+        await loadConversationMessages(activeConversationId, activeConversationUser);
         await loadConversations();
     } catch (error) {
         console.error(error);
         alert("Could not send message.");
+    }
+}
+
+function startMessagesPolling() {
+    clearMessagesPolling();
+
+    messagesPollingInterval = setInterval(function () {
+        if (activeConversationId) {
+            loadConversationMessages(activeConversationId, activeConversationUser, {
+                silent: true,
+            });
+        }
+    }, 5000);
+}
+
+function clearMessagesPolling() {
+    if (messagesPollingInterval) {
+        clearInterval(messagesPollingInterval);
+        messagesPollingInterval = null;
+    }
+}
+async function loadCurrentMessageUser() {
+    if (currentUserId) {
+        return;
+    }
+
+    try {
+        const { response, data } = await getRequest("/auth/me/");
+
+        if (response.ok) {
+            currentUserId = data.id;
+        }
+    } catch (error) {
+        console.error(error);
     }
 }

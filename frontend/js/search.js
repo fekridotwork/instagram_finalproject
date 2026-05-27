@@ -239,14 +239,24 @@ async function loadPublicProfile(username, userId = null) {
                             <p>${data.display_name || data.full_name || ""}</p>
                         </div>
 
-                        <button
-                            class="public-follow-btn"
-                            id="publicFollowBtn"
-                            data-user-id="${userId}"
-                            data-following="${data.is_following || false}"
-                        >
-                            ${data.is_following ? "Following" : "Follow"}
-                        </button>
+                        <div class="public-profile-actions">
+                            <button
+                                class="public-follow-btn"
+                                id="publicFollowBtn"
+                                data-user-id="${userId}"
+                                data-following="${data.is_following || false}"
+                            >
+                                ${data.is_following ? "Following" : "Follow"}
+                            </button>
+
+                            <button
+                                class="public-message-btn"
+                                id="publicMessageBtn"
+                                data-user-id="${userId}"
+                            >
+                                Message
+                            </button>
+                        </div>
                     </div>
 
                     <p class="public-profile-bio">
@@ -335,14 +345,19 @@ function renderPublicProfilePost(post) {
 }
 function bindPublicProfileActions() {
     const followButton = document.getElementById("publicFollowBtn");
+    const messageButton = document.getElementById("publicMessageBtn");
 
-    if (!followButton) {
-        return;
+    if (followButton) {
+        followButton.addEventListener("click", function () {
+            togglePublicProfileFollow(followButton);
+        });
     }
 
-    followButton.addEventListener("click", function () {
-        togglePublicProfileFollow(followButton);
-    });
+    if (messageButton) {
+        messageButton.addEventListener("click", function () {
+            startConversationFromPublicProfile(messageButton.dataset.userId);
+        });
+    }
 }
 
 async function togglePublicProfileFollow(button) {
@@ -400,4 +415,37 @@ function updatePublicFollowersCount(isFollowing) {
         : Math.max(currentValue - 1, 0);
 
     followersCountElement.textContent = newValue;
+}
+async function startConversationFromPublicProfile(userId) {
+    if (!userId) {
+        alert("Could not start conversation.");
+        return;
+    }
+
+    try {
+        const { response, data } = await postRequest("/direct/conversations/", {
+            user_id: userId,
+        });
+
+        if (!response.ok) {
+            alert(getErrorMessage(data));
+            return;
+        }
+
+        hideStories();
+
+        pageTitle.textContent = "Messages";
+        pageSubtitle.textContent = "Your direct conversations.";
+
+        await loadMessagesPage();
+
+        const conversationId = data.id || data.conversation_id;
+
+        if (conversationId) {
+            await loadConversationMessages(conversationId);
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Could not start conversation.");
+    }
 }
