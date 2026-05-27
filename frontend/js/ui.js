@@ -73,6 +73,7 @@ function renderFeed(posts) {
                 <p>Follow people or create your first post to fill your feed.</p>
             </div>
         `;
+        refreshIcons();
         return;
     }
 
@@ -80,44 +81,89 @@ function renderFeed(posts) {
         return `
             <article class="post-card" data-post-id="${post.id}">
                 <div class="post-header">
-                    <div class="avatar">
-                        ${post.username ? post.username[0].toUpperCase() : "U"}
+                    <div class="post-user">
+                        <div class="avatar">
+                            ${post.username ? post.username[0].toUpperCase() : "U"}
+                        </div>
+
+                        <div>
+                            <strong>${post.username}</strong>
+                            <p class="post-location mb-0">${post.location || "Moment"}</p>
+                        </div>
                     </div>
-                    <div>
-                        <strong>${post.username}</strong>
-                        <p class="text-muted mb-0">${formatDate(post.created_at)}</p>
-                    </div>
+
+                    <button class="post-more-button">
+                        <i data-lucide="more-horizontal"></i>
+                    </button>
                 </div>
 
                 ${renderPostMedia(post)}
 
-                <div class="post-actions">
-                    <button
-                        class="btn btn-light like-btn ${post.is_liked ? "liked" : ""}"
-                        data-post-id="${post.id}"
-                        data-liked="${post.is_liked}"
-                        data-likes-count="${post.likes_count || 0}"
-                    >
-                        ${post.is_liked ? "♥" : "♡"} ${post.likes_count || 0}
-                    </button>
+                <div class="post-actions-row">
+                    <div class="post-left-actions">
+                        <button
+                            class="post-action-button like-btn ${post.is_liked ? "liked" : ""}"
+                            data-post-id="${post.id}"
+                            data-liked="${post.is_liked}"
+                            data-likes-count="${post.likes_count || 0}"
+                        >
+                            <i data-lucide="heart"></i>
+                        </button>
 
-                    <button class="btn btn-light">
-                        Comment
-                    </button>
+                        <button class="post-action-button">
+                            <i data-lucide="message-circle"></i>
+                        </button>
+
+                        <button class="post-action-button">
+                            <i data-lucide="send"></i>
+                        </button>
+                    </div>
 
                     <button
-                        class="btn btn-light save-btn ${post.is_saved ? "saved" : ""}"
+                        class="post-action-button save-btn ${post.is_saved ? "saved" : ""}"
                         data-post-id="${post.id}"
                         data-saved="${post.is_saved}"
                     >
-                        ${post.is_saved ? "Saved" : "Save"}
+                        <i data-lucide="bookmark"></i>
                     </button>
                 </div>
 
-                ${post.caption ? `<p class="post-caption mb-0">${post.caption}</p>` : ""}
+                <div class="post-dots">
+                    <span class="active"></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
+                <div class="post-body">
+                    <p class="post-likes mb-2">
+                        <strong>${post.likes_count || 0}</strong> likes
+                    </p>
+
+                    ${
+                        post.caption
+                            ? `
+                                <p class="post-caption-text mb-2">
+                                    <strong>${post.username}</strong>
+                                    ${post.caption}
+                                </p>
+                            `
+                            : ""
+                    }
+
+                    <button class="post-comments-link">
+                        View all ${post.comments_count || 0} comments
+                    </button>
+
+                    <p class="post-time mb-0">
+                        ${formatDate(post.created_at)}
+                    </p>
+                </div>
             </article>
         `;
     }).join("");
+
+    refreshIcons();
 }
 
 function renderPostGrid(posts) {
@@ -194,13 +240,22 @@ function updateLikeButton(button, isLiked, likesCount) {
     button.dataset.liked = isLiked;
     button.dataset.likesCount = likesCount;
     button.classList.toggle("liked", isLiked);
-    button.innerHTML = `${isLiked ? "♥" : "♡"} ${likesCount}`;
+
+    const postCard = button.closest(".post-card");
+    const likesText = postCard.querySelector(".post-likes strong");
+
+    if (likesText) {
+        likesText.textContent = likesCount;
+    }
+
+    refreshIcons();
 }
 
 function updateSaveButton(button, isSaved) {
     button.dataset.saved = isSaved;
     button.classList.toggle("saved", isSaved);
-    button.innerHTML = isSaved ? "Saved" : "Save";
+
+    refreshIcons();
 }
 
 function formatDate(dateString) {
@@ -218,4 +273,10 @@ function formatDate(dateString) {
 
 function capitalize(text) {
     return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function refreshIcons() {
+    if (window.lucide) {
+        lucide.createIcons();
+    }
 }

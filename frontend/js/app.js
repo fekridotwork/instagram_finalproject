@@ -62,3 +62,5 @@ navItems.forEach(function (item) {
         handleNavigation(page);
     });
 });
+
+refreshIcons();
