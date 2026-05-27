@@ -39,11 +39,13 @@ function handleNavigation(page) {
         pageTitle.textContent = "Home";
         pageSubtitle.textContent = "Catch up with the latest moments.";
         globalSearchInput.value = "";
+        loadHomeStories();
         loadHomeFeed();
         return;
     }
 
     if (page === "explore") {
+        hideStories();
         pageTitle.textContent = "Explore";
         pageSubtitle.textContent = "Search people and discover public posts.";
         globalSearchInput.value = "";
@@ -52,12 +54,15 @@ function handleNavigation(page) {
     }
 
     if (page === "profile") {
+        hideStories();
         loadProfilePage();
         return;
     }
 
     pageTitle.textContent = capitalize(page);
     pageSubtitle.textContent = "This section is coming next.";
+
+    hideStories();
 
     feedList.innerHTML = `
         <div class="empty-state">

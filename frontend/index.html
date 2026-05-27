@@ -111,14 +111,8 @@
                     <div class="glass-user-avatar">M</div>
                 </div>
             </header>
-
-            <section class="stories-row glass-card">
-                <div class="story-item">You</div>
-                <div class="story-item">Ali</div>
-                <div class="story-item">Sara</div>
-                <div class="story-item">Nima</div>
-                <div class="story-item">Mina</div>
-            </section>
+            
+            <section id="storiesRow" class="stories-row glass-card d-none"></section>
 
             <section class="glass-content-header">
                 <h4 id="pageTitle" class="mb-1">Home</h4>
@@ -264,6 +258,145 @@
         </div>
     </div>
 
+    <div id="storyViewerModal" class="story-viewer-modal d-none">
+        <div class="story-viewer-backdrop" id="storyViewerBackdrop"></div>
+
+        <div class="story-viewer-card">
+            <button id="closeStoryViewerBtn" class="story-viewer-close">
+                ×
+            </button>
+
+            <div id="storyViewerContent">
+                Loading story...
+            </div>
+        </div>
+    </div>
+
+    <div id="createStoryModal" class="post-modal d-none">
+        <div
+            id="createStoryModalBackdrop"
+            class="post-modal-backdrop"
+        ></div>
+
+        <div class="create-story-card glass-card">
+            <button
+                id="closeCreateStoryModalBtn"
+                class="post-modal-close"
+                type="button"
+            >
+                ×
+            </button>
+
+            <div class="story-editor-layout">
+
+                <div class="story-editor-canvas-wrap">
+                    <div
+                        id="storyPreviewCanvas"
+                        class="story-preview-canvas"
+                    >
+                        <img
+                            id="storyPreviewImage"
+                            class="story-preview-image d-none"
+                            alt="Story preview"
+                        >
+
+                        <div
+                            id="storyTextOverlay"
+                            class="story-text-overlay d-none"
+                        >
+                            Your text
+                        </div>
+
+                        <div
+                            id="storyEmptyState"
+                            class="story-empty-state"
+                        >
+                            Choose an image to start
+                        </div>
+                    </div>
+                </div>
+
+                <div class="story-editor-sidebar">
+                    <h4>Create story</h4>
+
+                    <div
+                        id="createStoryMessage"
+                        class="alert d-none"
+                    ></div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Media
+                        </label>
+
+                        <input
+                            id="storyMediaInput"
+                            type="file"
+                            class="form-control"
+                            accept="image/*"
+                        >
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Text
+                        </label>
+
+                        <textarea
+                            id="storyTextInput"
+                            class="form-control"
+                            rows="4"
+                            placeholder="Write something..."
+                        ></textarea>
+                    </div>
+
+                    <div class="story-editor-tools">
+                        <label class="form-label">Text size</label>
+                        <input id="storyTextSizeInput" type="range" min="20" max="64" value="34" class="form-range">
+
+                        <label class="form-label mt-3">Text color</label>
+                        <div class="story-color-row">
+                            <button type="button" class="story-color-btn" data-color="#ffffff" style="background:#ffffff"></button>
+                            <button type="button" class="story-color-btn" data-color="#000000" style="background:#000000"></button>
+                            <button type="button" class="story-color-btn" data-color="#fb7185" style="background:#fb7185"></button>
+                            <button type="button" class="story-color-btn" data-color="#60a5fa" style="background:#60a5fa"></button>
+                            <button type="button" class="story-color-btn" data-color="#facc15" style="background:#facc15"></button>
+                            <button type="button" class="story-color-btn" data-color="#4ade80" style="background:#4ade80"></button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Visibility
+                        </label>
+
+                        <select
+                            id="storyVisibilityInput"
+                            class="form-select"
+                        >
+                            <option value="public">
+                                Public
+                            </option>
+
+                            <option value="followers">
+                                Followers only
+                            </option>
+                        </select>
+                    </div>
+
+                    <button
+                        id="submitStoryBtn"
+                        class="btn btn-primary w-100"
+                        type="button"
+                    >
+                        Share story
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="js/config.js"></script>
@@ -275,6 +408,8 @@
     <script src="js/post-detail.js"></script>
     <script src="js/create-post.js"></script>
     <script src="js/search.js"></script>
+    <script src="js/stories.js"></script>
+    <script src="js/create-story.js"></script>
     <script src="js/app.js"></script>
     <script>
         lucide.createIcons();

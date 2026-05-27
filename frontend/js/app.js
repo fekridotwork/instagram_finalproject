@@ -39,6 +39,30 @@ const createPostMessage = document.getElementById("createPostMessage");
 
 const globalSearchInput = document.getElementById("globalSearchInput");
 
+const storiesRow = document.getElementById("storiesRow");
+
+const storyViewerModal = document.getElementById("storyViewerModal");
+const storyViewerBackdrop = document.getElementById("storyViewerBackdrop");
+const closeStoryViewerBtn = document.getElementById("closeStoryViewerBtn");
+const storyViewerContent = document.getElementById("storyViewerContent");
+
+const createStoryModal = document.getElementById("createStoryModal");
+const createStoryModalBackdrop = document.getElementById("createStoryModalBackdrop");
+const closeCreateStoryModalBtn = document.getElementById("closeCreateStoryModalBtn");
+const storyMediaInput = document.getElementById("storyMediaInput");
+const storyTextInput = document.getElementById("storyTextInput");
+const storyVisibilityInput = document.getElementById("storyVisibilityInput");
+const submitStoryBtn = document.getElementById("submitStoryBtn");
+const createStoryMessage = document.getElementById("createStoryMessage");
+
+const storyPreviewCanvas = document.getElementById("storyPreviewCanvas");
+const storyPreviewImage = document.getElementById("storyPreviewImage");
+const storyTextOverlay = document.getElementById("storyTextOverlay");
+const storyEmptyState = document.getElementById("storyEmptyState");
+
+const storyTextSizeInput = document.getElementById("storyTextSizeInput");
+const storyColorButtons = document.querySelectorAll(".story-color-btn");
+
 checkAuthState();
 
 sendOtpBtn.addEventListener("click", requestOtp);
@@ -57,6 +81,46 @@ closeCreatePostModalBtn.addEventListener("click", closeCreatePostModal);
 submitPostBtn.addEventListener("click", submitPost);
 
 globalSearchInput.addEventListener("input", handleGlobalSearchInput);
+
+if (storyViewerBackdrop) {
+    storyViewerBackdrop.addEventListener("click", closeStoryViewer);
+}
+
+if (closeStoryViewerBtn) {
+    closeStoryViewerBtn.addEventListener("click", closeStoryViewer);
+}
+
+if (createStoryModalBackdrop) {
+    createStoryModalBackdrop.addEventListener("click", closeCreateStoryModal);
+}
+
+if (closeCreateStoryModalBtn) {
+    closeCreateStoryModalBtn.addEventListener("click", closeCreateStoryModal);
+}
+
+if (submitStoryBtn) {
+    submitStoryBtn.addEventListener("click", submitStory);
+}
+
+if (storyMediaInput) {
+    storyMediaInput.addEventListener("change", handleStoryMediaPreview);
+}
+
+if (storyTextInput) {
+    storyTextInput.addEventListener("input", handleStoryTextPreview);
+}
+if (storyTextOverlay) {
+    storyTextOverlay.addEventListener("mousedown", startDraggingStoryText);
+}
+if (storyTextSizeInput) {
+    storyTextSizeInput.addEventListener("input", handleStoryTextSizeChange);
+}
+
+storyColorButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+        handleStoryTextColorChange(button.dataset.color);
+    });
+});
 
 navItems.forEach(function (item) {
     item.addEventListener("click", function () {
