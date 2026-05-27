@@ -54,7 +54,7 @@
     </main>
 
     <main id="appPage" class="glass-app d-none">
-        <aside class="glass-sidebar glass-card">
+       <aside class="glass-sidebar glass-card">
             <div class="glass-brand">Moment</div>
 
             <nav class="glass-nav">
@@ -82,13 +82,20 @@
                     <i data-lucide="plus-square"></i>
                     <strong>Create</strong>
                 </button>
-
-
-                <button class="glass-nav-item app-nav-item" data-page="profile">
-                    <i data-lucide="user"></i>
-                    <strong>Profile</strong>
-                </button>
             </nav>
+
+            <div class="sidebar-user-card" id="sidebarProfileCard">
+                <div class="sidebar-user-avatar">
+                    M
+                </div>
+
+                <div class="sidebar-user-info">
+                    <strong>My profile</strong>
+                    <span>View profile</span>
+                </div>
+
+                <i data-lucide="chevron-right"></i>
+            </div>
 
             <button id="logoutBtn" class="glass-logout">
                 <i data-lucide="log-out"></i>
@@ -108,7 +115,12 @@
                         <i data-lucide="bell"></i>
                     </button>
 
-                    <div class="glass-user-avatar">M</div>
+                    <div
+                        class="glass-user-avatar topbar-profile"
+                        id="topProfileBtn"
+                    >
+                        M
+                    </div>
                 </div>
             </header>
             
@@ -394,6 +406,79 @@
                 </div>
 
             </div>
+        </div>
+    </div>
+    <div id="editProfileModal" class="post-modal d-none">
+        <div id="editProfileModalBackdrop" class="post-modal-backdrop"></div>
+
+        <div class="edit-profile-card glass-card">
+            <button
+                id="closeEditProfileModalBtn"
+                class="post-modal-close"
+                type="button"
+            >
+                ×
+            </button>
+
+            <h4 class="mb-3">Edit profile</h4>
+
+            <div id="editProfileMessage" class="alert d-none"></div>
+
+            <div class="mb-3">
+                <label class="form-label">Profile image</label>
+                <input
+                    id="editProfileImageInput"
+                    type="file"
+                    class="form-control"
+                    accept="image/*"
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input id="editUsernameInput" type="text" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Full name</label>
+                <input id="editFullNameInput" type="text" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Display name</label>
+                <input
+                    id="editDisplayNameInput"
+                    type="text"
+                    class="form-control"
+                    placeholder="Display name"
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Bio</label>
+                <textarea
+                    id="editBioInput"
+                    class="form-control"
+                    rows="4"
+                    placeholder="Write your bio..."
+                ></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Account privacy</label>
+                <select id="editIsPrivateInput" class="form-select">
+                    <option value="false">Public</option>
+                    <option value="true">Private</option>
+                </select>
+            </div>
+
+            <button
+                id="submitEditProfileBtn"
+                class="btn btn-primary w-100"
+                type="button"
+            >
+                Save changes
+            </button>
         </div>
     </div>
 

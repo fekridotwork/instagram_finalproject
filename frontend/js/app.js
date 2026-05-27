@@ -63,6 +63,37 @@ const storyEmptyState = document.getElementById("storyEmptyState");
 const storyTextSizeInput = document.getElementById("storyTextSizeInput");
 const storyColorButtons = document.querySelectorAll(".story-color-btn");
 
+const editProfileModalBackdrop = document.getElementById("editProfileModalBackdrop");
+const closeEditProfileModalBtn = document.getElementById("closeEditProfileModalBtn");
+const submitEditProfileBtn = document.getElementById("submitEditProfileBtn");
+
+if (editProfileModalBackdrop) {
+    editProfileModalBackdrop.addEventListener("click", closeEditProfileModal);
+}
+
+if (closeEditProfileModalBtn) {
+    closeEditProfileModalBtn.addEventListener("click", closeEditProfileModal);
+}
+
+if (submitEditProfileBtn) {
+    submitEditProfileBtn.addEventListener("click", submitEditProfile);
+}
+
+const sidebarProfileCard = document.getElementById("sidebarProfileCard");
+const topProfileBtn = document.getElementById("topProfileBtn");
+
+if (sidebarProfileCard) {
+    sidebarProfileCard.addEventListener("click", function () {
+        handleNavigation("profile");
+    });
+}
+
+if (topProfileBtn) {
+    topProfileBtn.addEventListener("click", function () {
+        handleNavigation("profile");
+    });
+}
+
 checkAuthState();
 
 sendOtpBtn.addEventListener("click", requestOtp);

@@ -127,3 +127,10 @@ function getErrorMessage(data) {
 
     return "Something went wrong.";
 }
+
+async function patchFormRequest(endpoint, formData) {
+    return requestWithAuth(endpoint, {
+        method: "PATCH",
+        body: formData,
+    });
+}

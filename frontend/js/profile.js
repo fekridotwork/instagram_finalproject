@@ -99,7 +99,9 @@ function renderProfile(profile, posts) {
 
                 <div class="profile-info">
                     <h3>${profile.display_name || profile.username}</h3>
-                    <p class="profile-username">@${profile.username}</p>
+                    <button id="editProfileBtn" class="profile-edit-btn">
+                        Edit profile
+                    </button>
 
                     ${
                         profile.bio
@@ -139,6 +141,8 @@ function renderProfile(profile, posts) {
 
     renderProfileGrid(posts);
     bindProfileTabs(posts);
+    bindCreateStoryButton();
+    bindEditProfileButton();
 }
 
 function renderProfileGrid(posts) {
@@ -199,4 +203,92 @@ function getMediaUrl(path) {
     return path.startsWith("http")
         ? path
         : `${BACKEND_BASE_URL}${path}`;
+}
+function bindEditProfileButton() {
+    const editProfileBtn = document.getElementById("editProfileBtn");
+
+    if (!editProfileBtn) {
+        return;
+    }
+
+    editProfileBtn.onclick = function () {
+        openEditProfileModal();
+    };
+}
+
+function openEditProfileModal() {
+    const modal = document.getElementById("editProfileModal");
+
+    modal.classList.remove("d-none");
+
+    document.getElementById("editDisplayNameInput").value =
+        currentProfile.display_name || "";
+
+    document.getElementById("editBioInput").value =
+        currentProfile.bio || "";
+
+    clearEditProfileMessage();
+
+    document.getElementById("editUsernameInput").value =
+        currentProfile.username || "";
+
+    document.getElementById("editFullNameInput").value =
+        currentProfile.full_name || "";
+
+    document.getElementById("editIsPrivateInput").value =
+        String(Boolean(currentProfile.is_private));
+}
+
+function closeEditProfileModal() {
+    document.getElementById("editProfileModal").classList.add("d-none");
+    document.getElementById("editProfileImageInput").value = "";
+    clearEditProfileMessage();
+}
+
+async function submitEditProfile() {
+    const displayName = document.getElementById("editDisplayNameInput").value.trim();
+    const bio = document.getElementById("editBioInput").value.trim();
+    const imageFile = document.getElementById("editProfileImageInput").files[0];
+    const username = document.getElementById("editUsernameInput").value.trim();
+    const fullName = document.getElementById("editFullNameInput").value.trim();
+    const isPrivate = document.getElementById("editIsPrivateInput").value;
+
+    const formData = new FormData();
+
+    formData.append("username", username);
+    formData.append("full_name", fullName);
+    formData.append("display_name", displayName);
+    formData.append("bio", bio);
+    formData.append("is_private", isPrivate);
+
+    if (imageFile) {
+        formData.append("profile_image", imageFile);
+    }
+
+    try {
+        const { response, data } = await patchFormRequest("/profile/me/", formData);
+
+        if (!response.ok) {
+            showEditProfileMessage(getErrorMessage(data), "danger");
+            return;
+        }
+
+        closeEditProfileModal();
+        await loadProfilePage();
+    } catch (error) {
+        console.error(error);
+        showEditProfileMessage("Could not update profile.", "danger");
+    }
+}
+
+function showEditProfileMessage(message, type) {
+    const box = document.getElementById("editProfileMessage");
+    box.textContent = message;
+    box.className = `alert alert-${type}`;
+}
+
+function clearEditProfileMessage() {
+    const box = document.getElementById("editProfileMessage");
+    box.textContent = "";
+    box.className = "alert d-none";
 }
