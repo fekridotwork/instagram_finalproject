@@ -1,15 +1,15 @@
 async function loadHomeFeed() {
-    await loadFeedFromEndpoint("/posts/");
+    await loadFeedFromEndpoint("/posts/", "feed");
 }
 
 async function loadExploreFeed() {
-    await loadFeedFromEndpoint("/explore/");
+    await loadFeedFromEndpoint("/explore/", "grid");
 }
 
-async function loadFeedFromEndpoint(endpoint) {
+async function loadFeedFromEndpoint(endpoint, viewType = "feed") {
     feedList.innerHTML = `
         <div class="text-center text-muted py-5">
-            Loading feed...
+            Loading posts...
         </div>
     `;
 
@@ -18,11 +18,16 @@ async function loadFeedFromEndpoint(endpoint) {
 
         if (response.ok) {
             const posts = Array.isArray(data) ? data : data.results || [];
-            renderPostGrid(posts);
+
+            if (viewType === "grid") {
+                renderPostGrid(posts);
+            } else {
+                renderFeed(posts);
+            }
         } else {
             feedList.innerHTML = `
                 <div class="empty-state">
-                    <h5>Could not load feed</h5>
+                    <h5>Could not load posts</h5>
                     <p>${getErrorMessage(data)}</p>
                 </div>
             `;
@@ -47,20 +52,15 @@ async function toggleLike(button) {
     button.disabled = true;
 
     try {
-        let response;
-        let data;
+        let result;
 
         if (isLiked) {
-            const result = await deleteRequest(`/posts/${postId}/like/`);
-            response = result.response;
-            data = result.data;
+            result = await deleteRequest(`/posts/${postId}/like/`);
         } else {
-            const result = await postRequest(`/posts/${postId}/like/`);
-            response = result.response;
-            data = result.data;
+            result = await postRequest(`/posts/${postId}/like/`);
         }
 
-        if (response.ok) {
+        if (result.response.ok) {
             const newLikedState = !isLiked;
             const newLikesCount = newLikedState
                 ? currentLikesCount + 1
@@ -68,7 +68,7 @@ async function toggleLike(button) {
 
             updateLikeButton(button, newLikedState, newLikesCount);
         } else {
-            alert(getErrorMessage(data));
+            alert(getErrorMessage(result.data));
         }
     } catch (error) {
         console.error(error);
@@ -85,23 +85,18 @@ async function toggleSave(button) {
     button.disabled = true;
 
     try {
-        let response;
-        let data;
+        let result;
 
         if (isSaved) {
-            const result = await deleteRequest(`/posts/${postId}/save/`);
-            response = result.response;
-            data = result.data;
+            result = await deleteRequest(`/posts/${postId}/save/`);
         } else {
-            const result = await postRequest(`/posts/${postId}/save/`);
-            response = result.response;
-            data = result.data;
+            result = await postRequest(`/posts/${postId}/save/`);
         }
 
-        if (response.ok) {
+        if (result.response.ok) {
             updateSaveButton(button, !isSaved);
         } else {
-            alert(getErrorMessage(data));
+            alert(getErrorMessage(result.data));
         }
     } catch (error) {
         console.error(error);
@@ -115,6 +110,7 @@ function handleFeedClick(event) {
     const likeButton = event.target.closest(".like-btn");
     const saveButton = event.target.closest(".save-btn");
     const gridItem = event.target.closest(".clean-grid-item, .posts-grid-item, .profile-grid-item");
+    const postMedia = event.target.closest(".post-media-frame");
 
     if (likeButton) {
         toggleLike(likeButton);
@@ -127,7 +123,12 @@ function handleFeedClick(event) {
     }
 
     if (gridItem) {
-        const postId = gridItem.dataset.postId;
-        openPostDetail(postId);
+        openPostDetail(gridItem.dataset.postId);
+        return;
+    }
+
+    if (postMedia) {
+        const postCard = postMedia.closest(".post-card");
+        openPostDetail(postCard.dataset.postId);
     }
 }

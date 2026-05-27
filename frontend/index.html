@@ -36,12 +36,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">Email or phone</label>
-                    <input
-                        id="identifierInput"
-                        type="text"
-                        class="form-control"
-                        placeholder="example@email.com or 0912..."
-                    >
+                    <input id="identifierInput" type="text" class="form-control" placeholder="example@email.com or 0912...">
                 </div>
 
                 <button id="sendOtpBtn" class="btn btn-primary w-100 mb-3">
@@ -51,12 +46,7 @@
                 <div id="otpSection" class="d-none">
                     <div class="mb-3">
                         <label class="form-label">Verification code</label>
-                        <input
-                            id="otpInput"
-                            type="text"
-                            class="form-control"
-                            placeholder="Enter your code"
-                        >
+                        <input id="otpInput" type="text" class="form-control" placeholder="Enter your code">
                     </div>
 
                     <button id="verifyOtpBtn" class="btn btn-success w-100">
@@ -74,34 +64,53 @@
         </section>
     </main>
 
-    <main id="appPage" class="app-page d-none">
-        <aside class="app-sidebar">
-            <div class="app-logo">Moment</div>
+    <main id="appPage" class="instagram-app d-none">
+        <aside class="ig-sidebar">
+            <div class="ig-brand">Moment</div>
 
-            <nav class="app-nav">
-                <button class="app-nav-item active" data-page="home">Home</button>
-                <button class="app-nav-item" data-page="search">Search</button>
-                <button class="app-nav-item" data-page="explore">Explore</button>
-                <button class="app-nav-item" data-page="messages">Messages</button>
-                <button class="app-nav-item" data-page="saved">Saved</button>
-                <button class="app-nav-item" data-page="profile">Profile</button>
+            <nav class="ig-nav">
+                <button class="ig-nav-item app-nav-item active" data-page="home">
+                    <span>⌂</span>
+                    <strong>Home</strong>
+                </button>
+
+                <button class="ig-nav-item app-nav-item" data-page="explore">
+                    <span>⌕</span>
+                    <strong>Explore</strong>
+                </button>
+
+                <button class="ig-nav-item app-nav-item" data-page="messages">
+                    <span>✉</span>
+                    <strong>Messages</strong>
+                </button>
+
+                <button id="newPostBtn" class="ig-nav-item">
+                    <span>＋</span>
+                    <strong>Create</strong>
+                </button>
+
+                <button class="ig-nav-item app-nav-item" data-page="saved">
+                    <span>▱</span>
+                    <strong>Saved</strong>
+                </button>
+
+                <button class="ig-nav-item app-nav-item" data-page="profile">
+                    <span>◉</span>
+                    <strong>Profile</strong>
+                </button>
             </nav>
 
-            <button id="logoutBtn" class="btn btn-outline-danger w-100 mt-auto">
+            <button id="logoutBtn" class="ig-logout">
                 Logout
             </button>
         </aside>
 
-        <section class="app-main">
-            <header class="app-header">
+        <section class="ig-main">
+            <header class="ig-topbar">
                 <div>
                     <h4 id="pageTitle" class="mb-1">Home</h4>
                     <p id="pageSubtitle" class="text-muted mb-0">Catch up with the latest moments.</p>
                 </div>
-
-                <button id="newPostBtn" class="btn btn-primary">
-                    New Post
-                </button>
             </header>
 
             <section class="stories-row">
@@ -118,15 +127,6 @@
                 </div>
             </section>
         </section>
-
-        <aside class="app-right-panel d-none d-xl-block">
-            <div class="right-card">
-                <h6>Today</h6>
-                <p class="text-muted mb-0">
-                    Find new people, follow stories, and keep your saved posts close.
-                </p>
-            </div>
-        </aside>
     </main>
 
     <div id="postModal" class="post-modal d-none">
@@ -157,22 +157,12 @@
 
             <div class="mb-3">
                 <label class="form-label">Media</label>
-                <input
-                    id="postMediaInput"
-                    type="file"
-                    class="form-control"
-                    accept="image/*,video/*"
-                >
+                <input id="postMediaInput" type="file" class="form-control" accept="image/*,video/*">
             </div>
 
             <div class="mb-3">
                 <label class="form-label">Caption</label>
-                <textarea
-                    id="postCaptionInput"
-                    class="form-control"
-                    rows="4"
-                    placeholder="Write a caption..."
-                ></textarea>
+                <textarea id="postCaptionInput" class="form-control" rows="4" placeholder="Write a caption..."></textarea>
             </div>
 
             <div class="mb-3">
