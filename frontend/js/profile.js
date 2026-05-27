@@ -48,9 +48,11 @@ async function loadProfilePage() {
 }
 
 async function loadSavedPostsGrid() {
-    feedList.querySelector("#profileGrid").innerHTML = `
-        <div class="text-center text-muted py-5">
-            Loading saved posts...
+    const grid = document.getElementById("profileGrid");
+
+    grid.innerHTML = `
+        <div class="empty-state profile-empty">
+            <h5>Loading saved posts...</h5>
         </div>
     `;
 
@@ -61,8 +63,8 @@ async function loadSavedPostsGrid() {
             const savedPosts = Array.isArray(data) ? data : data.results || [];
             renderProfileGrid(savedPosts);
         } else {
-            feedList.querySelector("#profileGrid").innerHTML = `
-                <div class="empty-state">
+            grid.innerHTML = `
+                <div class="empty-state profile-empty">
                     <h5>Could not load saved posts</h5>
                     <p>${getErrorMessage(data)}</p>
                 </div>
@@ -71,8 +73,8 @@ async function loadSavedPostsGrid() {
     } catch (error) {
         console.error(error);
 
-        feedList.querySelector("#profileGrid").innerHTML = `
-            <div class="empty-state">
+        grid.innerHTML = `
+            <div class="empty-state profile-empty">
                 <h5>Cannot connect to server</h5>
             </div>
         `;
@@ -156,7 +158,7 @@ function renderProfileGrid(posts) {
         const mediaUrl = post.media ? getMediaUrl(post.media) : "";
 
         return `
-            <article class="profile-grid-item">
+            <article class="profile-grid-item" data-post-id="${post.id}">
                 ${
                     mediaUrl
                         ? `<img src="${mediaUrl}" alt="Post">`
