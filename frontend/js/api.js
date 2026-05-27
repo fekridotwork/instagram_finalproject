@@ -1,34 +1,59 @@
 async function getRequest(endpoint) {
-    const accessToken = localStorage.getItem("accessToken");
-
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    return requestWithAuth(endpoint, {
         method: "GET",
-        headers: {
-            "Authorization": `Bearer ${accessToken}`,
-        },
     });
-
-    const data = await response.json();
-
-    return {
-        response,
-        data,
-    };
 }
 
 async function postRequest(endpoint, payload = {}) {
-    const accessToken = localStorage.getItem("accessToken");
-
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    return requestWithAuth(endpoint, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "Authorization": accessToken ? `Bearer ${accessToken}` : "",
         },
         body: JSON.stringify(payload),
     });
+}
 
-    const data = await response.json();
+async function deleteRequest(endpoint) {
+    return requestWithAuth(endpoint, {
+        method: "DELETE",
+    });
+}
+
+async function postFormRequest(endpoint, formData) {
+    return requestWithAuth(endpoint, {
+        method: "POST",
+        body: formData,
+    });
+}
+
+async function requestWithAuth(endpoint, options = {}, retry = true) {
+    const accessToken = localStorage.getItem("accessToken");
+
+    const headers = {
+        ...(options.headers || {}),
+    };
+
+    if (accessToken) {
+        headers["Authorization"] = `Bearer ${accessToken}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers,
+    });
+
+    const data = await safeJson(response);
+
+    if (response.status === 401 && retry) {
+        const refreshed = await refreshAccessToken();
+
+        if (refreshed) {
+            return requestWithAuth(endpoint, options, false);
+        }
+
+        forceLogout();
+    }
 
     return {
         response,
@@ -36,22 +61,53 @@ async function postRequest(endpoint, payload = {}) {
     };
 }
 
-async function deleteRequest(endpoint) {
-    const accessToken = localStorage.getItem("accessToken");
+async function refreshAccessToken() {
+    const refreshToken = localStorage.getItem("refreshToken");
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: "DELETE",
-        headers: {
-            "Authorization": `Bearer ${accessToken}`,
-        },
-    });
+    if (!refreshToken) {
+        return false;
+    }
 
-    const data = await response.json();
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/token/refresh/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                refresh: refreshToken,
+            }),
+        });
 
-    return {
-        response,
-        data,
-    };
+        const data = await safeJson(response);
+
+        if (!response.ok || !data.access) {
+            return false;
+        }
+
+        localStorage.setItem("accessToken", data.access);
+        return true;
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
+function forceLogout() {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+
+    if (typeof showAuth === "function") {
+        showAuth();
+    }
+}
+
+async function safeJson(response) {
+    try {
+        return await response.json();
+    } catch {
+        return {};
+    }
 }
 
 function getErrorMessage(data) {
@@ -70,22 +126,4 @@ function getErrorMessage(data) {
     }
 
     return "Something went wrong.";
-}
-async function postFormRequest(endpoint, formData) {
-    const accessToken = localStorage.getItem("accessToken");
-
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${accessToken}`,
-        },
-        body: formData,
-    });
-
-    const data = await response.json();
-
-    return {
-        response,
-        data,
-    };
 }
