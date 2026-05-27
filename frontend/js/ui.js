@@ -38,13 +38,15 @@ function handleNavigation(page) {
     if (page === "home") {
         pageTitle.textContent = "Home";
         pageSubtitle.textContent = "Catch up with the latest moments.";
+        globalSearchInput.value = "";
         loadHomeFeed();
         return;
     }
 
     if (page === "explore") {
         pageTitle.textContent = "Explore";
-        pageSubtitle.textContent = "Discover public posts people are liking.";
+        pageSubtitle.textContent = "Search people and discover public posts.";
+        globalSearchInput.value = "";
         loadExploreFeed();
         return;
     }

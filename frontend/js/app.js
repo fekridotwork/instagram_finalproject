@@ -37,6 +37,8 @@ const postVisibilityInput = document.getElementById("postVisibilityInput");
 const submitPostBtn = document.getElementById("submitPostBtn");
 const createPostMessage = document.getElementById("createPostMessage");
 
+const globalSearchInput = document.getElementById("globalSearchInput");
+
 checkAuthState();
 
 sendOtpBtn.addEventListener("click", requestOtp);
@@ -53,6 +55,8 @@ newPostBtn.addEventListener("click", openCreatePostModal);
 createPostModalBackdrop.addEventListener("click", closeCreatePostModal);
 closeCreatePostModalBtn.addEventListener("click", closeCreatePostModal);
 submitPostBtn.addEventListener("click", submitPost);
+
+globalSearchInput.addEventListener("input", handleGlobalSearchInput);
 
 navItems.forEach(function (item) {
     item.addEventListener("click", function () {
