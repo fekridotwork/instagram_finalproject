@@ -71,3 +71,21 @@ function getErrorMessage(data) {
 
     return "Something went wrong.";
 }
+async function postFormRequest(endpoint, formData) {
+    const accessToken = localStorage.getItem("accessToken");
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${accessToken}`,
+        },
+        body: formData,
+    });
+
+    const data = await response.json();
+
+    return {
+        response,
+        data,
+    };
+}

@@ -605,3 +605,16 @@ body {
         min-height: 320px;
     }
 }
+
+/* CREATE POST MODAL */
+
+.create-post-card {
+    position: relative;
+    z-index: 1;
+    width: min(520px, calc(100vw - 48px));
+    margin: 80px auto;
+    background: white;
+    border-radius: 24px;
+    padding: 28px;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
+}

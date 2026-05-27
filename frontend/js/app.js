@@ -26,6 +26,17 @@ const postModalContent = document.getElementById("postModalContent");
 const postModalBackdrop = document.getElementById("postModalBackdrop");
 const closePostModalBtn = document.getElementById("closePostModalBtn");
 
+const newPostBtn = document.getElementById("newPostBtn");
+
+const createPostModal = document.getElementById("createPostModal");
+const createPostModalBackdrop = document.getElementById("createPostModalBackdrop");
+const closeCreatePostModalBtn = document.getElementById("closeCreatePostModalBtn");
+const postMediaInput = document.getElementById("postMediaInput");
+const postCaptionInput = document.getElementById("postCaptionInput");
+const postVisibilityInput = document.getElementById("postVisibilityInput");
+const submitPostBtn = document.getElementById("submitPostBtn");
+const createPostMessage = document.getElementById("createPostMessage");
+
 checkAuthState();
 
 sendOtpBtn.addEventListener("click", requestOtp);
@@ -37,6 +48,11 @@ feedList.addEventListener("click", handleFeedClick);
 
 postModalBackdrop.addEventListener("click", closePostDetail);
 closePostModalBtn.addEventListener("click", closePostDetail);
+
+newPostBtn.addEventListener("click", openCreatePostModal);
+createPostModalBackdrop.addEventListener("click", closeCreatePostModal);
+closeCreatePostModalBtn.addEventListener("click", closeCreatePostModal);
+submitPostBtn.addEventListener("click", submitPost);
 
 navItems.forEach(function (item) {
     item.addEventListener("click", function () {
