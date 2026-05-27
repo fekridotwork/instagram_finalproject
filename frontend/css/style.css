@@ -1457,3 +1457,132 @@ body {
 .story-color-btn:hover {
     transform: scale(1.08);
 }
+/* DIRECT MESSAGES */
+
+.messages-page {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    min-height: 620px;
+    border-radius: 28px;
+    overflow: hidden;
+}
+
+.conversations-panel {
+    padding: 22px;
+    border-right: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.conversations-panel h5 {
+    color: white;
+    font-weight: 800;
+    margin-bottom: 18px;
+}
+
+.conversations-list {
+    display: grid;
+    gap: 10px;
+}
+
+.conversation-item {
+    border: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 18px;
+    text-align: left;
+    color: white;
+    background: rgba(255, 255, 255, 0.10);
+}
+
+.conversation-item:hover {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.conversation-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    font-weight: 800;
+    background: linear-gradient(135deg, #f97316, #ec4899, #8b5cf6);
+}
+
+.conversation-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.conversation-item p {
+    margin: 2px 0 0;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 13px;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chat-panel {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.chat-header {
+    padding: 20px 22px;
+    color: white;
+    font-weight: 800;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.messages-list {
+    padding: 22px;
+    overflow-y: auto;
+    display: grid;
+    align-content: start;
+    gap: 12px;
+}
+
+.message-bubble {
+    width: fit-content;
+    max-width: 75%;
+    padding: 12px 14px;
+    border-radius: 18px;
+    color: white;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.message-bubble p {
+    margin: 0;
+}
+
+.message-bubble span {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.message-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 18px 22px;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+@media (max-width: 700px) {
+    .messages-page {
+        grid-template-columns: 1fr;
+    }
+
+    .conversations-panel {
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    }
+}

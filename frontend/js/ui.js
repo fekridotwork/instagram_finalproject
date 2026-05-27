@@ -59,6 +59,15 @@ function handleNavigation(page) {
         return;
     }
 
+    if (page === "messages") {
+        hideStories();
+        pageTitle.textContent = "Messages";
+        pageSubtitle.textContent = "Your direct conversations.";
+        globalSearchInput.value = "";
+        loadMessagesPage();
+        return;
+    }
+
     pageTitle.textContent = capitalize(page);
     pageSubtitle.textContent = "This section is coming next.";
 
