@@ -4388,3 +4388,29 @@ body {
 #closeStoryViewerBtn {
     display: none !important;
 }
+.message-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.message-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.message-action-btn {
+    border: 0;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 11px;
+    color: white;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.message-action-btn:hover {
+    background: rgba(255, 255, 255, 0.28);
+}

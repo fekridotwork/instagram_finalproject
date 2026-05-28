@@ -192,13 +192,42 @@ function renderMessages(messages) {
             <div class="message-row ${isMine ? "mine" : "theirs"}">
                 <div class="message-bubble">
                     <p>${message.text}</p>
-                    <span>${formatDate(message.created_at)}</span>
+
+                    <div class="message-meta">
+                        <span>${formatDate(message.created_at)}</span>
+
+                        ${
+                            isMine
+                                ? `
+                                    <div class="message-actions">
+                                        <button
+                                            type="button"
+                                            class="message-action-btn edit-message-btn"
+                                            data-message-id="${message.id}"
+                                            data-message-text="${message.text}"
+                                        >
+                                            Edit
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            class="message-action-btn delete-message-btn"
+                                            data-message-id="${message.id}"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                `
+                                : ""
+                        }
+                    </div>
                 </div>
             </div>
         `;
     }).join("");
 
     messagesList.scrollTop = messagesList.scrollHeight;
+    bindMessageActionButtons();
 }
 
 function bindMessageForm() {
@@ -273,5 +302,81 @@ async function loadCurrentMessageUser() {
         }
     } catch (error) {
         console.error(error);
+    }
+}
+function bindMessageActionButtons() {
+    document.querySelectorAll(".edit-message-btn").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const messageId = button.dataset.messageId;
+            const currentText = button.dataset.messageText || "";
+
+            editMessage(messageId, currentText);
+        });
+    });
+
+    document.querySelectorAll(".delete-message-btn").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const messageId = button.dataset.messageId;
+
+            deleteMessage(messageId);
+        });
+    });
+}
+
+async function editMessage(messageId, currentText) {
+    const newText = prompt("Edit message:", currentText);
+
+    if (newText === null) {
+        return;
+    }
+
+    const text = newText.trim();
+
+    if (!text) {
+        alert("Message cannot be empty.");
+        return;
+    }
+
+    try {
+        const { response, data } = await patchRequest(
+            `/direct/messages/${messageId}/`,
+            { text: text }
+        );
+
+        if (!response.ok) {
+            alert(getErrorMessage(data));
+            return;
+        }
+
+        await loadConversationMessages(activeConversationId, activeConversationUser);
+        await loadConversations();
+    } catch (error) {
+        console.error(error);
+        alert("Could not edit message.");
+    }
+}
+
+async function deleteMessage(messageId) {
+    const confirmed = confirm("Delete this message?");
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const { response, data } = await deleteRequest(
+            `/direct/messages/${messageId}/`
+        );
+
+        if (!response.ok) {
+            alert(getErrorMessage(data));
+            return;
+        }
+
+        await loadConversationMessages(activeConversationId, activeConversationUser);
+        await loadConversations();
+    } catch (error) {
+        console.error(error);
+        alert("Could not delete message.");
     }
 }
