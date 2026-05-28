@@ -258,7 +258,7 @@ async function sendMessage() {
         );
 
         if (!response.ok) {
-            alert(getErrorMessage(data));
+            showToast(getErrorMessage(data), "error");
             return;
         }
 
@@ -267,7 +267,7 @@ async function sendMessage() {
         await loadConversations();
     } catch (error) {
         console.error(error);
-        alert("Could not send message.");
+        showToast("Could not send message.", "error");
     }
 }
 

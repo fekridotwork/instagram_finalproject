@@ -426,7 +426,7 @@ async function togglePublicProfileFollow(button) {
         }
     } catch (error) {
         console.error(error);
-        alert("Could not update follow state.");
+        showToast("Could not update follow state.", "error");
         button.textContent = isFollowing ? "Following" : "Follow";
     } finally {
         button.disabled = false;
@@ -454,7 +454,7 @@ function updatePublicFollowersCount(isFollowing) {
 }
 async function startConversationFromPublicProfile(userId, user = null) {
     if (!userId) {
-        alert("Could not start conversation.");
+        showToast("Could not start conversation.", "error");
         return;
     }
 
@@ -464,7 +464,7 @@ async function startConversationFromPublicProfile(userId, user = null) {
         });
 
         if (!response.ok) {
-            alert(getErrorMessage(data));
+            showToast(getErrorMessage(data), "error");
             return;
         }
 
@@ -482,7 +482,7 @@ async function startConversationFromPublicProfile(userId, user = null) {
         }
     } catch (error) {
         console.error(error);
-        alert("Could not start conversation.");
+        showToast("Could not start conversation.", "error");
     }
 }
 async function togglePublicProfileBlock(button) {
@@ -490,7 +490,7 @@ async function togglePublicProfileBlock(button) {
     const isBlocked = button.dataset.blocked === "true";
 
     if (!userId) {
-        alert("Could not block this user.");
+        showToast("Could not block this user.", "error");
         return;
     }
 
@@ -545,7 +545,7 @@ async function togglePublicProfileBlock(button) {
         }
     } catch (error) {
         console.error(error);
-        alert("Could not update block status.");
+        showToast("Could not update block status.", "error");
         button.textContent = isBlocked ? "Unblock" : "Block";
     } finally {
         button.disabled = false;

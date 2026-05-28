@@ -72,7 +72,7 @@ async function toggleLike(button) {
         }
     } catch (error) {
         console.error(error);
-        alert("Could not update like.");
+        showToast("Could not update like.", "error");
     } finally {
         button.disabled = false;
     }
@@ -100,7 +100,7 @@ async function toggleSave(button) {
         }
     } catch (error) {
         console.error(error);
-        alert("Could not update save state.");
+        showToast("Could not update save state.", "error");
     } finally {
         button.disabled = false;
     }

@@ -488,21 +488,37 @@ function bindPostOwnerActions(post) {
     });
 }
 
-function openPostOwnerMenu(post) {
-    const action = prompt("Type edit or delete:");
+async function openPostActions(post) {
+    const confirmedEdit = await openConfirmModal({
+        title: "Edit post",
+        description: "Do you want to edit this post caption?",
+        confirmText: "Edit",
+        cancelText: "More options",
+    });
 
-    if (action === "edit") {
-        openEditPostPrompt(post);
-        return;
+    if (confirmedEdit) {
+        return editPostCaption(post);
     }
 
-    if (action === "delete") {
-        deletePost(post.id);
+    const confirmedDelete = await openConfirmModal({
+        title: "Delete post",
+        description: "This post will be permanently deleted.",
+        confirmText: "Delete",
+        danger: true,
+    });
+
+    if (confirmedDelete) {
+        return deletePost(post.id);
     }
 }
 
 async function openEditPostPrompt(post) {
-    const newCaption = prompt("Edit caption:", post.caption || "");
+    const newCaption = await openInputModal({
+        title: "Edit caption",
+        description: "Update your post caption.",
+        initialValue: post.caption || "",
+        confirmText: "Save",
+    });
 
     if (newCaption === null) {
         return;
@@ -514,7 +530,7 @@ async function openEditPostPrompt(post) {
         });
 
         if (!response.ok) {
-            alert(getErrorMessage(data));
+            showToast(getErrorMessage(data), "error");
             return;
         }
 
@@ -522,12 +538,19 @@ async function openEditPostPrompt(post) {
         refreshFeedAfterCommentChange();
     } catch (error) {
         console.error(error);
-        alert("Could not edit post.");
+        showToast("Could not edit post.", "error");
     }
 }
 
 async function deletePost(postId) {
-    if (!confirm("Delete this post?")) {
+    const confirmed = await openConfirmModal({
+        title: "Delete post",
+        description: "This post will be permanently deleted.",
+        confirmText: "Delete",
+        danger: true,
+    });
+
+    if (!confirmed) {
         return;
     }
 
@@ -535,7 +558,7 @@ async function deletePost(postId) {
         const { response, data } = await deleteRequest(`/posts/${postId}/`);
 
         if (!response.ok) {
-            alert(getErrorMessage(data));
+            showToast(getErrorMessage(data), "error");
             return;
         }
 
@@ -557,6 +580,6 @@ async function deletePost(postId) {
         }
     } catch (error) {
         console.error(error);
-        alert("Could not delete post.");
+        showToast("Could not delete post.", "error");
     }
 }
