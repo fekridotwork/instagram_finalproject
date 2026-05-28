@@ -417,7 +417,7 @@ function renderFollowUserItem(user) {
             data-username="${username}"
         >
             <div class="follow-user-avatar">
-                ${renderUserAvatar(profile)}
+                ${renderUserAvatar(user)}
             </div>
 
             <div class="follow-user-info">
