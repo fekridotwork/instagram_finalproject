@@ -68,7 +68,7 @@ async function toggleLike(button) {
 
             updateLikeButton(button, newLikedState, newLikesCount);
         } else {
-            alert(getErrorMessage(result.data));
+            showToast(getErrorMessage(result.data), "error");
         }
     } catch (error) {
         console.error(error);
@@ -96,7 +96,7 @@ async function toggleSave(button) {
         if (result.response.ok) {
             updateSaveButton(button, !isSaved);
         } else {
-            alert(getErrorMessage(result.data));
+            showToast(getErrorMessage(result.data), "error");
         }
     } catch (error) {
         console.error(error);

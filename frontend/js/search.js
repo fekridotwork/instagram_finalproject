@@ -201,7 +201,7 @@ function bindSearchResultClicks() {
                 await loadPublicProfile(username, item.dataset.userId);
             } catch (error) {
                 console.error(error);
-                alert("Could not load profile.");
+                showToast("Could not load profile.", "error");
             }
         });
     });
@@ -220,7 +220,7 @@ async function loadPublicProfile(username, userId = null) {
     console.log(data);
 
     if (!response.ok) {
-        alert("Could not load profile.");
+        showToast("Could not load profile.", "error");
         return;
     }
 
@@ -421,7 +421,7 @@ async function togglePublicProfileFollow(button) {
 
             updatePublicFollowersCount(newState);
         } else {
-            alert(getErrorMessage(result.data));
+            showToast(getErrorMessage(result.data), "error");
             button.textContent = isFollowing ? "Following" : "Follow";
         }
     } catch (error) {
@@ -498,7 +498,14 @@ async function togglePublicProfileBlock(button) {
         ? "Unblock this user?"
         : "Block this user? This will remove follow connections between you.";
 
-    if (!confirm(confirmMessage)) {
+    const confirmed = await openConfirmModal({
+        title: isBlocked ? "Unblock user" : "Block user",
+        description: confirmMessage,
+        confirmText: isBlocked ? "Unblock" : "Block",
+        danger: true,
+    });
+
+    if (!confirmed) {
         return;
     }
 
@@ -511,7 +518,7 @@ async function togglePublicProfileBlock(button) {
             : await postRequest("/block/", { user_id: userId });
 
         if (!result.response.ok) {
-            alert(getErrorMessage(result.data));
+            showToast(getErrorMessage(result.data), "error");
             button.textContent = isBlocked ? "Unblock" : "Block";
             return;
         }
@@ -531,10 +538,10 @@ async function togglePublicProfileBlock(button) {
         }
 
         if (newState) {
-            alert("User blocked.");
+            showToast("User blocked.", "success");
             handleNavigation("home");
         } else {
-            alert("User unblocked.");
+            showToast("User unblocked.", "success");
         }
     } catch (error) {
         console.error(error);

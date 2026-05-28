@@ -51,9 +51,22 @@ function showAuth() {
     authPage.classList.remove("d-none");
 }
 
-function showMessage(message, type) {
-    messageBox.textContent = message;
-    messageBox.className = `alert alert-${type}`;
+function showMessage(box, message, type = "danger") {
+    if (!box) {
+        showToast(message, type === "danger" ? "error" : type);
+        return;
+    }
+
+    box.textContent = message;
+    box.className = `alert alert-${type}`;
+    box.classList.remove("d-none");
+
+    setTimeout(function () {
+        box.className = "alert d-none";
+        box.textContent = "";
+    }, 3000);
+
+    showToast(message, type === "danger" ? "error" : type);
 }
 
 function clearMessage() {
