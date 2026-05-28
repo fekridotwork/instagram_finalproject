@@ -153,21 +153,39 @@ async function submitStory() {
         const formData = new FormData();
 
         if (mediaFile) {
-            const finalImageBlob = await exportStoryCanvas();
+            const isVideo = mediaFile.type.startsWith("video/");
+            const isImage = mediaFile.type.startsWith("image/");
 
-            const finalImageFile = new File(
-                [finalImageBlob],
-                "story.png",
-                {
-                    type: "image/png",
+            if (isVideo) {
+                formData.append("media", mediaFile);
+                formData.append("media_type", "video");
+
+                if (text) {
+                    formData.append("text", text);
                 }
-            );
+            } else if (isImage) {
+                const finalImageBlob = await exportStoryCanvas();
 
-            formData.append("media", finalImageFile);
-            formData.append("media_type", "image");
+                const finalImageFile = new File(
+                    [finalImageBlob],
+                    "story.png",
+                    {
+                        type: "image/png",
+                    }
+                );
 
-            if (text) {
-                formData.append("text", text);
+                formData.append("media", finalImageFile);
+                formData.append("media_type", "image");
+
+                if (text) {
+                    formData.append("text", text);
+                }
+            } else {
+                showCreateStoryMessage(
+                    "Only image and video files are supported.",
+                    "danger"
+                );
+                return;
             }
         } else {
             formData.append("media_type", "text");
@@ -185,6 +203,7 @@ async function submitStory() {
             closeCreateStoryModal();
             await loadHomeStories();
         } else {
+            console.log(data);
             showCreateStoryMessage(
                 getErrorMessage(data),
                 "danger"

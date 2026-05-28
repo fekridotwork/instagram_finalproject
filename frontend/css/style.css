@@ -4166,3 +4166,225 @@ body {
 .story-nav-next {
     right: 0;
 }
+#closeStoryViewerBtn,
+.story-viewer-modal-close,
+.story-modal-close {
+    display: none !important;
+}
+.story-viewer-shell {
+    animation: storyViewerEnter 0.22s ease-out;
+}
+
+@keyframes storyViewerEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.story-progress-fill.completed {
+    width: 100%;
+}
+
+.story-progress-fill.running {
+    width: 0;
+    animation: storyProgressRun 5s linear forwards;
+}
+
+.story-paused .story-progress-fill.running {
+    animation-play-state: paused;
+}
+
+@keyframes storyProgressRun {
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+.story-viewer-media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(0,0,0,0.52) 0%,
+            transparent 28%,
+            transparent 72%,
+            rgba(0,0,0,0.38) 100%
+        );
+}
+
+.story-nav-zone {
+    -webkit-tap-highlight-color: transparent;
+}
+
+#closeStoryViewerBtn {
+    display: none !important;
+}
+.story-viewer-shell {
+    animation: storyViewerEnter 0.22s ease-out;
+}
+
+@keyframes storyViewerEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.story-progress-fill.completed {
+    width: 100%;
+}
+
+.story-progress-fill.running {
+    width: 0;
+    animation-name: storyProgressRun;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+.story-paused .story-progress-fill.running {
+    animation-play-state: paused;
+}
+
+@keyframes storyProgressRun {
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+.story-viewer-media::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(0,0,0,0.52) 0%,
+            transparent 28%,
+            transparent 72%,
+            rgba(0,0,0,0.38) 100%
+        );
+}
+
+.text-story-shell .story-viewer-media {
+    background:
+        radial-gradient(circle at 25% 20%, rgba(236, 72, 153, 0.35), transparent 34%),
+        radial-gradient(circle at 75% 80%, rgba(124, 58, 237, 0.36), transparent 36%),
+        linear-gradient(135deg, #111827, #312e81);
+}
+
+.story-viewer-text {
+    width: min(78%, 340px);
+    max-height: 65vh;
+
+    overflow-y: auto;
+
+    color: white;
+    font-size: clamp(28px, 4vw, 46px);
+    line-height: 1.22;
+    font-weight: 900;
+    text-align: center;
+
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.story-nav-zone {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.story-nav-prev {
+    width: 35%;
+}
+
+.story-nav-next {
+    width: 35%;
+}
+
+.story-hold-zone {
+    position: absolute;
+    top: 86px;
+    bottom: 0;
+    left: 35%;
+    width: 30%;
+    z-index: 4;
+}
+
+.story-heart-burst {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 20;
+
+    transform: translate(-50%, -50%) scale(0.4);
+
+    opacity: 0;
+
+    color: #fb7185;
+    font-size: 92px;
+
+    pointer-events: none;
+
+    filter: drop-shadow(0 16px 36px rgba(0,0,0,0.45));
+}
+
+.story-heart-burst.show {
+    animation: storyHeartPop 0.62s ease-out;
+}
+
+@keyframes storyHeartPop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.35);
+    }
+
+    35% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.15);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -58%) scale(1.55);
+    }
+}
+
+.story-seen .avatar-ring {
+    filter: grayscale(0.7);
+    opacity: 0.72;
+}
+
+.avatar-ring.no-story {
+    background: rgba(255,255,255,0.18);
+    opacity: 0.72;
+}
+
+#closeStoryViewerBtn {
+    display: none !important;
+}
