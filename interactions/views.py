@@ -27,6 +27,7 @@ from .schemas import (
     comment_list_schema,
     follow_schema,
     mutual_followers_schema,
+    my_blocked_users_schema,
     my_followers_schema,
     my_following_schema,
     my_saved_posts_schema,
@@ -248,6 +249,8 @@ class UserBlockAPIView(APIView):
             status=status.HTTP_200_OK,
         )
 
+
+@extend_schema_view(get=my_blocked_users_schema)
 class MyBlockedUsersListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = FollowUserSerializer

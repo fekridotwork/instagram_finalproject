@@ -7,6 +7,7 @@ from .views import (
     MyBlockedUsersListAPIView,
     MyFollowersListAPIView,
     MyFollowingListAPIView,
+    MyBlockedUsersListAPIView,
     MySavedPostsListAPIView,
     UserFollowAPIView,
 )
@@ -41,6 +42,11 @@ urlpatterns = [
         "block/",
         UserBlockAPIView.as_view(),
         name="user-block",
+    ),
+    path(
+        "me/blocked-users/",
+        MyBlockedUsersListAPIView.as_view(),
+        name="my-blocked-users",
     ),
     path(
         "me/blocked-users/",

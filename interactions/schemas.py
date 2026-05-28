@@ -177,6 +177,19 @@ unblock_schema = extend_schema(
     },
 )
 
+my_blocked_users_schema = extend_schema(
+    tags=["Interactions - Block"],
+    summary="List My Blocked Users",
+    description=(
+        "Return the list of active users blocked by the authenticated user. "
+        "Each item includes basic user/profile information and follow status."
+    ),
+    responses={
+        200: FollowUserSerializer(many=True),
+        401: unauthorized_response(),
+    },
+)
+
 
 my_followers_schema = extend_schema(
     tags=["Interactions - Follow"],
