@@ -90,9 +90,21 @@ function switchAuthMode() {
     }
 }
 
-function logout() {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+async function logout() {
+    const refreshToken = localStorage.getItem("refreshToken");
 
-    showAuth();
+    try {
+        if (refreshToken) {
+            await postRequest("/auth/logout/", {
+                refresh: refreshToken,
+            });
+        }
+    } catch (error) {
+        console.error("Logout request failed:", error);
+    } finally {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+
+        showAuth();
+    }
 }
