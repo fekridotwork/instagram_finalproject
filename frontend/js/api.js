@@ -135,15 +135,15 @@ async function patchFormRequest(endpoint, formData) {
     });
 }
 async function getFollowers() {
-    return requestWithAuth("/api/me/followers/");
+    return requestWithAuth("/me/followers/");
 }
 
 async function getFollowing() {
-    return requestWithAuth("/api/me/following/");
+    return requestWithAuth("/me/following/");
 }
 
 async function getMutualFollowers(userId) {
-    return requestWithAuth(`/api/users/${userId}/mutual-followers/`);
+    return requestWithAuth(`/users/${userId}/mutual-followers/`);
 }
 async function deleteJsonRequest(endpoint, payload) {
     return requestWithAuth(endpoint, {
