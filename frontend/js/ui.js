@@ -9,6 +9,29 @@ function renderUserAvatar(user, className = "") {
 
     return `<span class="${className}">${letter}</span>`;
 }
+function renderAvatar({
+    username = "User",
+    profileImage = "",
+    hasStory = false,
+    size = 48
+}) {
+    const firstLetter = username ? username[0].toUpperCase() : "U";
+
+    return `
+        <div
+            class="avatar-ring ${hasStory ? "has-story" : "no-story"}"
+            style="width:${size}px; height:${size}px;"
+        >
+            <div class="avatar-inner">
+                ${
+                    profileImage
+                        ? `<img src="${getMediaUrl(profileImage)}" alt="${username}">`
+                        : `<span>${firstLetter}</span>`
+                }
+            </div>
+        </div>
+    `;
+}
 function showApp() {
     authPage.classList.add("d-none");
     appPage.classList.remove("d-none");

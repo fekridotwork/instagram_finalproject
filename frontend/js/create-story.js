@@ -139,7 +139,10 @@ async function submitStory() {
     const visibility = storyVisibilityInput.value;
 
     if (!mediaFile && !text) {
-        showCreateStoryMessage("Please choose media or write text.", "danger");
+        showCreateStoryMessage(
+            "Please choose media or write text.",
+            "danger"
+        );
         return;
     }
 
@@ -151,33 +154,49 @@ async function submitStory() {
 
         if (mediaFile) {
             const finalImageBlob = await exportStoryCanvas();
+
             const finalImageFile = new File(
                 [finalImageBlob],
                 "story.png",
-                { type: "image/png" }
+                {
+                    type: "image/png",
+                }
             );
 
             formData.append("media", finalImageFile);
             formData.append("media_type", "image");
-        }
 
-        if (text) {
+            if (text) {
+                formData.append("text", text);
+            }
+        } else {
+            formData.append("media_type", "text");
             formData.append("text", text);
         }
 
         formData.append("visibility", visibility);
 
-        const { response, data } = await postFormRequest("/stories/", formData);
+        const { response, data } = await postFormRequest(
+            "/stories/",
+            formData
+        );
 
         if (response.ok) {
             closeCreateStoryModal();
             await loadHomeStories();
         } else {
-            showCreateStoryMessage(getErrorMessage(data), "danger");
+            showCreateStoryMessage(
+                getErrorMessage(data),
+                "danger"
+            );
         }
     } catch (error) {
         console.error(error);
-        showCreateStoryMessage("Could not share story.", "danger");
+
+        showCreateStoryMessage(
+            "Could not share story.",
+            "danger"
+        );
     } finally {
         submitStoryBtn.disabled = false;
         submitStoryBtn.textContent = "Share story";

@@ -181,15 +181,16 @@ class StorySerializer(serializers.ModelSerializer):
                     }
                 )
 
-        elif media_type in {"image", "video"}:
-            if not media:
-                raise serializers.ValidationError(
-                    {
-                        "media": "Media is required for image/video stories."
-                    }
-                )
+            elif media_type in {"image", "video"}:
+                if media:
+                    validate_media_file(media, media_type)
 
-            validate_media_file(media, media_type)
+                elif not text:
+                    raise serializers.ValidationError(
+                        {
+                            "media": "Story must have media or text."
+                        }
+                    )
 
         else:
             raise serializers.ValidationError(

@@ -4,6 +4,9 @@ let activeReplyUsername = null;
 
 async function openPostDetail(postId) {
     activePostId = postId;
+    activeReplyParentId = null;
+    activeReplyUsername = null;
+
     postModal.classList.remove("d-none");
 
     postModalContent.innerHTML = `
@@ -38,6 +41,9 @@ async function openPostDetail(postId) {
 
 function closePostDetail() {
     activePostId = null;
+    activeReplyParentId = null;
+    activeReplyUsername = null;
+
     postModal.classList.add("d-none");
     postModalContent.innerHTML = "";
 }
@@ -47,7 +53,7 @@ function renderPostDetail(post) {
     const comments = post.comments || [];
 
     postModalContent.innerHTML = `
-        <div class="post-detail">
+        <div class="post-detail post-detail-glass">
             <div class="post-detail-media">
                 ${
                     mediaUrl
@@ -57,37 +63,49 @@ function renderPostDetail(post) {
             </div>
 
             <div class="post-detail-info">
+                <button
+                    class="post-detail-close-btn"
+                    type="button"
+                    onclick="closePostDetail()"
+                >
+                    ×
+                </button>
+
                 <div class="post-detail-user">
-                    <div class="avatar">
+                    <div class="avatar post-detail-avatar">
                         ${renderUserAvatar(post)}
                     </div>
+
                     <div>
-                        <strong>${post.username}</strong>
+                        <strong>${post.username || "User"}</strong>
                         <p class="mb-0 text-white-50">${formatDate(post.created_at)}</p>
                     </div>
+
                     <button
                         class="post-detail-more-btn"
                         id="postDetailMoreBtn"
                         data-post-id="${post.id}"
+                        type="button"
                     >
                         <i data-lucide="more-horizontal"></i>
                     </button>
                 </div>
 
-                ${
-                    post.caption
-                        ? `
-                            <div class="post-detail-caption-block">
-                                <strong>${post.username}</strong>
-                                <p class="post-detail-caption">${post.caption}</p>
-                            </div>
-                        `
-                        : ""
-                }
+                <div class="post-detail-caption-block">
+                    <strong>${post.username || "User"}</strong>
+
+                    <p class="post-detail-caption">
+                        ${post.caption || ""}
+                    </p>
+                </div>
 
                 <div class="post-detail-meta">
-                    <span>${post.likes_count || 0} likes</span>
-                    <span id="postDetailCommentsCount">${post.comments_count || comments.length} comments</span>
+                    <span>♡ ${post.likes_count || 0} likes</span>
+                    <span id="postDetailCommentsCount">💬 ${post.comments_count || comments.length} comments</span>
+                </div>
+
+                <div class="post-detail-section-title">
+                    <strong>Comments</strong>
                 </div>
 
                 <div id="postDetailComments" class="post-detail-comments">
@@ -97,7 +115,7 @@ function renderPostDetail(post) {
                 <div class="reply-banner d-none" id="replyBanner">
                     <span id="replyBannerText"></span>
 
-                    <button id="cancelReplyBtn" class="cancel-reply-btn">
+                    <button id="cancelReplyBtn" class="cancel-reply-btn" type="button">
                         Cancel
                     </button>
                 </div>
@@ -110,7 +128,7 @@ function renderPostDetail(post) {
                         placeholder="Add a comment..."
                     >
 
-                    <button id="submitCommentBtn" class="btn btn-primary">
+                    <button id="submitCommentBtn" class="btn btn-primary" type="button">
                         Post
                     </button>
                 </div>
@@ -135,13 +153,15 @@ function renderPostComments(comments) {
     }
 
     return comments.map(function (comment) {
-        return renderCommentItem(comment);
+        return renderCommentThread(comment);
     }).join("");
 }
 
-function renderCommentItem(comment) {
+function renderCommentThread(comment) {
+    const replies = flattenReplies(comment.replies || [], 1, comment.username || "User");
+
     return `
-        <div class="post-detail-comment" data-comment-id="${comment.id}">
+        <div class="post-detail-comment main-comment-card" data-comment-id="${comment.id}">
             <div class="comment-avatar">
                 ${renderUserAvatar(comment)}
             </div>
@@ -157,6 +177,7 @@ function renderCommentItem(comment) {
                         class="delete-comment-btn"
                         data-comment-id="${comment.id}"
                         title="Delete comment"
+                        type="button"
                     >
                         ×
                     </button>
@@ -169,21 +190,94 @@ function renderCommentItem(comment) {
                         class="reply-comment-btn"
                         data-comment-id="${comment.id}"
                         data-username="${comment.username || "User"}"
+                        type="button"
                     >
                         Reply
                     </button>
                 </div>
+
                 ${
-                    comment.replies && comment.replies.length
+                    replies.length
                         ? `
-                            <div class="comment-replies">
-                                ${comment.replies.map(function (reply) {
-                                    return renderCommentItem(reply);
-                                }).join("")}
+                            <div class="comment-thread">
+                                ${replies.map(renderReplyRow).join("")}
                             </div>
                         `
                         : ""
                 }
+            </div>
+        </div>
+    `;
+}
+
+function flattenReplies(replies, level = 1, parentUsername = null, result = []) {
+    replies.forEach(function (reply) {
+        result.push({
+            ...reply,
+            replyLevel: Math.min(level, 3),
+            parentUsername: parentUsername,
+        });
+
+        if (reply.replies && reply.replies.length) {
+            flattenReplies(
+                reply.replies,
+                level + 1,
+                reply.username || "User",
+                result
+            );
+        }
+    });
+
+    return result;
+}
+
+function renderReplyRow(reply) {
+    return `
+        <div
+            class="reply-thread-row"
+            data-reply-level="${reply.replyLevel}"
+            data-comment-id="${reply.id}"
+        >
+            <div class="comment-avatar reply-avatar">
+                ${renderUserAvatar(reply)}
+            </div>
+
+            <div class="reply-thread-content">
+                <div class="comment-row">
+                    <p class="mb-0">
+                        <strong>${reply.username || "User"}</strong>
+
+                        ${
+                            reply.parentUsername
+                                ? `<span class="reply-target">replying to @${reply.parentUsername}</span>`
+                                : ""
+                        }
+
+                        ${reply.text || ""}
+                    </p>
+
+                    <button
+                        class="delete-comment-btn"
+                        data-comment-id="${reply.id}"
+                        title="Delete comment"
+                        type="button"
+                    >
+                        ×
+                    </button>
+                </div>
+
+                <div class="comment-meta-row">
+                    <span class="comment-date">${formatDate(reply.created_at)}</span>
+
+                    <button
+                        class="reply-comment-btn"
+                        data-comment-id="${reply.id}"
+                        data-username="${reply.username || "User"}"
+                        type="button"
+                    >
+                        Reply
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -195,12 +289,19 @@ function bindCommentForm() {
     const commentsBox = document.getElementById("postDetailComments");
     const cancelReplyBtn = document.getElementById("cancelReplyBtn");
 
-    submitCommentBtn.addEventListener("click", function () {
+    if (!commentInput || !submitCommentBtn || !commentsBox) {
+        console.warn("Comment form elements not found.");
+        return;
+    }
+
+    submitCommentBtn.addEventListener("click", function (event) {
+        event.preventDefault();
         submitComment(commentInput);
     });
 
     commentInput.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
+            event.preventDefault();
             submitComment(commentInput);
         }
     });
@@ -222,7 +323,9 @@ function bindCommentForm() {
         }
     });
 
-    cancelReplyBtn.addEventListener("click", resetReplyMode);
+    if (cancelReplyBtn) {
+        cancelReplyBtn.addEventListener("click", resetReplyMode);
+    }
 }
 
 async function submitComment(input) {
@@ -288,14 +391,30 @@ async function reloadPostComments() {
     const commentsBox = document.getElementById("postDetailComments");
     const commentsCount = document.getElementById("postDetailCommentsCount");
 
-    commentsBox.innerHTML = renderPostComments(comments);
-    commentsCount.textContent = `${comments.length} comments`;
+    if (commentsBox) {
+        commentsBox.innerHTML = renderPostComments(comments);
+    }
+
+    if (commentsCount) {
+        commentsCount.textContent = `💬 ${countAllComments(comments)} comments`;
+    }
 
     refreshFeedAfterCommentChange();
 }
 
+function countAllComments(comments) {
+    return comments.reduce(function (total, comment) {
+        const replies = comment.replies || [];
+        return total + 1 + countAllComments(replies);
+    }, 0);
+}
+
 function showCommentMessage(message, type) {
     const commentMessage = document.getElementById("commentMessage");
+
+    if (!commentMessage) {
+        return;
+    }
 
     commentMessage.textContent = message;
     commentMessage.className = `comment-message comment-message-${type}`;
@@ -327,10 +446,18 @@ function activateReplyMode(commentId, username) {
     const replyBannerText = document.getElementById("replyBannerText");
     const commentInput = document.getElementById("commentInput");
 
-    replyBanner.classList.remove("d-none");
-    replyBannerText.textContent = `Replying to @${username}`;
-    commentInput.placeholder = `Reply to ${username}...`;
-    commentInput.focus();
+    if (replyBanner) {
+        replyBanner.classList.remove("d-none");
+    }
+
+    if (replyBannerText) {
+        replyBannerText.textContent = `Replying to @${username}`;
+    }
+
+    if (commentInput) {
+        commentInput.placeholder = `Reply to ${username}...`;
+        commentInput.focus();
+    }
 }
 
 function resetReplyMode() {
@@ -348,6 +475,7 @@ function resetReplyMode() {
         commentInput.placeholder = "Add a comment...";
     }
 }
+
 function bindPostOwnerActions(post) {
     const moreBtn = document.getElementById("postDetailMoreBtn");
 
