@@ -488,36 +488,39 @@ function bindPostOwnerActions(post) {
     });
 }
 
-async function openPostActions(post) {
+async function openPostOwnerMenu(post) {
     const confirmedEdit = await openConfirmModal({
         title: "Edit post",
         description: "Do you want to edit this post caption?",
         confirmText: "Edit",
-        cancelText: "More options",
+        cancelText: "Delete instead",
     });
 
     if (confirmedEdit) {
-        return editPostCaption(post);
+        await openEditPostModal(post);
+        return;
     }
 
     const confirmedDelete = await openConfirmModal({
         title: "Delete post",
         description: "This post will be permanently deleted.",
         confirmText: "Delete",
+        cancelText: "Cancel",
         danger: true,
     });
 
     if (confirmedDelete) {
-        return deletePost(post.id);
+        await deletePost(post.id);
     }
 }
 
-async function openEditPostPrompt(post) {
+async function openEditPostModal(post) {
     const newCaption = await openInputModal({
         title: "Edit caption",
         description: "Update your post caption.",
         initialValue: post.caption || "",
         confirmText: "Save",
+        required: false,
     });
 
     if (newCaption === null) {
@@ -534,6 +537,7 @@ async function openEditPostPrompt(post) {
             return;
         }
 
+        showToast("Post updated.", "success");
         await openPostDetail(post.id);
         refreshFeedAfterCommentChange();
     } catch (error) {
@@ -543,17 +547,6 @@ async function openEditPostPrompt(post) {
 }
 
 async function deletePost(postId) {
-    const confirmed = await openConfirmModal({
-        title: "Delete post",
-        description: "This post will be permanently deleted.",
-        confirmText: "Delete",
-        danger: true,
-    });
-
-    if (!confirmed) {
-        return;
-    }
-
     try {
         const { response, data } = await deleteRequest(`/posts/${postId}/`);
 
@@ -562,6 +555,7 @@ async function deletePost(postId) {
             return;
         }
 
+        showToast("Post deleted.", "success");
         closePostDetail();
 
         const activeNav = document.querySelector(".app-nav-item.active");

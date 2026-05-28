@@ -402,11 +402,14 @@ let appModalResolver = null;
 
 function showToast(message, type = "info") {
     const toast = document.getElementById("appToast");
+    document.body.appendChild(toast);
 
     if (!toast) {
         console.log(message);
         return;
     }
+
+    document.body.appendChild(toast);
 
     clearTimeout(appToastTimer);
 
@@ -445,6 +448,7 @@ function openConfirmModal({
 } = {}) {
     return new Promise(function (resolve) {
         const overlay = document.getElementById("appModalOverlay");
+        document.body.appendChild(overlay);
         const titleEl = document.getElementById("appModalTitle");
         const descriptionEl = document.getElementById("appModalDescription");
         const input = document.getElementById("appModalInput");
@@ -490,6 +494,7 @@ function openInputModal({
 } = {}) {
     return new Promise(function (resolve) {
         const overlay = document.getElementById("appModalOverlay");
+        document.body.appendChild(overlay);
         const titleEl = document.getElementById("appModalTitle");
         const descriptionEl = document.getElementById("appModalDescription");
         const input = document.getElementById("appModalInput");
