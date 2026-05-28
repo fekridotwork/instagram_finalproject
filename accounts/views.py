@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import Profile
 from accounts.serializers import PublicProfileSerializer
+from interactions.models import Block
 from posts.models import Post
 from posts.services.visibility import can_view_profile
 
@@ -72,6 +73,12 @@ class PublicProfileAPIView(generics.RetrieveAPIView):
                 is_following=Exists(
                     self.request.user.following_relations.filter(
                         following=OuterRef("user_id"),
+                    )
+                ),
+                is_blocked=Exists(
+                    Block.objects.filter(
+                        blocker=self.request.user,
+                        blocked=OuterRef("user_id"),
                     )
                 ),
             )

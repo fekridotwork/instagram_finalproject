@@ -19,7 +19,7 @@ from posts.serializers import PostListSerializer
 from posts.services.annotations import annotate_post_interactions
 from posts.services.visibility import can_view_post
 
-from .models import Comment, Follow, SavePost
+from .models import Block, Comment, Follow, SavePost
 from .schemas import (
     block_schema,
     comment_create_schema,
@@ -248,7 +248,28 @@ class UserBlockAPIView(APIView):
             status=status.HTTP_200_OK,
         )
 
+class MyBlockedUsersListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowUserSerializer
 
+    def get_queryset(self):
+        queryset = (
+            User.objects
+            .filter(
+                id__in=Block.objects.filter(
+                    blocker=self.request.user,
+                ).values("blocked_id"),
+                is_active=True,
+            )
+            .select_related("profile")
+        )
+
+        queryset = annotate_follow_status(
+            queryset,
+            self.request.user,
+        )
+
+        return queryset
 @extend_schema_view(get=my_followers_schema)
 class MyFollowersListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]

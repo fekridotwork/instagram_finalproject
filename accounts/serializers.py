@@ -103,6 +103,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
 
 class PublicProfileSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source="user.id", read_only=True)
     username = serializers.CharField(source="user.username", read_only=True)
     is_active = serializers.BooleanField(source="user.is_active", read_only=True)
 
@@ -110,10 +111,12 @@ class PublicProfileSerializer(serializers.ModelSerializer):
     following_count = serializers.IntegerField(read_only=True)
     posts_count = serializers.IntegerField(read_only=True)
     is_following = serializers.BooleanField(read_only=True)
+    is_blocked = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Profile
         fields = [
+            "id",
             "username",
             "full_name",
             "display_name",
@@ -125,4 +128,5 @@ class PublicProfileSerializer(serializers.ModelSerializer):
             "following_count",
             "posts_count",
             "is_following",
+            "is_blocked",
         ]
