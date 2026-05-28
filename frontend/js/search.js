@@ -259,17 +259,19 @@ async function loadPublicProfile(username, userId = null) {
                                 class="public-message-btn"
                                 id="publicMessageBtn"
                                 data-user-id="${userId}"
+                                data-username="${data.username}"
+                                data-display-name="${data.display_name || data.full_name || ""}"
+                                data-profile-image="${data.profile_image || ""}"
                             >
                                 Message
                             </button>
-
                             <button
-                                class="public-block-btn"
+                                class="public-block-btn ${data.is_blocked ? "blocked" : ""}"
                                 id="publicBlockBtn"
                                 data-user-id="${userId}"
-                                data-blocked="false"
+                                data-blocked="${data.is_blocked ? "true" : "false"}"
                             >
-                                Block
+                                ${data.is_blocked ? "Unblock" : "Block"}
                             </button>
                         </div>
                     </div>
@@ -377,7 +379,12 @@ function bindPublicProfileActions() {
 
     if (messageButton) {
         messageButton.addEventListener("click", function () {
-            startConversationFromPublicProfile(messageButton.dataset.userId);
+            startConversationFromPublicProfile(messageButton.dataset.userId, {
+                id: Number(messageButton.dataset.userId),
+                username: messageButton.dataset.username,
+                display_name: messageButton.dataset.displayName,
+                profile_image: messageButton.dataset.profileImage,
+            });
         });
     }
     const blockButton = document.getElementById("publicBlockBtn");
@@ -445,7 +452,7 @@ function updatePublicFollowersCount(isFollowing) {
 
     followersCountElement.textContent = newValue;
 }
-async function startConversationFromPublicProfile(userId) {
+async function startConversationFromPublicProfile(userId, user = null) {
     if (!userId) {
         alert("Could not start conversation.");
         return;
@@ -471,7 +478,7 @@ async function startConversationFromPublicProfile(userId) {
         const conversationId = data.id || data.conversation_id;
 
         if (conversationId) {
-            await loadConversationMessages(conversationId);
+            await loadConversationMessages(conversationId, user);
         }
     } catch (error) {
         console.error(error);
