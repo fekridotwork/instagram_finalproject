@@ -384,3 +384,148 @@ function refreshIcons() {
         lucide.createIcons();
     }
 }
+let appToastTimer = null;
+let appModalResolver = null;
+
+function showToast(message, type = "info") {
+    const toast = document.getElementById("appToast");
+
+    if (!toast) {
+        console.log(message);
+        return;
+    }
+
+    clearTimeout(appToastTimer);
+
+    toast.textContent = message;
+    toast.className = `app-toast app-toast-${type}`;
+
+    appToastTimer = setTimeout(function () {
+        toast.className = "app-toast d-none";
+        toast.textContent = "";
+    }, 3000);
+}
+
+function closeAppModal(result = null) {
+    const overlay = document.getElementById("appModalOverlay");
+    const input = document.getElementById("appModalInput");
+    const error = document.getElementById("appModalError");
+
+    overlay.classList.add("d-none");
+    input.classList.add("d-none");
+    input.value = "";
+    error.classList.add("d-none");
+    error.textContent = "";
+
+    if (appModalResolver) {
+        appModalResolver(result);
+        appModalResolver = null;
+    }
+}
+
+function openConfirmModal({
+    title = "Confirm action",
+    description = "Are you sure?",
+    confirmText = "Confirm",
+    cancelText = "Cancel",
+    danger = false,
+} = {}) {
+    return new Promise(function (resolve) {
+        const overlay = document.getElementById("appModalOverlay");
+        const titleEl = document.getElementById("appModalTitle");
+        const descriptionEl = document.getElementById("appModalDescription");
+        const input = document.getElementById("appModalInput");
+        const confirmBtn = document.getElementById("appModalConfirmBtn");
+        const cancelBtn = document.getElementById("appModalCancelBtn");
+
+        appModalResolver = resolve;
+
+        titleEl.textContent = title;
+        descriptionEl.textContent = description;
+        input.classList.add("d-none");
+
+        confirmBtn.textContent = confirmText;
+        cancelBtn.textContent = cancelText;
+        confirmBtn.className = danger ? "btn btn-danger" : "btn btn-primary";
+
+        overlay.classList.remove("d-none");
+
+        confirmBtn.onclick = function () {
+            closeAppModal(true);
+        };
+
+        cancelBtn.onclick = function () {
+            closeAppModal(false);
+        };
+
+        overlay.onclick = function (event) {
+            if (event.target === overlay) {
+                closeAppModal(false);
+            }
+        };
+    });
+}
+
+function openInputModal({
+    title = "Edit",
+    description = "",
+    initialValue = "",
+    placeholder = "",
+    confirmText = "Save",
+    cancelText = "Cancel",
+    required = true,
+} = {}) {
+    return new Promise(function (resolve) {
+        const overlay = document.getElementById("appModalOverlay");
+        const titleEl = document.getElementById("appModalTitle");
+        const descriptionEl = document.getElementById("appModalDescription");
+        const input = document.getElementById("appModalInput");
+        const error = document.getElementById("appModalError");
+        const confirmBtn = document.getElementById("appModalConfirmBtn");
+        const cancelBtn = document.getElementById("appModalCancelBtn");
+
+        appModalResolver = resolve;
+
+        titleEl.textContent = title;
+        descriptionEl.textContent = description;
+        input.classList.remove("d-none");
+        input.value = initialValue;
+        input.placeholder = placeholder;
+
+        error.classList.add("d-none");
+        error.textContent = "";
+
+        confirmBtn.textContent = confirmText;
+        cancelBtn.textContent = cancelText;
+        confirmBtn.className = "btn btn-primary";
+
+        overlay.classList.remove("d-none");
+
+        setTimeout(function () {
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+        }, 50);
+
+        confirmBtn.onclick = function () {
+            const value = input.value.trim();
+
+            if (required && !value) {
+                error.textContent = "This field cannot be empty.";
+                error.classList.remove("d-none");
+                return;
+            }
+
+            closeAppModal(value);
+        };
+
+        cancelBtn.onclick = function () {
+            closeAppModal(null);
+        };
+
+        overlay.onclick = function (event) {
+            if (event.target === overlay) {
+                closeAppModal(null);
+            }
+        };
+    });
+}

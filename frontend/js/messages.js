@@ -324,40 +324,44 @@ function bindMessageActionButtons() {
 }
 
 async function editMessage(messageId, currentText) {
-    const newText = prompt("Edit message:", currentText);
+    const text = await openInputModal({
+        title: "Edit message",
+        description: "Update your message text.",
+        initialValue: currentText,
+        confirmText: "Save",
+    });
 
-    if (newText === null) {
-        return;
-    }
-
-    const text = newText.trim();
-
-    if (!text) {
-        alert("Message cannot be empty.");
+    if (text === null) {
         return;
     }
 
     try {
         const { response, data } = await patchRequest(
             `/direct/messages/${messageId}/`,
-            { text: text }
+            { text }
         );
 
         if (!response.ok) {
-            alert(getErrorMessage(data));
+            showToast(getErrorMessage(data), "error");
             return;
         }
 
+        showToast("Message updated.", "success");
         await loadConversationMessages(activeConversationId, activeConversationUser);
         await loadConversations();
     } catch (error) {
         console.error(error);
-        alert("Could not edit message.");
+        showToast("Could not edit message.", "error");
     }
 }
 
 async function deleteMessage(messageId) {
-    const confirmed = confirm("Delete this message?");
+    const confirmed = await openConfirmModal({
+        title: "Delete message",
+        description: "This message will be permanently deleted.",
+        confirmText: "Delete",
+        danger: true,
+    });
 
     if (!confirmed) {
         return;
@@ -369,14 +373,15 @@ async function deleteMessage(messageId) {
         );
 
         if (!response.ok) {
-            alert(getErrorMessage(data));
+            showToast(getErrorMessage(data), "error");
             return;
         }
 
+        showToast("Message deleted.", "success");
         await loadConversationMessages(activeConversationId, activeConversationUser);
         await loadConversations();
     } catch (error) {
         console.error(error);
-        alert("Could not delete message.");
+        showToast("Could not delete message.", "error");
     }
 }
