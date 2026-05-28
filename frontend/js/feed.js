@@ -109,6 +109,8 @@ async function toggleSave(button) {
 function handleFeedClick(event) {
     const likeButton = event.target.closest(".like-btn");
     const saveButton = event.target.closest(".save-btn");
+    const commentButton = event.target.closest(".comment-btn");
+    const commentsLink = event.target.closest(".post-comments-link");
     const gridItem = event.target.closest(".clean-grid-item, .posts-grid-item, .profile-grid-item");
     const postMedia = event.target.closest(".post-media-frame");
 
@@ -119,6 +121,17 @@ function handleFeedClick(event) {
 
     if (saveButton) {
         toggleSave(saveButton);
+        return;
+    }
+
+    if (commentButton) {
+        openPostDetail(commentButton.dataset.postId);
+        return;
+    }
+
+    if (commentsLink) {
+        const postCard = commentsLink.closest(".post-card");
+        openPostDetail(postCard.dataset.postId);
         return;
     }
 

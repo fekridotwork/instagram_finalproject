@@ -1,8 +1,26 @@
+function renderUserAvatar(user, className = "") {
+    const image = user?.profile_image ? getMediaUrl(user.profile_image) : "";
+    const username = user?.username || "User";
+    const letter = username[0]?.toUpperCase() || "U";
+
+    if (image) {
+        return `<img src="${image}" alt="${username}" class="${className}">`;
+    }
+
+    return `<span class="${className}">${letter}</span>`;
+}
 function showApp() {
     authPage.classList.add("d-none");
     appPage.classList.remove("d-none");
 
+    pageTitle.textContent = "Home";
+    pageSubtitle.textContent = "Catch up with the latest moments.";
+
+    document.querySelector(".glass-search")?.classList.add("d-none");
+
+    loadHomeStories();
     loadHomeFeed();
+    hydrateSidebarProfileCard();
 }
 
 function showAuth() {
@@ -35,6 +53,11 @@ function setActiveNav(activeItem) {
 }
 
 function handleNavigation(page) {
+    const searchBar = document.querySelector(".glass-search");
+
+    if (searchBar) {
+        searchBar.classList.toggle("d-none", page !== "explore");
+    }
     if (page === "home") {
         pageTitle.textContent = "Home";
         pageSubtitle.textContent = "Catch up with the latest moments.";
@@ -99,7 +122,7 @@ function renderFeed(posts) {
                 <div class="post-header">
                     <div class="post-user">
                         <div class="avatar">
-                            ${post.username ? post.username[0].toUpperCase() : "U"}
+                            ${renderUserAvatar(post)}
                         </div>
 
                         <div>
@@ -126,7 +149,10 @@ function renderFeed(posts) {
                             <i data-lucide="heart"></i>
                         </button>
 
-                        <button class="post-action-button">
+                        <button
+                            class="post-action-button comment-btn"
+                            data-post-id="${post.id}"
+                        >
                             <i data-lucide="message-circle"></i>
                         </button>
 
@@ -205,13 +231,18 @@ function renderPostGrid(posts) {
                                 ? `<img src="${mediaUrl}" alt="Post">`
                                 : `<div class="clean-grid-placeholder">No media</div>`
                         }
+
+                        <div class="post-grid-hover">
+                            <span>♥ ${post.likes_count || 0}</span>
+                            <span>💬 ${post.comments_count || 0}</span>
+                            <span>↗ ${post.shares_count || 0}</span>
+                        </div>
                     </article>
                 `;
             }).join("")}
         </section>
     `;
 }
-
 function getMediaUrl(path) {
     if (!path) {
         return "";

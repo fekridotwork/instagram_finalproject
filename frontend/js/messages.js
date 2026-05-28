@@ -88,7 +88,7 @@ function renderConversations(conversations) {
                     ${
                         image
                             ? `<img src="${image}" alt="${username}">`
-                            : `<span>${username[0].toUpperCase()}</span>`
+                            : renderUserAvatar(user)
                     }
                 </div>
 
@@ -133,7 +133,7 @@ async function loadConversationMessages(conversationId, user = null, options = {
                     ${
                         activeConversationUser.profile_image
                             ? `<img src="${getMediaUrl(activeConversationUser.profile_image)}" alt="${username}">`
-                            : `<span>${username[0].toUpperCase()}</span>`
+                            : renderUserAvatar(activeConversationUser)
                     }
                 </div>
 

@@ -59,12 +59,19 @@ function renderPostDetail(post) {
             <div class="post-detail-info">
                 <div class="post-detail-user">
                     <div class="avatar">
-                        ${post.username ? post.username[0].toUpperCase() : "U"}
+                        ${renderUserAvatar(post)}
                     </div>
                     <div>
                         <strong>${post.username}</strong>
                         <p class="mb-0 text-white-50">${formatDate(post.created_at)}</p>
                     </div>
+                    <button
+                        class="post-detail-more-btn"
+                        id="postDetailMoreBtn"
+                        data-post-id="${post.id}"
+                    >
+                        <i data-lucide="more-horizontal"></i>
+                    </button>
                 </div>
 
                 ${
@@ -114,6 +121,8 @@ function renderPostDetail(post) {
     `;
 
     bindCommentForm();
+    bindPostOwnerActions(post);
+    refreshIcons();
 }
 
 function renderPostComments(comments) {
@@ -134,7 +143,7 @@ function renderCommentItem(comment) {
     return `
         <div class="post-detail-comment" data-comment-id="${comment.id}">
             <div class="comment-avatar">
-                ${comment.username ? comment.username[0].toUpperCase() : "U"}
+                ${renderUserAvatar(comment)}
             </div>
 
             <div class="comment-content">
@@ -337,5 +346,89 @@ function resetReplyMode() {
 
     if (commentInput) {
         commentInput.placeholder = "Add a comment...";
+    }
+}
+function bindPostOwnerActions(post) {
+    const moreBtn = document.getElementById("postDetailMoreBtn");
+
+    if (!moreBtn) {
+        return;
+    }
+
+    moreBtn.addEventListener("click", function () {
+        openPostOwnerMenu(post);
+    });
+}
+
+function openPostOwnerMenu(post) {
+    const action = prompt("Type edit or delete:");
+
+    if (action === "edit") {
+        openEditPostPrompt(post);
+        return;
+    }
+
+    if (action === "delete") {
+        deletePost(post.id);
+    }
+}
+
+async function openEditPostPrompt(post) {
+    const newCaption = prompt("Edit caption:", post.caption || "");
+
+    if (newCaption === null) {
+        return;
+    }
+
+    try {
+        const { response, data } = await patchRequest(`/posts/${post.id}/`, {
+            caption: newCaption,
+        });
+
+        if (!response.ok) {
+            alert(getErrorMessage(data));
+            return;
+        }
+
+        await openPostDetail(post.id);
+        refreshFeedAfterCommentChange();
+    } catch (error) {
+        console.error(error);
+        alert("Could not edit post.");
+    }
+}
+
+async function deletePost(postId) {
+    if (!confirm("Delete this post?")) {
+        return;
+    }
+
+    try {
+        const { response, data } = await deleteRequest(`/posts/${postId}/`);
+
+        if (!response.ok) {
+            alert(getErrorMessage(data));
+            return;
+        }
+
+        closePostDetail();
+
+        const activeNav = document.querySelector(".app-nav-item.active");
+        const page = activeNav ? activeNav.dataset.page : "home";
+
+        if (page === "home") {
+            loadHomeFeed();
+        }
+
+        if (page === "explore") {
+            loadExploreFeed();
+        }
+
+        if (page === "profile") {
+            loadProfilePage();
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Could not delete post.");
     }
 }

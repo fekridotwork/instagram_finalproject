@@ -90,11 +90,7 @@ function renderProfile(profile, posts) {
         <section class="public-profile-page">
             <div class="public-profile-hero glass-card">
                 <div class="public-profile-avatar">
-                    ${
-                        profileImage
-                            ? `<img src="${profileImage}" alt="${profile.username}">`
-                            : `<span>${profile.username ? profile.username[0].toUpperCase() : "U"}</span>`
-                    }
+                    ${renderUserAvatar(profile)}
                 </div>
 
                 <div class="public-profile-info">
@@ -180,9 +176,15 @@ function renderProfileGrid(posts) {
                         ? `<img src="${mediaUrl}" alt="Post">`
                         : `<div class="profile-grid-placeholder">No media</div>`
                 }
+
+                <div class="post-grid-hover">
+                    <span>♥ ${post.likes_count || 0}</span>
+                    <span>💬 ${post.comments_count || 0}</span>
+                    <span>↗ ${post.shares_count || 0}</span>
+                </div>
             </article>
         `;
-    }).join("");
+}).join("");
 }
 
 function bindProfileTabs(myPosts) {
@@ -394,11 +396,7 @@ function renderFollowUserItem(user) {
             data-username="${username}"
         >
             <div class="follow-user-avatar">
-                ${
-                    profileImage
-                        ? `<img src="${profileImage}" alt="${username}">`
-                        : `<span>${username[0].toUpperCase()}</span>`
-                }
+                ${renderUserAvatar(profile)}
             </div>
 
             <div class="follow-user-info">

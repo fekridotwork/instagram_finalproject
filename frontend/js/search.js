@@ -145,7 +145,7 @@ function renderUserSearchResult(user) {
                 ${
                     image
                         ? `<img src="${image}" alt="${username}">`
-                        : `<span>${username[0].toUpperCase()}</span>`
+                        : `<span>${renderUserAvatar(user)}  </span>`
                 }
             </div>
 
@@ -182,6 +182,12 @@ function renderSearchPostResult(post) {
                     ? `<img src="${mediaUrl}" alt="Post">`
                     : `<div class="clean-grid-placeholder">No media</div>`
             }
+
+            <div class="post-grid-hover">
+                <span>♥ ${post.likes_count || 0}</span>
+                <span>💬 ${post.comments_count || 0}</span>
+                <span>↗ ${post.shares_count || 0}</span>
+            </div>
         </article>
     `;
 }
@@ -192,7 +198,7 @@ function bindSearchResultClicks() {
             const username = item.dataset.username;
 
             try {
-                await await loadPublicProfile(username, item.dataset.userId);(username);
+                await loadPublicProfile(username, item.dataset.userId);
             } catch (error) {
                 console.error(error);
                 alert("Could not load profile.");
@@ -255,6 +261,15 @@ async function loadPublicProfile(username, userId = null) {
                                 data-user-id="${userId}"
                             >
                                 Message
+                            </button>
+
+                            <button
+                                class="public-block-btn"
+                                id="publicBlockBtn"
+                                data-user-id="${userId}"
+                                data-blocked="false"
+                            >
+                                Block
                             </button>
                         </div>
                     </div>
@@ -340,9 +355,16 @@ function renderPublicProfilePost(post) {
                     ? `<img src="${mediaUrl}" alt="Post">`
                     : `<div class="clean-grid-placeholder">No media</div>`
             }
+
+            <div class="post-grid-hover">
+                <span>♥ ${post.likes_count || 0}</span>
+                <span>💬 ${post.comments_count || 0}</span>
+                <span>↗ ${post.shares_count || 0}</span>
+            </div>
         </article>
     `;
 }
+
 function bindPublicProfileActions() {
     const followButton = document.getElementById("publicFollowBtn");
     const messageButton = document.getElementById("publicMessageBtn");
@@ -356,6 +378,13 @@ function bindPublicProfileActions() {
     if (messageButton) {
         messageButton.addEventListener("click", function () {
             startConversationFromPublicProfile(messageButton.dataset.userId);
+        });
+    }
+    const blockButton = document.getElementById("publicBlockBtn");
+
+    if (blockButton) {
+        blockButton.addEventListener("click", function () {
+            togglePublicProfileBlock(blockButton);
         });
     }
 }
@@ -447,5 +476,64 @@ async function startConversationFromPublicProfile(userId) {
     } catch (error) {
         console.error(error);
         alert("Could not start conversation.");
+    }
+}
+async function togglePublicProfileBlock(button) {
+    const userId = button.dataset.userId;
+    const isBlocked = button.dataset.blocked === "true";
+
+    if (!userId) {
+        alert("Could not block this user.");
+        return;
+    }
+
+    const confirmMessage = isBlocked
+        ? "Unblock this user?"
+        : "Block this user? This will remove follow connections between you.";
+
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = isBlocked ? "Unblocking..." : "Blocking...";
+
+    try {
+        const result = isBlocked
+            ? await deleteJsonRequest("/block/", { user_id: userId })
+            : await postRequest("/block/", { user_id: userId });
+
+        if (!result.response.ok) {
+            alert(getErrorMessage(result.data));
+            button.textContent = isBlocked ? "Unblock" : "Block";
+            return;
+        }
+
+        const newState = !isBlocked;
+
+        button.dataset.blocked = String(newState);
+        button.textContent = newState ? "Unblock" : "Block";
+        button.classList.toggle("blocked", newState);
+
+        const followButton = document.getElementById("publicFollowBtn");
+
+        if (followButton && newState) {
+            followButton.dataset.following = "false";
+            followButton.textContent = "Follow";
+            followButton.classList.remove("following");
+        }
+
+        if (newState) {
+            alert("User blocked.");
+            handleNavigation("home");
+        } else {
+            alert("User unblocked.");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Could not update block status.");
+        button.textContent = isBlocked ? "Unblock" : "Block";
+    } finally {
+        button.disabled = false;
     }
 }

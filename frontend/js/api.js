@@ -145,3 +145,21 @@ async function getFollowing() {
 async function getMutualFollowers(userId) {
     return requestWithAuth(`/api/users/${userId}/mutual-followers/`);
 }
+async function deleteJsonRequest(endpoint, payload) {
+    return requestWithAuth(endpoint, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
+}
+async function patchRequest(endpoint, payload = {}) {
+    return requestWithAuth(endpoint, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
+}

@@ -108,6 +108,7 @@ if (closeFollowModalBtn) {
 }
 
 checkAuthState();
+hydrateSidebarProfileCard();
 
 sendOtpBtn.addEventListener("click", requestOtp);
 verifyOtpBtn.addEventListener("click", verifyOtp);
@@ -174,5 +175,38 @@ navItems.forEach(function (item) {
         handleNavigation(page);
     });
 });
+async function hydrateSidebarProfileCard() {
+    try {
+        const { response, data } = await getRequest("/profile/me/");
+
+        if (!response.ok) {
+            return;
+        }
+
+        const sidebarAvatar = document.querySelector(".sidebar-user-avatar");
+        const sidebarUsername = document.querySelector(".sidebar-user-info strong");
+        const topAvatar = document.querySelector(".glass-user-avatar");
+
+        const avatarHtml = data.profile_image
+            ? `<img src="${getMediaUrl(data.profile_image)}" alt="${data.username}">`
+            : `<span>${data.username ? data.username[0].toUpperCase() : "U"}</span>`;
+
+        if (sidebarAvatar) {
+            sidebarAvatar.innerHTML = avatarHtml;
+        }
+
+        if (topAvatar) {
+            topAvatar.innerHTML = avatarHtml;
+        }
+
+        if (sidebarUsername) {
+            sidebarUsername.textContent = data.username || "My profile";
+        }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+window.hydrateSidebarProfileCard = hydrateSidebarProfileCard;
 
 refreshIcons();
