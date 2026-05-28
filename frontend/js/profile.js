@@ -100,9 +100,15 @@ function renderProfile(profile, posts) {
                             <p>@${profile.username}</p>
                         </div>
 
-                        <button id="editProfileBtn" class="public-message-btn">
-                            Edit profile
-                        </button>
+                        <div class="public-profile-actions">
+                            <button id="editProfileBtn" class="public-message-btn">
+                                Edit profile
+                            </button>
+
+                            <button id="blockedUsersBtn" class="public-message-btn">
+                                Blocked users
+                            </button>
+                        </div>
                     </div>
 
                     <p class="public-profile-bio">
@@ -148,6 +154,7 @@ function renderProfile(profile, posts) {
     bindProfileTabs(posts);
     bindCreateStoryButton();
     bindEditProfileButton();
+    bindBlockedUsersButton();
     bindProfileFollowStats();
     loadProfileFollowCounts();
     refreshIcons();
@@ -464,5 +471,107 @@ async function loadProfileFollowCounts() {
         }
     } catch (error) {
         console.error(error);
+    }
+}
+function bindBlockedUsersButton() {
+    const blockedUsersBtn = document.getElementById("blockedUsersBtn");
+
+    if (!blockedUsersBtn) {
+        return;
+    }
+
+    blockedUsersBtn.addEventListener("click", openBlockedUsersModal);
+}
+
+async function openBlockedUsersModal() {
+    followModal.classList.remove("d-none");
+    followModalTitle.textContent = "Blocked users";
+
+    followModalList.innerHTML = `
+        <p class="text-white-50">Loading blocked users...</p>
+    `;
+
+    try {
+        const { response, data } = await getRequest("/me/blocked-users/");
+
+        if (!response.ok) {
+            followModalList.innerHTML = `
+                <p class="text-white-50">${getErrorMessage(data)}</p>
+            `;
+            return;
+        }
+
+        const users = Array.isArray(data) ? data : data.results || [];
+        renderBlockedUsers(users);
+    } catch (error) {
+        console.error(error);
+
+        followModalList.innerHTML = `
+            <p class="text-white-50">Could not load blocked users.</p>
+        `;
+    }
+}
+
+function renderBlockedUsers(users) {
+    if (!users.length) {
+        followModalList.innerHTML = `
+            <p class="text-white-50">You have not blocked anyone.</p>
+        `;
+        return;
+    }
+
+    followModalList.innerHTML = users.map(function (user) {
+        return `
+            <article class="follow-user-item blocked-user-item">
+                <div class="follow-user-avatar">
+                    ${renderUserAvatar(user)}
+                </div>
+
+                <div class="follow-user-info">
+                    <strong>${user.username}</strong>
+                    <span>${user.display_name || ""}</span>
+                </div>
+
+                <button
+                    class="follow-user-status unblock-user-btn"
+                    type="button"
+                    data-user-id="${user.id}"
+                >
+                    Unblock
+                </button>
+            </article>
+        `;
+    }).join("");
+
+    document.querySelectorAll(".unblock-user-btn").forEach(function (button) {
+        button.addEventListener("click", async function (event) {
+            event.stopPropagation();
+
+            const userId = button.dataset.userId;
+            await unblockUserFromList(userId);
+        });
+    });
+}
+
+async function unblockUserFromList(userId) {
+    try {
+        const { response, data } = await deleteJsonRequest("/block/", {
+            user_id: Number(userId),
+        });
+
+        if (!response.ok) {
+            followModalList.innerHTML = `
+                <p class="text-white-50">${getErrorMessage(data)}</p>
+            `;
+            return;
+        }
+
+        await openBlockedUsersModal();
+    } catch (error) {
+        console.error(error);
+
+        followModalList.innerHTML = `
+            <p class="text-white-50">Could not unblock this user.</p>
+        `;
     }
 }
