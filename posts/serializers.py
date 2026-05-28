@@ -18,6 +18,11 @@ class PostSerializer(serializers.ModelSerializer):
     is_liked = serializers.BooleanField(read_only=True)
     is_saved = serializers.BooleanField(read_only=True)
 
+    profile_image = serializers.ImageField(
+        source="user.profile.profile_image",
+        read_only=True
+    )
+
     def validate(self, attrs):
         media = attrs.get("media")
         media_type = attrs.get("media_type")
@@ -49,6 +54,7 @@ class PostSerializer(serializers.ModelSerializer):
             "id",
             "user_id",
             "username",
+            "profile_image",
             "media",
             "media_type",
             "caption",
@@ -89,6 +95,7 @@ class PostListSerializer(PostSerializer):
             "id",
             "user_id",
             "username",
+            "profile_image",
             "media",
             "media_type",
             "caption",
@@ -130,6 +137,10 @@ class PostDetailSerializer(PostSerializer):
 class StorySerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="user.id", read_only=True)
     username = serializers.CharField(source="user.username", read_only=True)
+    profile_image = serializers.ImageField(
+        source="user.profile.profile_image",
+        read_only=True
+    )
 
     def validate_text(self, value):
         if value is None:
@@ -196,6 +207,7 @@ class StorySerializer(serializers.ModelSerializer):
             "id",
             "user_id",
             "username",
+            "profile_image",
             "media",
             "media_type",
             "text",

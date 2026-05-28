@@ -11,12 +11,18 @@ class CommentSerializer(serializers.ModelSerializer):
 
     replies = serializers.SerializerMethodField()
 
+    profile_image = serializers.ImageField(
+        source="user.profile.profile_image",
+        read_only=True
+    )
+
     class Meta:
         model = Comment
         fields = [
             'id',
             'user_id',
             'username',
+            "profile_image",
             'post',
             'parent',
             'text',
