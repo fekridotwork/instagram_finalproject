@@ -84,7 +84,7 @@ class PostViewSet(viewsets.ModelViewSet):
             queryset,
             self.request.user,
         )
-        return queryset
+        return queryset.order_by("-created_at")
 
     def get_serializer_class(self):
         if self.action == "list":
