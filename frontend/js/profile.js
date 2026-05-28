@@ -12,7 +12,6 @@ async function loadProfilePage() {
 
     try {
         const profileResult = await getRequest("/profile/me/");
-        const postsResult = await getRequest("/posts/");
 
         if (!profileResult.response.ok) {
             feedList.innerHTML = `
@@ -26,13 +25,28 @@ async function loadProfilePage() {
 
         currentProfile = profileResult.data;
 
-        const allPosts = Array.isArray(postsResult.data)
+        const postsResult = await getRequest(`/users/${currentProfile.username}/posts/`);
+
+        if (!profileResult.response.ok) {
+            feedList.innerHTML = `
+                <div class="empty-state">
+                    <h5>Could not load profile</h5>
+                    <p>${getErrorMessage(profileResult.data)}</p>
+                </div>
+            `;
+            return;
+        }
+
+        currentProfile = profileResult.data;
+
+        if (!postsResult.response.ok) {
+            renderProfile(currentProfile, []);
+            return;
+        }
+
+        const myPosts = Array.isArray(postsResult.data)
             ? postsResult.data
             : postsResult.data.results || [];
-
-        const myPosts = allPosts.filter(function (post) {
-            return post.username === currentProfile.username;
-        });
 
         renderProfile(currentProfile, myPosts);
     } catch (error) {
