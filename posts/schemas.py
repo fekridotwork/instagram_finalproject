@@ -16,6 +16,7 @@ from config.swagger import (
     unauthorized_response,
 )
 from .serializers import (
+    HashtagSerializer,
     PostSerializer,
     PostDetailSerializer,
     PostListSerializer,
@@ -328,5 +329,14 @@ explore_schema = extend_schema(
     responses={
         200: PostListSerializer(many=True),
         401: unauthorized_response(),
+    },
+)
+
+trending_hashtags_schema = extend_schema(
+    tags=["Posts - Hashtags"],
+    summary="Trending hashtags",
+    description="Return trending hashtags ordered by number of posts.",
+    responses={
+        200: HashtagSerializer(many=True),
     },
 )

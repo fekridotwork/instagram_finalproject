@@ -44,6 +44,7 @@ function showApp() {
     loadHomeStories();
     loadHomeFeed();
     hydrateSidebarProfileCard();
+    loadTrendingHashtags();
 }
 
 function showAuth() {
@@ -546,4 +547,151 @@ function openInputModal({
             }
         };
     });
+}
+async function loadTrendingHashtags() {
+    try {
+        const { response, data } = await getRequest(
+            "/posts/hashtags/trending/"
+        );
+
+        if (!response.ok) {
+            return;
+        }
+
+        const hashtags = Array.isArray(data)
+            ? data
+            : data.results || [];
+
+        renderTrendingHashtags(hashtags);
+    } catch (error) {
+        console.error(error);
+    }
+}
+function renderTrendingHashtags(hashtags) {
+    const container = document.getElementById("trendingTagsList");
+
+    if (!container) {
+        return;
+    }
+
+    if (!hashtags.length) {
+        container.innerHTML = `
+            <p class="sidebar-empty">No trending hashtags yet.</p>
+        `;
+        return;
+    }
+
+    container.innerHTML = hashtags.map(function (tag, index) {
+        const postsText = tag.posts_count === 1 ? "post" : "posts";
+
+        return `
+            <button
+                type="button"
+                class="trending-tag-card"
+                data-tag="${tag.name}"
+            >
+                <span class="trending-tag-name">#${tag.name}</span>
+
+                <span class="trending-tag-meta">
+                    ${tag.posts_count} ${postsText}
+                </span>
+
+                <span class="trending-tag-rank">
+                    ${index + 1}
+                </span>
+            </button>
+        `;
+    }).join("");
+
+    bindTrendingHashtagButtons();
+}
+function bindTrendingHashtagButtons() {
+    document.querySelectorAll(".trending-tag-btn").forEach(function (button) {
+        button.addEventListener("click", function () {
+            openHashtagSearch(button.dataset.tag);
+        });
+    });
+}
+function bindTrendingHashtagButtons() {
+    document.querySelectorAll(".trending-tag-card").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const tag = button.dataset.tag;
+
+            if (!tag) {
+                return;
+            }
+
+            openTrendingHashtag(tag);
+        });
+    });
+}
+
+function openTrendingHashtag(tag) {
+    handleNavigation("explore");
+
+    setTimeout(function () {
+        if (!globalSearchInput) {
+            return;
+        }
+
+        runHashtagSearch(tag);
+        globalSearchInput.dispatchEvent(new Event("input"));
+    }, 100);
+}
+async function runHashtagSearch(tag) {
+    const cleanTag = tag.replace("#", "").trim();
+
+    pageTitle.textContent = `#${cleanTag}`;
+    pageSubtitle.textContent = `Posts tagged with #${cleanTag}`;
+
+    feedList.innerHTML = `
+        <div class="text-center text-white-50 py-5">
+            Loading hashtag posts...
+        </div>
+    `;
+
+    try {
+        const { response, data } = await getRequest(
+            `/search/?search=${encodeURIComponent(cleanTag)}&type=posts`
+        );
+
+        if (!response.ok) {
+            feedList.innerHTML = `
+                <div class="empty-state">
+                    <h5>Could not load hashtag</h5>
+                    <p>${getErrorMessage(data)}</p>
+                </div>
+            `;
+            return;
+        }
+
+        const posts = Array.isArray(data.posts) ? data.posts : [];
+
+        if (!posts.length) {
+            feedList.innerHTML = `
+                <div class="empty-state">
+                    <h5>No posts</h5>
+                    <p>No posts found for #${cleanTag}.</p>
+                </div>
+            `;
+            return;
+        }
+
+        feedList.innerHTML = `
+            <section class="clean-grid">
+                ${posts.map(renderSearchPostResult).join("")}
+            </section>
+        `;
+
+        bindSearchResultClicks();
+    } catch (error) {
+        console.error(error);
+
+        feedList.innerHTML = `
+            <div class="empty-state">
+                <h5>Could not load hashtag</h5>
+                <p>Something went wrong.</p>
+            </div>
+        `;
+    }
 }

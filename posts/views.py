@@ -23,7 +23,7 @@ from posts.services.search import (VALID_SEARCH_TYPES, normalize_search_term,
                                    search_posts, search_users)
 from posts.services.visibility import can_view_post, can_view_profile
 
-from .models import Post, Story
+from .models import Hashtag, Post, Story
 from .schemas import (
     explore_schema,
     global_search_schema,
@@ -35,8 +35,9 @@ from .schemas import (
     story_create_schema,
     story_delete_schema,
     story_list_schema,
+    trending_hashtags_schema,
 )
-from .serializers import (PostDetailSerializer, PostListSerializer,
+from .serializers import (HashtagSerializer, PostDetailSerializer, PostListSerializer,
                           PostSerializer, StorySerializer)
 from .services.hashtags import sync_post_hashtags
 
@@ -394,3 +395,17 @@ class ExploreAPIView(generics.ListAPIView):
         )
 
         return queryset
+
+
+@extend_schema_view(get=trending_hashtags_schema)
+class TrendingHashtagsAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = HashtagSerializer
+
+    def get_queryset(self):
+        return (
+            Hashtag.objects
+            .annotate(posts_count=Count("posts"))
+            .filter(posts_count__gt=0)
+            .order_by("-posts_count", "name")[:8]
+        )

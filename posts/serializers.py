@@ -5,7 +5,7 @@ from interactions.models import Comment
 from interactions.serializers import CommentSerializer
 from posts.services.media_validation import validate_media_file
 
-from .models import Post, Story
+from .models import Hashtag, Post, Story
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -224,4 +224,16 @@ class StorySerializer(serializers.ModelSerializer):
             "is_deleted",
             "expires_at",
             "created_at",
+        ]
+
+
+class HashtagSerializer(serializers.ModelSerializer):
+    posts_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Hashtag
+        fields = [
+            "id",
+            "name",
+            "posts_count",
         ]
