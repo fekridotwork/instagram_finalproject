@@ -1,19 +1,6 @@
 const authPage = document.getElementById("authPage");
 const appPage = document.getElementById("appPage");
 
-const authTitle = document.getElementById("authTitle");
-const authSubtitle = document.getElementById("authSubtitle");
-const switchText = document.getElementById("switchText");
-const switchAuthBtn = document.getElementById("switchAuthBtn");
-
-const identifierInput = document.getElementById("identifierInput");
-const sendOtpBtn = document.getElementById("sendOtpBtn");
-
-const otpSection = document.getElementById("otpSection");
-const otpInput = document.getElementById("otpInput");
-const verifyOtpBtn = document.getElementById("verifyOtpBtn");
-
-const messageBox = document.getElementById("messageBox");
 const logoutBtn = document.getElementById("logoutBtn");
 
 const feedList = document.getElementById("feedList");
@@ -63,6 +50,20 @@ const storyEmptyState = document.getElementById("storyEmptyState");
 const storyTextSizeInput = document.getElementById("storyTextSizeInput");
 const storyColorButtons = document.querySelectorAll(".story-color-btn");
 const storyImageZoomInput = document.getElementById("storyImageZoomInput");
+
+const editProfileModalBackdrop = document.getElementById("editProfileModalBackdrop");
+const closeEditProfileModalBtn = document.getElementById("closeEditProfileModalBtn");
+const submitEditProfileBtn = document.getElementById("submitEditProfileBtn");
+
+const sidebarProfileCard = document.getElementById("sidebarProfileCard");
+const topProfileBtn = document.getElementById("topProfileBtn");
+
+const followModal = document.getElementById("followModal");
+const followModalBackdrop = document.getElementById("followModalBackdrop");
+const closeFollowModalBtn = document.getElementById("closeFollowModalBtn");
+const followModalTitle = document.getElementById("followModalTitle");
+const followModalList = document.getElementById("followModalList");
+
 if (storyImageZoomInput) {
     storyImageZoomInput.addEventListener("input", handleStoryImageZoomChange);
 }
@@ -70,10 +71,6 @@ if (storyImageZoomInput) {
 if (storyPreviewImage) {
     storyPreviewImage.addEventListener("mousedown", startDraggingStoryImage);
 }
-
-const editProfileModalBackdrop = document.getElementById("editProfileModalBackdrop");
-const closeEditProfileModalBtn = document.getElementById("closeEditProfileModalBtn");
-const submitEditProfileBtn = document.getElementById("submitEditProfileBtn");
 
 if (editProfileModalBackdrop) {
     editProfileModalBackdrop.addEventListener("click", closeEditProfileModal);
@@ -87,9 +84,6 @@ if (submitEditProfileBtn) {
     submitEditProfileBtn.addEventListener("click", submitEditProfile);
 }
 
-const sidebarProfileCard = document.getElementById("sidebarProfileCard");
-const topProfileBtn = document.getElementById("topProfileBtn");
-
 if (sidebarProfileCard) {
     sidebarProfileCard.addEventListener("click", function () {
         handleNavigation("profile");
@@ -101,11 +95,6 @@ if (topProfileBtn) {
         handleNavigation("profile");
     });
 }
-const followModal = document.getElementById("followModal");
-const followModalBackdrop = document.getElementById("followModalBackdrop");
-const closeFollowModalBtn = document.getElementById("closeFollowModalBtn");
-const followModalTitle = document.getElementById("followModalTitle");
-const followModalList = document.getElementById("followModalList");
 
 if (followModalBackdrop) {
     followModalBackdrop.addEventListener("click", closeFollowModal);
@@ -115,25 +104,41 @@ if (closeFollowModalBtn) {
     closeFollowModalBtn.addEventListener("click", closeFollowModal);
 }
 
-checkAuthState();
-hydrateSidebarProfileCard();
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", logout);
+}
 
-sendOtpBtn.addEventListener("click", requestOtp);
-verifyOtpBtn.addEventListener("click", verifyOtp);
-switchAuthBtn.addEventListener("click", switchAuthMode);
-logoutBtn.addEventListener("click", logout);
+if (feedList) {
+    feedList.addEventListener("click", handleFeedClick);
+}
 
-feedList.addEventListener("click", handleFeedClick);
+if (postModalBackdrop) {
+    postModalBackdrop.addEventListener("click", closePostDetail);
+}
 
-postModalBackdrop.addEventListener("click", closePostDetail);
-closePostModalBtn.addEventListener("click", closePostDetail);
+if (closePostModalBtn) {
+    closePostModalBtn.addEventListener("click", closePostDetail);
+}
 
-newPostBtn.addEventListener("click", openCreatePostModal);
-createPostModalBackdrop.addEventListener("click", closeCreatePostModal);
-closeCreatePostModalBtn.addEventListener("click", closeCreatePostModal);
-submitPostBtn.addEventListener("click", submitPost);
+if (newPostBtn) {
+    newPostBtn.addEventListener("click", openCreatePostModal);
+}
 
-globalSearchInput.addEventListener("input", handleGlobalSearchInput);
+if (createPostModalBackdrop) {
+    createPostModalBackdrop.addEventListener("click", closeCreatePostModal);
+}
+
+if (closeCreatePostModalBtn) {
+    closeCreatePostModalBtn.addEventListener("click", closeCreatePostModal);
+}
+
+if (submitPostBtn) {
+    submitPostBtn.addEventListener("click", submitPost);
+}
+
+if (globalSearchInput) {
+    globalSearchInput.addEventListener("input", handleGlobalSearchInput);
+}
 
 if (storyViewerBackdrop) {
     storyViewerBackdrop.addEventListener("click", closeStoryViewer);
@@ -162,9 +167,11 @@ if (storyMediaInput) {
 if (storyTextInput) {
     storyTextInput.addEventListener("input", handleStoryTextPreview);
 }
+
 if (storyTextOverlay) {
     storyTextOverlay.addEventListener("mousedown", startDraggingStoryText);
 }
+
 if (storyTextSizeInput) {
     storyTextSizeInput.addEventListener("input", handleStoryTextSizeChange);
 }
@@ -183,6 +190,7 @@ navItems.forEach(function (item) {
         handleNavigation(page);
     });
 });
+
 async function hydrateSidebarProfileCard() {
     try {
         const { response, data } = await getRequest("/profile/me/");
@@ -217,4 +225,6 @@ async function hydrateSidebarProfileCard() {
 
 window.hydrateSidebarProfileCard = hydrateSidebarProfileCard;
 
+checkAuthState();
+hydrateSidebarProfileCard();
 refreshIcons();

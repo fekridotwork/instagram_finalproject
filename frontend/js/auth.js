@@ -1,93 +1,489 @@
-let authPurpose = "login";
+const authTitle = document.getElementById("authTitle");
+const authSubtitle = document.getElementById("authSubtitle");
+const authLoginTab = document.getElementById("authLoginTab");
+const authRegisterTab = document.getElementById("authRegisterTab");
+const authModeSwitch = document.querySelector(".auth-mode-switch");
 
-function checkAuthState() {
-    const accessToken = localStorage.getItem("accessToken");
+const switchText = document.getElementById("switchText");
+const switchAuthBtn = document.getElementById("switchAuthBtn");
 
-    if (accessToken) {
-        showApp();
-    } else {
-        showAuth();
+const identifierSection = document.getElementById("identifierSection");
+const identifierInput = document.getElementById("identifierInput");
+const identifierLabel = document.getElementById("identifierLabel");
+const identifierHelp = document.getElementById("identifierHelp");
+const identifierTabs = document.querySelectorAll(".auth-identifier-tab");
+
+const authSubmitBtn = document.getElementById("authSubmitBtn");
+const messageBox = document.getElementById("messageBox");
+
+const otpSection = document.getElementById("otpSection");
+const otpInput = document.getElementById("otpInput");
+const otpBoxesWrapper = document.getElementById("otpBoxes");
+if (otpBoxesWrapper) {
+    otpBoxesWrapper.setAttribute("tabindex", "0");
+
+    otpBoxesWrapper.addEventListener("click", function () {
+        otpBoxesWrapper.focus();
+
+        if (otpBoxesWrapper) {
+            otpBoxesWrapper.focus();
+        } else if (otpInput) {
+            otpInput.focus();
+        }
+    });
+
+    otpBoxesWrapper.addEventListener("keydown", function (event) {
+        if (!otpInput) {
+            return;
+        }
+
+        if (/^\d$/.test(event.key)) {
+            event.preventDefault();
+
+            if (otpInput.value.length < 5) {
+                otpInput.value += event.key;
+                renderOtpBoxes();
+            }
+        }
+
+        if (event.key === "Backspace") {
+            event.preventDefault();
+
+            otpInput.value = otpInput.value.slice(0, -1);
+            renderOtpBoxes();
+        }
+
+        if (event.key === "Enter") {
+            event.preventDefault();
+            verifyOtp();
+        }
+    });
+}
+const otpBoxes = document.querySelectorAll(".otp-box-display");
+const verifyOtpBtn = document.getElementById("verifyOtpBtn");
+const authIdentifierPreview = document.getElementById("authIdentifierPreview");
+const changeIdentifierBtn = document.getElementById("changeIdentifierBtn");
+const resendOtpBtn = document.getElementById("resendOtpBtn");
+const otpCooldownText = document.getElementById("otpCooldownText");
+
+let authMode = "login";
+let identifierType = "auto";
+let currentIdentifier = "";
+let resendTimer = null;
+let resendSeconds = 0;
+
+if (authLoginTab) {
+    authLoginTab.addEventListener("click", function () {
+        switchAuthMode("login");
+    });
+}
+
+if (authRegisterTab) {
+    authRegisterTab.addEventListener("click", function () {
+        switchAuthMode("register");
+    });
+}
+
+if (switchAuthBtn) {
+    switchAuthBtn.addEventListener("click", function () {
+        switchAuthMode(authMode === "login" ? "register" : "login");
+    });
+}
+
+identifierTabs.forEach(function (tab) {
+    tab.addEventListener("click", function () {
+        setIdentifierType(tab.dataset.identifierType);
+    });
+});
+
+if (authSubmitBtn) {
+    authSubmitBtn.addEventListener("click", requestOtp);
+}
+
+if (verifyOtpBtn) {
+    verifyOtpBtn.addEventListener("click", verifyOtp);
+}
+
+if (changeIdentifierBtn) {
+    changeIdentifierBtn.addEventListener("click", resetAuthStep);
+}
+
+if (resendOtpBtn) {
+    resendOtpBtn.addEventListener("click", requestOtp);
+}
+
+if (otpInput) {
+    otpInput.addEventListener("input", function () {
+        otpInput.value = otpInput.value.replace(/\D/g, "").slice(0, 5);
+        renderOtpBoxes();
+    });
+
+    otpInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            verifyOtp();
+        }
+    });
+}
+
+if (otpBoxesWrapper) {
+    otpBoxesWrapper.addEventListener("click", function () {
+        if (otpInput) {
+            otpInput.focus();
+        }
+    });
+}
+
+function switchAuthMode(mode) {
+    authMode = mode;
+    resetAuthStep();
+
+    if (authLoginTab) {
+        authLoginTab.classList.toggle("active", mode === "login");
     }
+
+    if (authRegisterTab) {
+        authRegisterTab.classList.toggle("active", mode === "register");
+    }
+
+    if (switchText) {
+        switchText.textContent =
+            mode === "login" ? "Don't have an account?" : "Already have an account?";
+    }
+
+    if (switchAuthBtn) {
+        switchAuthBtn.textContent =
+            mode === "login" ? "Create one" : "Log in";
+    }
+}
+
+function setIdentifierType(type) {
+    identifierType = type;
+
+    identifierTabs.forEach(function (tab) {
+        tab.classList.toggle("active", tab.dataset.identifierType === type);
+    });
+
+    if (type === "email") {
+        identifierLabel.textContent = "Email";
+        identifierInput.placeholder = "example@email.com";
+        identifierInput.type = "email";
+        identifierHelp.textContent = "We will send your code to this email.";
+        return;
+    }
+
+    if (type === "phone") {
+        identifierLabel.textContent = "Phone";
+        identifierInput.placeholder = "0912...";
+        identifierInput.type = "tel";
+        identifierHelp.textContent = "We will send your code to this phone number.";
+        return;
+    }
+
+    identifierLabel.textContent = "Email or phone";
+    identifierInput.placeholder = "example@email.com or 0912...";
+    identifierInput.type = "text";
+    identifierHelp.textContent = "We will send you a one-time verification code.";
 }
 
 async function requestOtp() {
     const identifier = identifierInput.value.trim();
 
-    if (!identifier) {
-        showMessage("Please enter your email or phone.", "danger");
+    if (!validateIdentifier(identifier)) {
+        showAuthMessage("Enter a valid email or phone number.", "danger");
         return;
     }
+
+    currentIdentifier = identifier;
+    setPrimaryLoading(true, "Sending code...");
 
     try {
         const { response, data } = await postRequest("/auth/request-otp/", {
-            identifier: identifier,
-            purpose: authPurpose,
+            identifier,
+            purpose: authMode,
         });
 
-        if (response.ok) {
-            showMessage("Verification code sent. Check your email or phone.", "success");
-            otpSection.classList.remove("d-none");
-        } else {
-            showMessage(getErrorMessage(data), "danger");
+        if (!response.ok) {
+            showAuthMessage(getErrorMessage(data), "danger");
+            return;
         }
+
+        showOtpStep(identifier);
+        startResendCooldown(120);
     } catch (error) {
         console.error(error);
-        showMessage("Cannot connect to server.", "danger");
+        showAuthMessage("Could not send code. Try again.", "danger");
+    } finally {
+        setPrimaryLoading(false);
     }
+}
+
+function showOtpStep(identifier) {
+    clearAuthMessage();
+    clearOtpBoxes();
+
+    if (identifierSection) {
+        identifierSection.classList.add("d-none");
+    }
+
+    if (authModeSwitch) {
+        authModeSwitch.classList.add("d-none");
+    }
+
+    if (otpSection) {
+        otpSection.classList.remove("d-none");
+    }
+
+    if (authTitle) {
+        authTitle.textContent = "Enter verification code";
+    }
+
+    if (authSubtitle) {
+        authSubtitle.textContent = "Type the 5-digit code we sent you.";
+    }
+
+    if (authIdentifierPreview) {
+        authIdentifierPreview.textContent = maskIdentifier(identifier);
+    }
+
+    setTimeout(function () {
+        if (otpInput) {
+            otpInput.focus();
+        }
+    }, 100);
 }
 
 async function verifyOtp() {
-    const identifier = identifierInput.value.trim();
-    const code = otpInput.value.trim();
+    const code = getOtpValue();
 
-    if (!identifier || !code) {
-        showMessage("Please enter your email/phone and verification code.", "danger");
+    if (code.length !== 5) {
+        showAuthMessage("Enter the complete 5-digit verification code.", "danger");
         return;
     }
 
+    setVerifyLoading(true);
+
     try {
         const { response, data } = await postRequest("/auth/verify-otp/", {
-            identifier: identifier,
-            purpose: authPurpose,
-            code: code,
+            identifier: currentIdentifier,
+            code,
+            purpose: authMode,
         });
 
-        if (response.ok) {
-            localStorage.setItem("accessToken", data.access);
-            localStorage.setItem("refreshToken", data.refresh);
-
-            showApp();
-        } else {
-            showMessage(getErrorMessage(data), "danger");
+        if (!response.ok) {
+            clearOtpBoxes();
+            showAuthMessage(
+                getErrorMessage(data) || "The code is incorrect or expired.",
+                "danger"
+            );
+            return;
         }
+
+        localStorage.setItem("accessToken", data.access);
+        localStorage.setItem("refreshToken", data.refresh);
+
+        clearAuthMessage();
+        await checkAuthState();
     } catch (error) {
         console.error(error);
-        showMessage("Cannot connect to server.", "danger");
+        showAuthMessage("Could not verify code. Try again.", "danger");
+    } finally {
+        setVerifyLoading(false);
     }
 }
 
-function switchAuthMode() {
-    if (authPurpose === "login") {
-        authPurpose = "register";
+function resetAuthStep() {
+    currentIdentifier = "";
 
-        authTitle.textContent = "Create your account";
-        authSubtitle.textContent = "Start sharing your world in a few seconds.";
-        switchText.textContent = "Already have an account?";
-        switchAuthBtn.textContent = "Login";
-        sendOtpBtn.textContent = "Send signup code";
-
-        resetOtpState();
-    } else {
-        authPurpose = "login";
-
-        authTitle.textContent = "Welcome back";
-        authSubtitle.textContent = "Enter your email or phone to continue.";
-        switchText.textContent = "Don't have an account?";
-        switchAuthBtn.textContent = "Create one";
-        sendOtpBtn.textContent = "Send login code";
-
-        resetOtpState();
+    if (identifierInput) {
+        identifierInput.disabled = false;
+        identifierInput.value = "";
     }
+
+    if (identifierSection) {
+        identifierSection.classList.remove("d-none");
+    }
+
+    if (authModeSwitch) {
+        authModeSwitch.classList.remove("d-none");
+    }
+
+    if (otpSection) {
+        otpSection.classList.add("d-none");
+    }
+
+    if (authTitle) {
+        authTitle.textContent =
+            authMode === "login" ? "Welcome back" : "Create your account";
+    }
+
+    if (authSubtitle) {
+        authSubtitle.textContent =
+            authMode === "login"
+                ? "Log in with your email or phone number."
+                : "Register with your email or phone number.";
+    }
+
+    if (authSubmitBtn) {
+        authSubmitBtn.disabled = false;
+        authSubmitBtn.textContent =
+            authMode === "login" ? "Send login code" : "Send register code";
+    }
+
+    clearOtpBoxes();
+    clearAuthMessage();
+
+    clearInterval(resendTimer);
+    resendTimer = null;
+    resendSeconds = 0;
+
+    if (resendOtpBtn) {
+        resendOtpBtn.disabled = true;
+        resendOtpBtn.textContent = "Resend code";
+    }
+
+    if (otpCooldownText) {
+        otpCooldownText.textContent = "You can request a new code soon.";
+    }
+
+    setTimeout(function () {
+        if (identifierInput) {
+            identifierInput.focus();
+        }
+    }, 100);
+}
+
+function startResendCooldown(seconds) {
+    resendSeconds = seconds;
+
+    if (!resendOtpBtn) {
+        return;
+    }
+
+    resendOtpBtn.disabled = true;
+
+    clearInterval(resendTimer);
+    updateCooldownText();
+
+    resendTimer = setInterval(function () {
+        resendSeconds -= 1;
+        updateCooldownText();
+
+        if (resendSeconds <= 0) {
+            clearInterval(resendTimer);
+            resendTimer = null;
+
+            resendOtpBtn.disabled = false;
+            resendOtpBtn.textContent = "Resend code";
+
+            if (otpCooldownText) {
+                otpCooldownText.textContent = "Didn't receive the code?";
+            }
+        }
+    }, 1000);
+}
+
+function updateCooldownText() {
+    const minutes = String(Math.floor(resendSeconds / 60)).padStart(2, "0");
+    const seconds = String(resendSeconds % 60).padStart(2, "0");
+
+    if (resendOtpBtn) {
+        resendOtpBtn.textContent = `Resend in ${minutes}:${seconds}`;
+    }
+}
+
+function renderOtpBoxes() {
+    const code = getOtpValue();
+
+    otpBoxes.forEach(function (box, index) {
+        box.textContent = code[index] || "";
+        box.classList.toggle("active", index === code.length);
+    });
+}
+
+function getOtpValue() {
+    if (!otpInput) {
+        return "";
+    }
+
+    return otpInput.value.replace(/\D/g, "").slice(0, 5);
+}
+
+function clearOtpBoxes() {
+    if (otpInput) {
+        otpInput.value = "";
+    }
+
+    renderOtpBoxes();
+}
+
+function validateIdentifier(identifier) {
+    if (identifierType === "email") {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+    }
+
+    if (identifierType === "phone") {
+        return /^\+?\d{8,15}$/.test(identifier);
+    }
+
+    return (
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier) ||
+        /^\+?\d{8,15}$/.test(identifier)
+    );
+}
+
+function maskIdentifier(identifier) {
+    if (identifier.includes("@")) {
+        const [name, domain] = identifier.split("@");
+        return `${name.slice(0, 2)}***@${domain}`;
+    }
+
+    return `${identifier.slice(0, 4)}***${identifier.slice(-3)}`;
+}
+
+function setPrimaryLoading(isLoading, text = "") {
+    if (!authSubmitBtn) {
+        return;
+    }
+
+    authSubmitBtn.disabled = isLoading;
+
+    if (isLoading) {
+        authSubmitBtn.dataset.originalText = authSubmitBtn.textContent;
+        authSubmitBtn.textContent = text;
+        return;
+    }
+
+    authSubmitBtn.textContent =
+        authSubmitBtn.dataset.originalText ||
+        (authMode === "login" ? "Send login code" : "Send register code");
+}
+
+function setVerifyLoading(isLoading) {
+    if (!verifyOtpBtn) {
+        return;
+    }
+
+    verifyOtpBtn.disabled = isLoading;
+    verifyOtpBtn.textContent = isLoading ? "Verifying..." : "Continue";
+}
+
+function showAuthMessage(message, type = "danger") {
+    if (!messageBox) {
+        return;
+    }
+
+    messageBox.textContent = message;
+    messageBox.className = `alert alert-${type}`;
+    messageBox.classList.remove("d-none");
+}
+
+function clearAuthMessage() {
+    if (!messageBox) {
+        return;
+    }
+
+    messageBox.textContent = "";
+    messageBox.className = "alert d-none";
 }
 
 async function logout() {
@@ -105,6 +501,43 @@ async function logout() {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
 
+        resetAuthStep();
+
+        if (typeof currentUser !== "undefined") {
+            currentUser = null;
+        }
+
+        showAuth();
+    }
+}
+
+async function checkAuthState() {
+    const accessToken = localStorage.getItem("accessToken");
+
+    if (!accessToken) {
+        resetAuthStep();
+        showAuth();
+        return;
+    }
+
+    try {
+        const { response, data } = await getRequest("/profile/me/");
+
+        if (!response.ok) {
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            resetAuthStep();
+            showAuth();
+            return;
+        }
+
+        currentUser = data;
+        showApp(data);
+    } catch (error) {
+        console.error(error);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        resetAuthStep();
         showAuth();
     }
 }

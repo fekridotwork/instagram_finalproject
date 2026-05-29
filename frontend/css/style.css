@@ -4803,3 +4803,330 @@ body {
 .home-hero-create-btn:hover {
     transform: translateY(-2px);
 }
+/* Auth upgrade */
+.auth-card-upgraded {
+    width: min(430px, calc(100vw - 32px));
+    padding: 34px;
+    border-radius: 30px;
+}
+
+.auth-mode-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding: 6px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.auth-mode-btn,
+.auth-identifier-tab {
+    border: 0;
+    border-radius: 14px;
+    padding: 10px 12px;
+    color: rgba(255, 255, 255, 0.72);
+    font-weight: 800;
+    background: transparent;
+    transition: 0.18s ease;
+}
+
+.auth-mode-btn.active,
+.auth-identifier-tab.active {
+    color: white;
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.88), rgba(99, 102, 241, 0.88));
+    box-shadow: 0 10px 26px rgba(99, 102, 241, 0.24);
+}
+
+.auth-identifier-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.auth-identifier-tab {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.auth-input,
+.auth-card-upgraded .form-control {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    padding: 13px 15px;
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.auth-help-text {
+    display: block;
+    margin-top: 8px;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 13px;
+}
+
+.auth-primary-btn {
+    border: 0;
+    border-radius: 16px;
+    padding: 13px 18px;
+    color: white;
+    font-weight: 900;
+    background: linear-gradient(135deg, #ec4899, #6366f1);
+    box-shadow: 0 12px 30px rgba(99, 102, 241, 0.32);
+}
+
+.auth-primary-btn:disabled {
+    opacity: 0.68;
+    cursor: not-allowed;
+}
+
+.auth-code-target {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+}
+
+.auth-code-target strong {
+    color: white;
+}
+
+.otp-boxes {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+
+.otp-box {
+    width: 100%;
+    height: 52px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 16px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 900;
+    color: white;
+    background: rgba(255, 255, 255, 0.10);
+    outline: none;
+    transition: 0.16s ease;
+}
+
+.otp-box:focus {
+    border-color: rgba(236, 72, 153, 0.9);
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.16);
+}
+
+.auth-resend-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.auth-resend-row .btn-link,
+.auth-code-target .btn-link,
+.auth-card-upgraded .btn-link {
+    color: #f0abfc;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.auth-resend-row .btn-link:disabled {
+    color: rgba(255, 255, 255, 0.42);
+}
+
+#messageBox:not(.d-none) {
+    border: 0;
+    border-radius: 16px;
+    padding: 12px 14px;
+    font-weight: 700;
+}
+
+@media (max-width: 576px) {
+    .auth-card-upgraded {
+        padding: 26px;
+    }
+
+    .otp-box {
+        height: 46px;
+        border-radius: 13px;
+        font-size: 19px;
+    }
+}
+.otp-boxes {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.otp-box {
+    width: 100%;
+    height: 54px;
+    border: 1px solid rgba(255, 255, 255, 0.26);
+    border-radius: 16px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 900;
+    color: white;
+    background: rgba(255, 255, 255, 0.12);
+    outline: none;
+}
+
+.otp-box:focus {
+    border-color: #ec4899;
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.18);
+}
+
+.auth-code-target {
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.10);
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.auth-code-target strong {
+    color: white;
+    margin-inline: 6px;
+}
+
+.auth-resend-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+}
+.otp-boxes {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+}
+.otp-boxes {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.otp-box {
+    width: 100%;
+    height: 56px;
+
+    display: block;
+
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 16px;
+
+    background: rgba(255, 255, 255, 0.14);
+
+    color: #ffffff !important;
+    caret-color: #ffffff;
+
+    text-align: center;
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 56px;
+
+    outline: none;
+    box-shadow: none;
+
+    pointer-events: auto;
+    user-select: text;
+    -webkit-user-select: text;
+
+    appearance: textfield;
+    -webkit-appearance: none;
+}
+
+.otp-box:focus {
+    border-color: #ec4899;
+    background: rgba(255, 255, 255, 0.20);
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.20);
+}
+
+.otp-box::selection {
+    background: rgba(236, 72, 153, 0.45);
+}
+.otp-boxes {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+    cursor: text;
+}
+
+.otp-box-display {
+    height: 56px;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    color: white;
+    font-size: 24px;
+    font-weight: 900;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.otp-box-display.active {
+    border-color: #ec4899;
+    background: rgba(255, 255, 255, 0.20);
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.20);
+}
+
+.otp-hidden-input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+.otp-input-wrap {
+    position: relative;
+    margin-top: 10px;
+}
+
+.otp-boxes {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+}
+
+.otp-box-display {
+    height: 56px;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    color: white;
+    font-size: 24px;
+    font-weight: 900;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.otp-box-display.active {
+    border-color: #ec4899;
+    background: rgba(255, 255, 255, 0.20);
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.20);
+}
+
+.otp-hidden-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    border: 0;
+    background: transparent;
+    color: transparent;
+    caret-color: transparent;
+    cursor: text;
+    z-index: 5;
+}
