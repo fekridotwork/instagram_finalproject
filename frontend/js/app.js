@@ -62,6 +62,14 @@ const storyEmptyState = document.getElementById("storyEmptyState");
 
 const storyTextSizeInput = document.getElementById("storyTextSizeInput");
 const storyColorButtons = document.querySelectorAll(".story-color-btn");
+const storyImageZoomInput = document.getElementById("storyImageZoomInput");
+if (storyImageZoomInput) {
+    storyImageZoomInput.addEventListener("input", handleStoryImageZoomChange);
+}
+
+if (storyPreviewImage) {
+    storyPreviewImage.addEventListener("mousedown", startDraggingStoryImage);
+}
 
 const editProfileModalBackdrop = document.getElementById("editProfileModalBackdrop");
 const closeEditProfileModalBtn = document.getElementById("closeEditProfileModalBtn");

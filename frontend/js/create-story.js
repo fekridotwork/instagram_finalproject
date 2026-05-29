@@ -2,6 +2,12 @@ let isDraggingStoryText = false;
 let storyTextDragOffsetX = 0;
 let storyTextDragOffsetY = 0;
 let currentStoryTextColor = "#ffffff";
+let isDraggingStoryImage = false;
+let storyImageDragStartX = 0;
+let storyImageDragStartY = 0;
+let storyImageOffsetX = 0;
+let storyImageOffsetY = 0;
+let storyImageScale = 1;
 
 function bindCreateStoryButton() {
     const createStoryButton = document.querySelector(".story-add");
@@ -29,10 +35,21 @@ function closeCreateStoryModal() {
         storyTextSizeInput.value = 34;
     }
 
+    if (storyImageZoomInput) {
+        storyImageZoomInput.value = 1;
+    }
+
     currentStoryTextColor = "#ffffff";
+
+    storyImageOffsetX = 0;
+    storyImageOffsetY = 0;
+    storyImageScale = 1;
+    isDraggingStoryImage = false;
 
     storyPreviewImage.src = "";
     storyPreviewImage.classList.add("d-none");
+    storyPreviewImage.style.transform = "translate(0px, 0px) scale(1)";
+    storyPreviewImage.style.cursor = "grab";
 
     storyTextOverlay.textContent = "";
     storyTextOverlay.classList.add("d-none");
@@ -43,6 +60,9 @@ function closeCreateStoryModal() {
     storyTextOverlay.style.color = "#ffffff";
 
     storyEmptyState.classList.remove("d-none");
+
+    document.removeEventListener("mousemove", dragStoryImage);
+    document.removeEventListener("mouseup", stopDraggingStoryImage);
 
     clearCreateStoryMessage();
 }
@@ -59,6 +79,15 @@ function handleStoryMediaPreview() {
     const imageUrl = URL.createObjectURL(file);
 
     storyPreviewImage.src = imageUrl;
+    storyImageOffsetX = 0;
+    storyImageOffsetY = 0;
+    storyImageScale = 1;
+
+    if (storyImageZoomInput) {
+        storyImageZoomInput.value = 1;
+    }
+
+    updateStoryImageTransform();
     storyPreviewImage.classList.remove("d-none");
     storyEmptyState.classList.add("d-none");
 }
@@ -260,7 +289,23 @@ function exportStoryCanvas() {
             drawY = (height - drawHeight) / 2;
         }
 
-        context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+        const canvasPreviewRect = storyPreviewCanvas.getBoundingClientRect();
+
+        const scaleX = width / canvasPreviewRect.width;
+        const scaleY = height / canvasPreviewRect.height;
+
+        const finalDrawWidth = drawWidth * storyImageScale;
+        const finalDrawHeight = drawHeight * storyImageScale;
+        const finalDrawX = drawX + storyImageOffsetX * scaleX;
+        const finalDrawY = drawY + storyImageOffsetY * scaleY;
+
+        context.drawImage(
+            image,
+            finalDrawX,
+            finalDrawY,
+            finalDrawWidth,
+            finalDrawHeight
+        );
 
         const text = storyTextInput.value.trim();
 
@@ -332,4 +377,64 @@ function showCreateStoryMessage(message, type) {
 function clearCreateStoryMessage() {
     createStoryMessage.textContent = "";
     createStoryMessage.className = "alert d-none";
+}
+function updateStoryImageTransform() {
+    storyPreviewImage.style.transform = `
+        translate(${storyImageOffsetX}px, ${storyImageOffsetY}px)
+        scale(${storyImageScale})
+    `;
+}
+
+function handleStoryImageZoomChange() {
+    storyImageScale = Number(storyImageZoomInput.value);
+    clampStoryImagePosition();
+    updateStoryImageTransform();
+}
+
+function startDraggingStoryImage(event) {
+    if (storyPreviewImage.classList.contains("d-none")) {
+        return;
+    }
+
+    isDraggingStoryImage = true;
+
+    storyImageDragStartX = event.clientX - storyImageOffsetX;
+    storyImageDragStartY = event.clientY - storyImageOffsetY;
+
+    storyPreviewImage.style.cursor = "grabbing";
+
+    document.addEventListener("mousemove", dragStoryImage);
+    document.addEventListener("mouseup", stopDraggingStoryImage);
+}
+
+function dragStoryImage(event) {
+    if (!isDraggingStoryImage) {
+        return;
+    }
+
+    storyImageOffsetX = event.clientX - storyImageDragStartX;
+    storyImageOffsetY = event.clientY - storyImageDragStartY;
+
+    clampStoryImagePosition();
+    updateStoryImageTransform();
+}
+
+function stopDraggingStoryImage() {
+    isDraggingStoryImage = false;
+
+    storyPreviewImage.style.cursor = "grab";
+
+    document.removeEventListener("mousemove", dragStoryImage);
+    document.removeEventListener("mouseup", stopDraggingStoryImage);
+}
+
+function clampStoryImagePosition() {
+    const canvasWidth = storyPreviewCanvas.clientWidth;
+    const canvasHeight = storyPreviewCanvas.clientHeight;
+
+    const maxX = ((storyImageScale - 1) * canvasWidth) / 2;
+    const maxY = ((storyImageScale - 1) * canvasHeight) / 2;
+
+    storyImageOffsetX = Math.max(-maxX, Math.min(storyImageOffsetX, maxX));
+    storyImageOffsetY = Math.max(-maxY, Math.min(storyImageOffsetY, maxY));
 }

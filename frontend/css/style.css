@@ -4590,3 +4590,124 @@ body {
     color: rgba(255, 255, 255, 0.6);
     font-size: 14px;
 }
+.create-story-card {
+    position: relative;
+    z-index: 1;
+    width: min(920px, calc(100vw - 48px));
+    margin: 48px auto;
+    border-radius: 32px;
+    padding: 28px;
+    color: white;
+    background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.05)),
+        rgba(15, 23, 42, 0.42);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 30px 80px rgba(15, 23, 42, 0.45);
+}
+
+.story-editor-layout {
+    display: grid;
+    grid-template-columns: minmax(320px, 430px) minmax(300px, 1fr);
+    gap: 28px;
+    align-items: stretch;
+}
+
+.story-editor-canvas-wrap {
+    display: flex;
+    justify-content: center;
+}
+
+.story-preview-canvas {
+    width: 390px;
+    height: 690px;
+    border-radius: 34px;
+    overflow: hidden;
+    position: relative;
+    background:
+        radial-gradient(circle at top, rgba(99, 102, 241, 0.28), transparent 34%),
+        rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.14),
+        0 24px 60px rgba(15, 23, 42, 0.35);
+}
+
+.story-preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform-origin: center center;
+    cursor: grab;
+    user-select: none;
+    transition: transform 0.08s linear;
+}
+
+.story-empty-state {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 32px;
+    text-align: center;
+    color: rgba(255,255,255,0.72);
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.story-editor-sidebar {
+    padding: 8px 4px;
+    color: white;
+}
+
+.story-editor-sidebar h4 {
+    margin-bottom: 18px;
+    font-size: 26px;
+    font-weight: 900;
+}
+
+.story-editor-sidebar .form-control,
+.story-editor-sidebar .form-select {
+    border: 0;
+    border-radius: 16px;
+    padding: 13px 15px;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.story-editor-sidebar textarea {
+    min-height: 118px;
+}
+
+.story-editor-tools {
+    margin-bottom: 18px;
+    padding: 16px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.story-color-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.story-color-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.82);
+    cursor: pointer;
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.story-color-btn:hover {
+    transform: scale(1.12);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.32);
+}
+
+#submitStoryBtn {
+    border: 0;
+    border-radius: 16px;
+    padding: 13px 18px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #ec4899, #6366f1);
+}
