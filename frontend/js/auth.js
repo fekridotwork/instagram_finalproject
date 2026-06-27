@@ -24,6 +24,8 @@ const changeIdentifierBtn = document.getElementById("changeIdentifierBtn");
 const resendOtpBtn = document.getElementById("resendOtpBtn");
 const otpCooldownText = document.getElementById("otpCooldownText");
 
+const OTP_LENGTH = 5;
+
 let authMode = "login";
 let identifierType = "auto";
 let currentIdentifier = "";
@@ -71,16 +73,13 @@ if (resendOtpBtn) {
 }
 
 if (otpInput) {
-    if (otpInput) {
-    otpInput.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
-            verifyOtp();
-        }
+    otpInput.addEventListener("input", function () {
+        otpInput.value = otpInput.value.replace(/\D/g, "").slice(0, OTP_LENGTH);
     });
-}
 
     otpInput.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
+            event.preventDefault();
             verifyOtp();
         }
     });
@@ -167,7 +166,7 @@ async function requestOtp() {
 
 function showOtpStep(identifier) {
     clearAuthMessage();
-    clearOtpBoxes();
+    clearOtpInput();
 
     identifierSection?.classList.add("d-none");
     authModeSwitch?.classList.add("d-none");
@@ -193,7 +192,7 @@ function showOtpStep(identifier) {
 async function verifyOtp() {
     const code = getOtpValue();
 
-    if (code.length !== 5) {
+    if (code.length !== OTP_LENGTH) {
         showAuthMessage("Enter the complete 5-digit verification code.", "danger");
         return;
     }
@@ -208,7 +207,7 @@ async function verifyOtp() {
         });
 
         if (!response.ok) {
-            clearOtpBoxes();
+            clearOtpInput();
             showAuthMessage(
                 getErrorMessage(data) || "The code is incorrect or expired.",
                 "danger"
@@ -259,7 +258,7 @@ function resetAuthStep() {
             authMode === "login" ? "Send login code" : "Send register code";
     }
 
-    clearOtpBoxes();
+    clearOtpInput();
     clearAuthMessage();
 
     clearInterval(resendTimer);
@@ -320,10 +319,10 @@ function updateCooldownText() {
 }
 
 function getOtpValue() {
-    return otpInput ? otpInput.value.replace(/\D/g, "").slice(0, 5) : "";
+    return otpInput ? otpInput.value.replace(/\D/g, "").slice(0, OTP_LENGTH) : "";
 }
 
-function clearOtpBoxes() {
+function clearOtpInput() {
     if (otpInput) {
         otpInput.value = "";
     }
