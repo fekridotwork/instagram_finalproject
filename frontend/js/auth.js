@@ -18,48 +18,6 @@ const messageBox = document.getElementById("messageBox");
 
 const otpSection = document.getElementById("otpSection");
 const otpInput = document.getElementById("otpInput");
-const otpBoxesWrapper = document.getElementById("otpBoxes");
-if (otpBoxesWrapper) {
-    otpBoxesWrapper.setAttribute("tabindex", "0");
-
-    otpBoxesWrapper.addEventListener("click", function () {
-        otpBoxesWrapper.focus();
-
-        if (otpBoxesWrapper) {
-            otpBoxesWrapper.focus();
-        } else if (otpInput) {
-            otpInput.focus();
-        }
-    });
-
-    otpBoxesWrapper.addEventListener("keydown", function (event) {
-        if (!otpInput) {
-            return;
-        }
-
-        if (/^\d$/.test(event.key)) {
-            event.preventDefault();
-
-            if (otpInput.value.length < 5) {
-                otpInput.value += event.key;
-                renderOtpBoxes();
-            }
-        }
-
-        if (event.key === "Backspace") {
-            event.preventDefault();
-
-            otpInput.value = otpInput.value.slice(0, -1);
-            renderOtpBoxes();
-        }
-
-        if (event.key === "Enter") {
-            event.preventDefault();
-            verifyOtp();
-        }
-    });
-}
-const otpBoxes = document.querySelectorAll(".otp-box-display");
 const verifyOtpBtn = document.getElementById("verifyOtpBtn");
 const authIdentifierPreview = document.getElementById("authIdentifierPreview");
 const changeIdentifierBtn = document.getElementById("changeIdentifierBtn");
@@ -113,10 +71,13 @@ if (resendOtpBtn) {
 }
 
 if (otpInput) {
-    otpInput.addEventListener("input", function () {
-        otpInput.value = otpInput.value.replace(/\D/g, "").slice(0, 5);
-        renderOtpBoxes();
+    if (otpInput) {
+    otpInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            verifyOtp();
+        }
     });
+}
 
     otpInput.addEventListener("keydown", function (event) {
         if (event.key === "Enter") {
@@ -125,25 +86,12 @@ if (otpInput) {
     });
 }
 
-if (otpBoxesWrapper) {
-    otpBoxesWrapper.addEventListener("click", function () {
-        if (otpInput) {
-            otpInput.focus();
-        }
-    });
-}
-
 function switchAuthMode(mode) {
     authMode = mode;
     resetAuthStep();
 
-    if (authLoginTab) {
-        authLoginTab.classList.toggle("active", mode === "login");
-    }
-
-    if (authRegisterTab) {
-        authRegisterTab.classList.toggle("active", mode === "register");
-    }
+    authLoginTab?.classList.toggle("active", mode === "login");
+    authRegisterTab?.classList.toggle("active", mode === "register");
 
     if (switchText) {
         switchText.textContent =
@@ -221,17 +169,9 @@ function showOtpStep(identifier) {
     clearAuthMessage();
     clearOtpBoxes();
 
-    if (identifierSection) {
-        identifierSection.classList.add("d-none");
-    }
-
-    if (authModeSwitch) {
-        authModeSwitch.classList.add("d-none");
-    }
-
-    if (otpSection) {
-        otpSection.classList.remove("d-none");
-    }
+    identifierSection?.classList.add("d-none");
+    authModeSwitch?.classList.add("d-none");
+    otpSection?.classList.remove("d-none");
 
     if (authTitle) {
         authTitle.textContent = "Enter verification code";
@@ -246,9 +186,7 @@ function showOtpStep(identifier) {
     }
 
     setTimeout(function () {
-        if (otpInput) {
-            otpInput.focus();
-        }
+        otpInput?.focus();
     }, 100);
 }
 
@@ -299,17 +237,9 @@ function resetAuthStep() {
         identifierInput.value = "";
     }
 
-    if (identifierSection) {
-        identifierSection.classList.remove("d-none");
-    }
-
-    if (authModeSwitch) {
-        authModeSwitch.classList.remove("d-none");
-    }
-
-    if (otpSection) {
-        otpSection.classList.add("d-none");
-    }
+    identifierSection?.classList.remove("d-none");
+    authModeSwitch?.classList.remove("d-none");
+    otpSection?.classList.add("d-none");
 
     if (authTitle) {
         authTitle.textContent =
@@ -346,9 +276,7 @@ function resetAuthStep() {
     }
 
     setTimeout(function () {
-        if (identifierInput) {
-            identifierInput.focus();
-        }
+        identifierInput?.focus();
     }, 100);
 }
 
@@ -391,29 +319,14 @@ function updateCooldownText() {
     }
 }
 
-function renderOtpBoxes() {
-    const code = getOtpValue();
-
-    otpBoxes.forEach(function (box, index) {
-        box.textContent = code[index] || "";
-        box.classList.toggle("active", index === code.length);
-    });
-}
-
 function getOtpValue() {
-    if (!otpInput) {
-        return "";
-    }
-
-    return otpInput.value.replace(/\D/g, "").slice(0, 5);
+    return otpInput ? otpInput.value.replace(/\D/g, "").slice(0, 5) : "";
 }
 
 function clearOtpBoxes() {
     if (otpInput) {
         otpInput.value = "";
     }
-
-    renderOtpBoxes();
 }
 
 function validateIdentifier(identifier) {

@@ -5130,3 +5130,31 @@ body {
     cursor: text;
     z-index: 5;
 }
+.otp-boxes {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+    cursor: text;
+    outline: none;
+}
+
+.otp-boxes:focus .otp-box-display.active {
+    border-color: #ec4899;
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.20);
+}
+#otpInput {
+    position: static !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    color: #111827 !important;
+    caret-color: #111827 !important;
+    background: #ffffff !important;
+    border: 0 !important;
+    border-radius: 16px !important;
+    padding: 14px 16px !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+}

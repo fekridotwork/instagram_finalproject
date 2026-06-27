@@ -84,25 +84,16 @@
                     </div>
 
                     <label class="form-label mt-3">Verification code</label>
-                    <div class="otp-input-wrap">
-                        <div id="otpBoxes" class="otp-boxes">
-                            <div class="otp-box-display"></div>
-                            <div class="otp-box-display"></div>
-                            <div class="otp-box-display"></div>
-                            <div class="otp-box-display"></div>
-                            <div class="otp-box-display"></div>
-                        </div>
 
-                        <input
-                            id="otpInput"
-                            type="text"
-                            inputmode="numeric"
-                            maxlength="5"
-                            class="otp-hidden-input"
-                            autocomplete="one-time-code"
-                        >
-                    </div>
-                    <input id="otpInput" type="hidden">
+                    <input
+                        id="otpInput"
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="5"
+                        class="form-control auth-input"
+                        placeholder="Enter 5-digit code"
+                        autocomplete="one-time-code"
+                    >
 
                     <button id="verifyOtpBtn" class="btn auth-primary-btn w-100 mt-3" type="button">
                         Continue
@@ -284,7 +275,7 @@
         <div class="post-modal-backdrop" id="postModalBackdrop"></div>
 
         <div class="post-modal-card glass-card">
-            <button id="closePostModalBtn" class="post-modal-close">×</button>
+            <button id="closePostModalBtn" class="post-modal-close" type="button">×</button>
             <div id="postModalContent">Loading...</div>
         </div>
     </div>
@@ -293,7 +284,7 @@
         <div class="post-modal-backdrop" id="createPostModalBackdrop"></div>
 
         <div class="create-post-card glass-card">
-            <button id="closeCreatePostModalBtn" class="post-modal-close">×</button>
+            <button id="closeCreatePostModalBtn" class="post-modal-close" type="button">×</button>
 
             <h4 class="mb-3">Create new post</h4>
 
@@ -317,7 +308,7 @@
                 </select>
             </div>
 
-            <button id="submitPostBtn" class="btn btn-primary w-100">Publish</button>
+            <button id="submitPostBtn" class="btn btn-primary w-100" type="button">Publish</button>
         </div>
     </div>
 

@@ -121,7 +121,10 @@ if (closePostModalBtn) {
 }
 
 if (newPostBtn) {
-    newPostBtn.addEventListener("click", openCreatePostModal);
+    newPostBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        openCreatePostModal();
+    });
 }
 
 if (createPostModalBackdrop) {
@@ -133,7 +136,10 @@ if (closeCreatePostModalBtn) {
 }
 
 if (submitPostBtn) {
-    submitPostBtn.addEventListener("click", submitPost);
+    submitPostBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        submitPost();
+    });
 }
 
 if (globalSearchInput) {
@@ -157,7 +163,10 @@ if (closeCreateStoryModalBtn) {
 }
 
 if (submitStoryBtn) {
-    submitStoryBtn.addEventListener("click", submitStory);
+    submitStoryBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        submitStory();
+    });
 }
 
 if (storyMediaInput) {
