@@ -5,7 +5,7 @@ from interactions.models import Comment
 from interactions.serializers import CommentSerializer
 from posts.services.media_validation import validate_media_file
 
-from .models import Post, Story
+from .models import Hashtag, Post, Story
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -17,6 +17,11 @@ class PostSerializer(serializers.ModelSerializer):
 
     is_liked = serializers.BooleanField(read_only=True)
     is_saved = serializers.BooleanField(read_only=True)
+
+    profile_image = serializers.ImageField(
+        source="user.profile.profile_image",
+        read_only=True
+    )
 
     def validate(self, attrs):
         media = attrs.get("media")
@@ -49,6 +54,7 @@ class PostSerializer(serializers.ModelSerializer):
             "id",
             "user_id",
             "username",
+            "profile_image",
             "media",
             "media_type",
             "caption",
@@ -89,6 +95,7 @@ class PostListSerializer(PostSerializer):
             "id",
             "user_id",
             "username",
+            "profile_image",
             "media",
             "media_type",
             "caption",
@@ -130,6 +137,10 @@ class PostDetailSerializer(PostSerializer):
 class StorySerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="user.id", read_only=True)
     username = serializers.CharField(source="user.username", read_only=True)
+    profile_image = serializers.ImageField(
+        source="user.profile.profile_image",
+        read_only=True
+    )
 
     def validate_text(self, value):
         if value is None:
@@ -158,33 +169,25 @@ class StorySerializer(serializers.ModelSerializer):
         if media_type == "text":
             if media:
                 raise serializers.ValidationError(
-                    {
-                        "media": "Text stories cannot have media."
-                    }
+                    {"media": "Text stories cannot have media."}
                 )
 
             if not text:
                 raise serializers.ValidationError(
-                    {
-                        "text": "Text story cannot be empty."
-                    }
+                    {"text": "Text story cannot be empty."}
                 )
 
         elif media_type in {"image", "video"}:
-            if not media:
+            if media:
+                validate_media_file(media, media_type)
+            else:
                 raise serializers.ValidationError(
-                    {
-                        "media": "Media is required for image/video stories."
-                    }
+                    {"media": "Media is required for image and video stories."}
                 )
-
-            validate_media_file(media, media_type)
 
         else:
             raise serializers.ValidationError(
-                {
-                    "media_type": "Invalid story type."
-                }
+                {"media_type": "Invalid story type."}
             )
 
         attrs["text"] = text
@@ -196,6 +199,7 @@ class StorySerializer(serializers.ModelSerializer):
             "id",
             "user_id",
             "username",
+            "profile_image",
             "media",
             "media_type",
             "text",
@@ -211,4 +215,16 @@ class StorySerializer(serializers.ModelSerializer):
             "is_deleted",
             "expires_at",
             "created_at",
+        ]
+
+
+class HashtagSerializer(serializers.ModelSerializer):
+    posts_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Hashtag
+        fields = [
+            "id",
+            "name",
+            "posts_count",
         ]

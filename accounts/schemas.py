@@ -3,7 +3,7 @@ from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_sche
 from config.swagger import detail_response, not_found_response, unauthorized_response
 from posts.serializers import PostListSerializer
 
-from .serializers import ProfileSerializer, PublicProfileSerializer
+from .serializers import ProfileSerializer, PublicProfileSerializer, ProfileUpdateSerializer
 
 
 my_profile_retrieve_schema = extend_schema(
@@ -31,7 +31,9 @@ my_profile_update_schema = extend_schema(
         "This endpoint supports partial updates. The username is updated through "
         "the nested user field exposed by the serializer."
     ),
-    request=ProfileSerializer,
+    request={
+        "multipart/form-data": ProfileUpdateSerializer,
+    },
     responses={
         200: OpenApiResponse(
             response=ProfileSerializer,

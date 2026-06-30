@@ -1,10 +1,12 @@
 from drf_spectacular.utils import extend_schema_view
 from django.db.models import Count, Exists, OuterRef, Q
 from rest_framework import generics
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 
 from accounts.models import Profile
 from accounts.serializers import PublicProfileSerializer
+from interactions.models import Block
 from posts.models import Post
 from posts.services.visibility import can_view_profile
 
@@ -13,7 +15,7 @@ from .schemas import (
     my_profile_update_schema,
     public_profile_retrieve_schema,
 )
-from .serializers import ProfileSerializer
+from .serializers import ProfileSerializer, ProfileUpdateSerializer
 
 
 @extend_schema_view(
@@ -24,6 +26,12 @@ from .serializers import ProfileSerializer
 class ProfileAPIView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ProfileSerializer
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return ProfileUpdateSerializer
+        return ProfileSerializer
 
     def get_object(self):
         return self.request.user.profile
@@ -65,6 +73,12 @@ class PublicProfileAPIView(generics.RetrieveAPIView):
                 is_following=Exists(
                     self.request.user.following_relations.filter(
                         following=OuterRef("user_id"),
+                    )
+                ),
+                is_blocked=Exists(
+                    Block.objects.filter(
+                        blocker=self.request.user,
+                        blocked=OuterRef("user_id"),
                     )
                 ),
             )

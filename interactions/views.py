@@ -19,7 +19,7 @@ from posts.serializers import PostListSerializer
 from posts.services.annotations import annotate_post_interactions
 from posts.services.visibility import can_view_post
 
-from .models import Comment, Follow, SavePost
+from .models import Block, Comment, Follow, SavePost
 from .schemas import (
     block_schema,
     comment_create_schema,
@@ -27,6 +27,7 @@ from .schemas import (
     comment_list_schema,
     follow_schema,
     mutual_followers_schema,
+    my_blocked_users_schema,
     my_followers_schema,
     my_following_schema,
     my_saved_posts_schema,
@@ -222,7 +223,11 @@ class UserBlockAPIView(APIView):
         )
 
     def delete(self, request):
-        serializer = BlockUserSerializer(data=request.data)
+        data = request.data.copy()
+        if not data.get("user_id"):
+            data["user_id"] = request.query_params.get("user_id")
+
+        serializer = BlockUserSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
         target_user = get_object_or_404(
@@ -245,6 +250,29 @@ class UserBlockAPIView(APIView):
         )
 
 
+@extend_schema_view(get=my_blocked_users_schema)
+class MyBlockedUsersListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = FollowUserSerializer
+
+    def get_queryset(self):
+        queryset = (
+            User.objects
+            .filter(
+                id__in=Block.objects.filter(
+                    blocker=self.request.user,
+                ).values("blocked_id"),
+                is_active=True,
+            )
+            .select_related("profile")
+        )
+
+        queryset = annotate_follow_status(
+            queryset,
+            self.request.user,
+        )
+
+        return queryset
 @extend_schema_view(get=my_followers_schema)
 class MyFollowersListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]

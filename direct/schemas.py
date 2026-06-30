@@ -4,6 +4,7 @@ from config.swagger import detail_response, not_found_response, unauthorized_res
 from .serializers import (
     ConversationSerializer,
     DirectMessageSerializer,
+    DirectMessageUpdateSerializer,
     InboxConversationSerializer,
     StartConversationSerializer,
 )
@@ -129,5 +130,32 @@ conversation_message_create_schema = extend_schema(
             description="Conversation not found.",
             example_detail="Not found.",
         ),
+    },
+)
+direct_message_update_schema = extend_schema(
+    tags=["Direct Messages"],
+    summary="Edit direct message",
+    description=(
+        "Edit a direct message. Only the sender of the message can edit it."
+    ),
+    request=DirectMessageUpdateSerializer,
+    responses={
+        200: DirectMessageSerializer,
+        400: OpenApiResponse(description="Validation error."),
+        403: OpenApiResponse(description="You can only edit your own messages."),
+        404: OpenApiResponse(description="Message not found."),
+    },
+)
+
+direct_message_delete_schema = extend_schema(
+    tags=["Direct Messages"],
+    summary="Delete direct message",
+    description=(
+        "Delete a direct message. Only the sender of the message can delete it."
+    ),
+    responses={
+        204: OpenApiResponse(description="Message deleted successfully."),
+        403: OpenApiResponse(description="You can only delete your own messages."),
+        404: OpenApiResponse(description="Message not found."),
     },
 )

@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moment</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <main id="authPage" class="auth-page auth-page-upgraded">
+        <section class="auth-hero d-none d-lg-flex">
+            <div>
+                <span class="badge rounded-pill text-bg-light mb-3">Moment</span>
+                <h1>Share moments.<br>Stay close.</h1>
+                <p>Photos, stories, messages, and small pieces of life that make people feel closer.</p>
+            </div>
+        </section>
+
+        <section class="auth-panel">
+            <div class="auth-card auth-card-upgraded glass-card">
+                <div class="text-center mb-4">
+                    <div class="brand-icon">◎</div>
+                    <h3 id="authTitle" class="mt-3 mb-1">Welcome back</h3>
+                    <p id="authSubtitle" class="text-muted mb-0">Enter your email or phone to continue.</p>
+                </div>
+
+                <div class="auth-mode-switch" aria-label="Authentication mode">
+                    <button id="authLoginTab" type="button" class="auth-mode-btn active" data-purpose="login">
+                        Login
+                    </button>
+                    <button id="authRegisterTab" type="button" class="auth-mode-btn" data-purpose="register">
+                        Register
+                    </button>
+                </div>
+
+                <div id="messageBox" class="alert d-none"></div>
+
+                <div id="identifierSection">
+                    <div class="auth-identifier-tabs" aria-label="Identifier type">
+                        <button type="button" class="auth-identifier-tab active" data-identifier-type="auto">
+                            Auto
+                        </button>
+                        <button type="button" class="auth-identifier-tab" data-identifier-type="email">
+                            Email
+                        </button>
+                        <button type="button" class="auth-identifier-tab" data-identifier-type="phone">
+                            Phone
+                        </button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label id="identifierLabel" class="form-label">Email or phone</label>
+                        <input
+                            id="identifierInput"
+                            type="text"
+                            class="form-control auth-input"
+                            placeholder="example@email.com or 0912..."
+                            autocomplete="username"
+                        >
+                        <small id="identifierHelp" class="auth-help-text">
+                            We will send you a one-time verification code.
+                        </small>
+                    </div>
+
+                    <button
+                        id="authSubmitBtn"
+                        type="submit"
+                        class="auth-primary-btn"
+                    >
+                        Send login code
+                    </button>
+                </div>
+
+                <div id="otpSection" class="d-none">
+                    <div class="auth-code-target">
+                        <span>Code sent to</span>
+                        <strong id="authIdentifierPreview">your account</strong>
+                        <button id="changeIdentifierBtn" type="button" class="btn btn-link p-0">
+                            Change
+                        </button>
+                    </div>
+
+                    <label class="form-label mt-3">Verification code</label>
+
+                    <input
+                        id="otpInput"
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="5"
+                        class="form-control auth-input"
+                        placeholder="Enter 5-digit code"
+                        autocomplete="one-time-code"
+                    >
+
+                    <button id="verifyOtpBtn" class="btn auth-primary-btn w-100 mt-3" type="button">
+                        Continue
+                    </button>
+
+                    <div class="auth-resend-row">
+                        <span id="otpCooldownText" class="auth-help-text">You can request a new code soon.</span>
+                        <button id="resendOtpBtn" type="button" class="btn btn-link p-0" disabled>
+                            Resend code
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <span id="switchText" class="text-muted">Don't have an account?</span>
+                    <button id="switchAuthBtn" class="btn btn-link p-0 ms-1" type="button">Create one</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <main id="appPage" class="glass-app d-none">
+       <aside class="glass-sidebar glass-card">
+            <div class="glass-brand">Moment</div>
+
+            <nav class="glass-nav">
+                <button class="glass-nav-item app-nav-item active" data-page="home">
+                    <i data-lucide="home"></i>
+                    <strong>Home</strong>
+                </button>
+
+                <button class="glass-nav-item app-nav-item" data-page="explore">
+                    <i data-lucide="search"></i>
+                    <strong>Explore</strong>
+                </button>
+
+                <button class="glass-nav-item app-nav-item" data-page="messages">
+                    <i data-lucide="message-circle"></i>
+                    <strong>Messages</strong>
+                </button>
+
+                <button id="newPostBtn" class="glass-nav-item">
+                    <i data-lucide="plus-square"></i>
+                    <strong>Create</strong>
+                </button>
+            </nav>
+
+            <div class="sidebar-user-card" id="sidebarProfileCard">
+                <div class="sidebar-user-avatar">
+                    M
+                </div>
+
+                <div class="sidebar-user-info">
+                    <strong>My profile</strong>
+                    <span>View profile</span>
+                </div>
+
+                <i data-lucide="chevron-right"></i>
+            </div>
+
+            <button id="logoutBtn" class="glass-logout">
+                <i data-lucide="log-out"></i>
+                <span>Log out</span>
+            </button>
+        </aside>
+
+        <section class="glass-main">
+            <header class="glass-topbar">
+                <div class="glass-search">
+                    <i data-lucide="search"></i>
+                    <input id="globalSearchInput" type="text" placeholder="Search people, tags, places...">
+                </div>
+
+                <div class="glass-top-actions">
+                    <button class="glass-icon-btn">
+                        <i data-lucide="bell"></i>
+                    </button>
+
+                    <div
+                        class="glass-user-avatar topbar-profile"
+                        id="topProfileBtn"
+                    >
+                        M
+                    </div>
+                </div>
+            </header>
+
+            <section class="glass-content-header home-hero">
+                <div class="home-hero-content">
+                    <h1 id="pageTitle" class="home-hero-title">
+                        Home
+                    </h1>
+
+                    <p id="pageSubtitle" class="home-hero-subtitle">
+                        Catch up with the latest moments.
+                    </p>
+                </div>
+
+            </section>
+            <section id="storiesRow" class="stories-row glass-card d-none"></section>
+
+            <section id="feedList" class="feed-list">
+                <div class="text-center text-white-50 py-5">
+                    Loading feed...
+                </div>
+            </section>
+        </section>
+
+        <aside class="glass-right">
+            <div class="glass-widget glass-card">
+                <div class="widget-head">
+                    <h6>Suggestions for you</h6>
+                    <span>See all</span>
+                </div>
+
+                <div class="suggestion-item">
+                    <div class="mini-avatar">A</div>
+                    <div>
+                        <strong>matin.design</strong>
+                        <p>Follows you</p>
+                    </div>
+                    <button>Follow</button>
+                </div>
+
+                <div class="suggestion-item">
+                    <div class="mini-avatar">E</div>
+                    <div>
+                        <strong>elmira.photography</strong>
+                        <p>New to Moment</p>
+                    </div>
+                    <button>Follow</button>
+                </div>
+
+                <div class="suggestion-item">
+                    <div class="mini-avatar">H</div>
+                    <div>
+                        <strong>hossein.nature</strong>
+                        <p>Follows you</p>
+                    </div>
+                    <button>Follow</button>
+                </div>
+            </div>
+
+            <div class="glass-widget glass-card">
+                <div class="widget-head">
+                    <h6>Trending tags</h6>
+                    <span>See all</span>
+                </div>
+
+                <div id="trendingTagsList" class="trending-tags-list"></div>
+            </div>
+
+            <div class="glass-widget glass-card">
+                <div class="widget-head">
+                    <h6>Active now</h6>
+                    <span>See all</span>
+                </div>
+
+                <div class="active-user">
+                    <div class="mini-avatar online">N</div>
+                    <div>
+                        <strong>nima.m</strong>
+                        <p>Online</p>
+                    </div>
+                </div>
+
+                <div class="active-user">
+                    <div class="mini-avatar online">P</div>
+                    <div>
+                        <strong>parisa__</strong>
+                        <p>Online</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <div id="postModal" class="post-modal d-none">
+        <div class="post-modal-backdrop" id="postModalBackdrop"></div>
+
+        <div class="post-modal-card glass-card">
+            <button id="closePostModalBtn" class="post-modal-close" type="button">×</button>
+            <div id="postModalContent">Loading...</div>
+        </div>
+    </div>
+
+    <div id="createPostModal" class="post-modal d-none">
+        <div class="post-modal-backdrop" id="createPostModalBackdrop"></div>
+
+        <div class="create-post-card glass-card">
+            <button id="closeCreatePostModalBtn" class="post-modal-close" type="button">×</button>
+
+            <h4 class="mb-3">Create new post</h4>
+
+            <div id="createPostMessage" class="alert d-none"></div>
+
+            <div class="mb-3">
+                <label class="form-label">Media</label>
+                <input id="postMediaInput" type="file" class="form-control" accept="image/*,video/*">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Caption</label>
+                <textarea id="postCaptionInput" class="form-control" rows="4" placeholder="Write a caption..."></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Visibility</label>
+                <select id="postVisibilityInput" class="form-select">
+                    <option value="public">Public</option>
+                    <option value="followers">Followers only</option>
+                </select>
+            </div>
+
+            <button id="submitPostBtn" class="btn btn-primary w-100" type="button">Publish</button>
+        </div>
+    </div>
+
+    <div id="storyViewerModal" class="story-viewer-modal d-none">
+        <div class="story-viewer-backdrop" id="storyViewerBackdrop"></div>
+
+        <div class="story-viewer-card">
+            <button id="closeStoryViewerBtn" class="story-viewer-close">
+                ×
+            </button>
+
+            <div id="storyViewerContent">
+                Loading story...
+            </div>
+        </div>
+    </div>
+
+    <div id="createStoryModal" class="post-modal d-none">
+        <div
+            id="createStoryModalBackdrop"
+            class="post-modal-backdrop"
+        ></div>
+
+        <div class="create-story-card glass-card">
+            <button
+                id="closeCreateStoryModalBtn"
+                class="post-modal-close"
+                type="button"
+            >
+                ×
+            </button>
+
+            <div class="story-editor-layout">
+
+                <div class="story-editor-canvas-wrap">
+                    <div
+                        id="storyPreviewCanvas"
+                        class="story-preview-canvas"
+                    >
+                        <img
+                            id="storyPreviewImage"
+                            class="story-preview-image d-none"
+                            alt="Story preview"
+                        >
+
+                        <div
+                            id="storyTextOverlay"
+                            class="story-text-overlay d-none"
+                        >
+                            Your text
+                        </div>
+
+                        <div
+                            id="storyEmptyState"
+                            class="story-empty-state"
+                        >
+                            Choose an image to start
+                        </div>
+                    </div>
+                </div>
+
+                <div class="story-editor-sidebar">
+                    <h4>Create story</h4>
+
+                    <div
+                        id="createStoryMessage"
+                        class="alert d-none"
+                    ></div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Media
+                        </label>
+
+                        <input
+                            id="storyMediaInput"
+                            type="file"
+                            class="form-control"
+                            accept="image/*"
+                        >
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Text
+                        </label>
+
+                        <textarea
+                            id="storyTextInput"
+                            class="form-control"
+                            rows="4"
+                            placeholder="Write something..."
+                        ></textarea>
+                    </div>
+
+                    <div class="story-editor-tools">
+                        <label class="form-label">Text size</label>
+                        <input id="storyTextSizeInput" type="range" min="20" max="64" value="34" class="form-range">
+                        <label class="form-label mt-3">Image zoom</label>
+                        <input
+                            id="storyImageZoomInput"
+                            type="range"
+                            min="1"
+                            max="2.5"
+                            step="0.05"
+                            value="1"
+                            class="form-range"
+                        >
+                        <label class="form-label mt-3">Text color</label>
+                        <div class="story-color-row">
+                            <button type="button" class="story-color-btn" data-color="#ffffff" style="background:#ffffff"></button>
+                            <button type="button" class="story-color-btn" data-color="#000000" style="background:#000000"></button>
+                            <button type="button" class="story-color-btn" data-color="#fb7185" style="background:#fb7185"></button>
+                            <button type="button" class="story-color-btn" data-color="#60a5fa" style="background:#60a5fa"></button>
+                            <button type="button" class="story-color-btn" data-color="#facc15" style="background:#facc15"></button>
+                            <button type="button" class="story-color-btn" data-color="#4ade80" style="background:#4ade80"></button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Visibility
+                        </label>
+
+                        <select
+                            id="storyVisibilityInput"
+                            class="form-select"
+                        >
+                            <option value="public">
+                                Public
+                            </option>
+
+                            <option value="followers">
+                                Followers only
+                            </option>
+                        </select>
+                    </div>
+
+                    <button
+                        id="submitStoryBtn"
+                        class="btn btn-primary w-100"
+                        type="button"
+                    >
+                        Share story
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="editProfileModal" class="post-modal d-none">
+        <div id="editProfileModalBackdrop" class="post-modal-backdrop"></div>
+
+        <div class="edit-profile-card glass-card">
+            <button
+                id="closeEditProfileModalBtn"
+                class="post-modal-close"
+                type="button"
+            >
+                ×
+            </button>
+
+            <h4 class="mb-3">Edit profile</h4>
+
+            <div id="editProfileMessage" class="alert d-none"></div>
+
+            <div class="mb-3">
+                <label class="form-label">Profile image</label>
+                <input
+                    id="editProfileImageInput"
+                    type="file"
+                    class="form-control"
+                    accept="image/*"
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <input id="editUsernameInput" type="text" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Full name</label>
+                <input id="editFullNameInput" type="text" class="form-control">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Display name</label>
+                <input
+                    id="editDisplayNameInput"
+                    type="text"
+                    class="form-control"
+                    placeholder="Display name"
+                >
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Bio</label>
+                <textarea
+                    id="editBioInput"
+                    class="form-control"
+                    rows="4"
+                    placeholder="Write your bio..."
+                ></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Account privacy</label>
+                <select id="editIsPrivateInput" class="form-select">
+                    <option value="false">Public</option>
+                    <option value="true">Private</option>
+                </select>
+            </div>
+
+            <button
+                id="submitEditProfileBtn"
+                class="btn btn-primary w-100"
+                type="button"
+            >
+                Save changes
+            </button>
+        </div>
+    </div>
+
+    <div id="followModal" class="post-modal d-none">
+        <div id="followModalBackdrop" class="post-modal-backdrop"></div>
+
+        <div class="follow-modal-card glass-card">
+            <button id="closeFollowModalBtn" class="post-modal-close" type="button">
+                ×
+            </button>
+
+            <h4 id="followModalTitle" class="mb-3">Followers</h4>
+
+            <div id="followModalList" class="follow-modal-list">
+                Loading...
+            </div>
+        </div>
+    </div>
+    <div id="appToast" class="app-toast d-none"></div>
+
+    <div id="appModalOverlay" class="app-modal-overlay d-none">
+        <div class="app-modal glass-card">
+            <h5 id="appModalTitle">Confirm action</h5>
+            <p id="appModalDescription" class="text-white-50"></p>
+
+            <textarea
+                id="appModalInput"
+                class="form-control d-none"
+                rows="3"
+            ></textarea>
+
+            <div id="appModalError" class="app-modal-error d-none"></div>
+
+            <div class="app-modal-actions">
+                <button id="appModalCancelBtn" class="btn btn-outline-light">
+                    Cancel
+                </button>
+                <button id="appModalConfirmBtn" class="btn btn-primary">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script src="js/config.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/feed.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/post-detail.js"></script>
+    <script src="js/create-post.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/stories.js"></script>
+    <script src="js/create-story.js"></script>
+    <script src="js/messages.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -145,7 +145,16 @@ unblock_schema = extend_schema(
         "Unblock a previously blocked user. This does not restore any previous "
         "follow relationship automatically."
     ),
-    request=BlockUserSerializer,
+    parameters=[
+        OpenApiParameter(
+            name="user_id",
+            type=int,
+            location=OpenApiParameter.QUERY,
+            description="ID of the user to unblock.",
+            required=True,
+        ),
+    ],
+    request=None,
     responses={
         200: message_response(
             name="UnblockUserResponse",
@@ -165,6 +174,19 @@ unblock_schema = extend_schema(
             description="Target user was not found or is inactive.",
             example_detail="Not found.",
         ),
+    },
+)
+
+my_blocked_users_schema = extend_schema(
+    tags=["Interactions - Block"],
+    summary="List My Blocked Users",
+    description=(
+        "Return the list of active users blocked by the authenticated user. "
+        "Each item includes basic user/profile information and follow status."
+    ),
+    responses={
+        200: FollowUserSerializer(many=True),
+        401: unauthorized_response(),
     },
 )
 

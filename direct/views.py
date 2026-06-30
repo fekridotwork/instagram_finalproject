@@ -1,5 +1,5 @@
 from drf_spectacular.utils import extend_schema_view
-from django.db.models import OuterRef, Q, Subquery
+from django.db.models import Count, OuterRef, Q, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
@@ -15,12 +15,15 @@ from .schemas import (
     conversation_list_schema,
     conversation_message_create_schema,
     conversation_messages_list_schema,
+    direct_message_delete_schema,
+    direct_message_update_schema,
 )
 from .serializers import (
-    ConversationSerializer, 
+    ConversationSerializer,
     DirectMessageSerializer,
+    DirectMessageUpdateSerializer,
     InboxConversationSerializer,
-    StartConversationSerializer
+    StartConversationSerializer,
 )
 
 
@@ -78,6 +81,7 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
                 "user2__profile",
             )
             .annotate(
+                messages_count=Count("messages"),
                 last_message=Subquery(
                     last_message_queryset.values("text")[:1]
                 ),
@@ -88,6 +92,7 @@ class ConversationListCreateAPIView(generics.GenericAPIView):
                     last_message_queryset.values("created_at")[:1]
                 ),
             )
+            .filter(messages_count__gt=0)
             .order_by("-updated_at"),
             request.user,
         )
@@ -200,3 +205,67 @@ class ConversationMessagesAPIView(generics.GenericAPIView):
             response_serializer.data,
             status=status.HTTP_201_CREATED,
         )
+    
+
+@extend_schema_view(
+    patch=direct_message_update_schema,
+    delete=direct_message_delete_schema,
+)
+class DirectMessageDetailAPIView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = DirectMessageUpdateSerializer
+
+    def get_message(self):
+        return get_object_or_404(
+            DirectMessage.objects.select_related(
+                "conversation",
+                "conversation__user1",
+                "conversation__user2",
+            ),
+            Q(conversation__user1=self.request.user) |
+            Q(conversation__user2=self.request.user),
+            id=self.kwargs["message_id"],
+        )
+
+    def patch(self, request, message_id):
+        message = self.get_message()
+
+        if message.sender != request.user:
+            self.permission_denied(
+                request,
+                message="You can only edit your own messages.",
+            )
+
+        serializer = self.get_serializer(
+            message,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        response_serializer = DirectMessageSerializer(message)
+        return Response(response_serializer.data)
+
+    def delete(self, request, message_id):
+        message = self.get_message()
+
+        if message.sender != request.user:
+            self.permission_denied(
+                request,
+                message="You can only delete your own messages.",
+            )
+
+        conversation = message.conversation
+        message.delete()
+
+        last_message = conversation.messages.order_by("-created_at").first()
+
+        if last_message:
+            conversation.updated_at = last_message.created_at
+        else:
+            conversation.updated_at = conversation.created_at
+
+        conversation.save(update_fields=["updated_at"])
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

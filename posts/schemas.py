@@ -16,11 +16,43 @@ from config.swagger import (
     unauthorized_response,
 )
 from .serializers import (
+    HashtagSerializer,
     PostSerializer,
     PostDetailSerializer,
     PostListSerializer,
     StorySerializer
 )
+
+class PostCreateRequestSerializer(serializers.Serializer):
+    media = serializers.FileField()
+    media_type = serializers.ChoiceField(choices=["image", "video", "text"])
+    caption = serializers.CharField(required=False, allow_blank=True)
+    visibility = serializers.ChoiceField(
+        choices=["public", "followers"],
+        required=False,
+    )
+
+
+class PostUpdateRequestSerializer(serializers.Serializer):
+    media = serializers.FileField(required=False)
+    media_type = serializers.ChoiceField(
+        choices=["image", "video", "text"],
+        required=False,
+    )
+    caption = serializers.CharField(required=False, allow_blank=True)
+    visibility = serializers.ChoiceField(
+        choices=["public", "followers"],
+        required=False,
+    )
+
+class StoryCreateRequestSerializer(serializers.Serializer):
+    media = serializers.FileField(required=False)
+    media_type = serializers.ChoiceField(choices=["image", "video", "text"])
+    text = serializers.CharField(required=False, allow_blank=True)
+    visibility = serializers.ChoiceField(
+        choices=["public", "followers"],
+        required=False,
+    )
 
 post_list_schema = extend_schema(
     tags=["Posts"],
@@ -44,7 +76,7 @@ post_create_schema = extend_schema(
         "Create a new post with an image or video file, caption, and visibility. "
         "The request must be sent as multipart/form-data."
     ),
-    request=PostSerializer,
+    request={"multipart/form-data": PostCreateRequestSerializer},
     responses={
         201: OpenApiResponse(
             response=PostDetailSerializer,
@@ -93,7 +125,7 @@ post_update_schema = extend_schema(
         "Partially update a post owned by the authenticated user. "
         "Caption, visibility, and media can be updated. Media is not required for partial updates."
     ),
-    request=PostSerializer,
+    request={"multipart/form_data": PostUpdateRequestSerializer},
     responses={
         200: PostDetailSerializer,
         400: detail_response(
@@ -165,7 +197,7 @@ story_create_schema = extend_schema(
         "Create a new story with media, optional text, and visibility settings. "
         "The request must be sent as multipart/form-data."
     ),
-    request=StorySerializer,
+    request={"multipart/form-data": StoryCreateRequestSerializer},
     responses={
         201: OpenApiResponse(
             response=StorySerializer,
@@ -297,5 +329,14 @@ explore_schema = extend_schema(
     responses={
         200: PostListSerializer(many=True),
         401: unauthorized_response(),
+    },
+)
+
+trending_hashtags_schema = extend_schema(
+    tags=["Posts - Hashtags"],
+    summary="Trending hashtags",
+    description="Return trending hashtags ordered by number of posts.",
+    responses={
+        200: HashtagSerializer(many=True),
     },
 )
